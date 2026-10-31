@@ -1,0 +1,13 @@
+# Why Unhurried
+
+With the rise of AI, the job market has ironically become harder to navigate than ever before. AI-driven auto-apply tools make it effortless to submit custom-tailored applications, which sounds fantastic—until you realize it results in thousands of applicants flooding every open role. We are now in a worse position than when we started. Job seekers are forced to "spray and pray" across more platforms than ever, desperately hoping for a call, while recruiters are utterly paralyzed by a volume of resumes they could never genuinely review.
+
+We have created an absurd loop: AI writes the job description, AI customizes the applicant’s resume, AI screens the submissions, and ultimately, AI rejects them—often before a human ever lays eyes on the page. It is a broken situation that serves neither the applicant nor the hiring team.
+
+The solution is to step back, take a deep breath, and fundamentally slow the process down. What if we approached the job market with an old-fashioned mindset, but powered by modern tools? Instead of the mass-application method, imagine an AI agent acting as a personal researcher—scouring the internet to find a highly curated list of opportunities that perfectly match a job seeker’s unique criteria.
+
+From there, the applicant selects only a small handful of roles and thinks critically about why they want those specific opportunities. They intentionally customize their materials and take the time to find relevant team members on platforms like LinkedIn. They reach out not just to ask for a job, but to genuinely understand the role, the culture, and the day-to-day challenges. This deliberate effort allows the candidate to deeply assess if the role is the right move, while giving the hiring team a clear signal that this person is genuinely invested and a highly compatible fit.
+
+In an ideal world, a job seeker should know about an opening before it is even published. They should already know which companies they want to work for and exactly why. Rather than being one of ten thousand people who blindly clicked "apply," they should strive to be one of the few considered ideal before the posting even goes live.
+
+This is how we build a thriving, sustainable job market—one where both candidates and hiring managers feel the system is working for them, not against them. AI should act as a force multiplier for deep research and alignment. It should help us identify truly great places to work and verify cultural and technical fit. Making it easier to churn out resumes and click "apply" was never the true goal. The ultimate goal is connecting the right candidate with the right position, and AI should be used to make that profound connection easier, rather than just automating the noise.
