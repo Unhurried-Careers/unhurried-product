@@ -19,15 +19,15 @@ Open the architecture canvas beside chat: `unhurried-architecture.canvas.tsx`.
 
 | Repo | Role |
 | --- | --- |
-| [unhurried-infra](https://github.com/rafee/unhurried-infra) | Terraform for GCP (API Gateway, Cloud Run, Firestore, Pub/Sub, Scheduler, Firebase Auth + Hosting) |
-| [unhurried-common](https://github.com/rafee/unhurried-common) | Shared Go library (auth, HTTP, Firestore, Pub/Sub) |
-| [unhurried-job-search](https://github.com/rafee/unhurried-job-search) | Discover jobs from official APIs using saved criteria |
-| [unhurried-resume](https://github.com/rafee/unhurried-resume) | Google Docs + Vertex AI resume create/rewrite |
-| [unhurried-applications](https://github.com/rafee/unhurried-applications) | Apply pipeline, Chrome extension API, tracking |
-| [unhurried-notifications](https://github.com/rafee/unhurried-notifications) | Email and SMS on job/application events |
-| [unhurried-inbox](https://github.com/rafee/unhurried-inbox) | Gmail ingest + Calendar interview booking |
-| [unhurried-web](https://github.com/rafee/unhurried-web) | TypeScript React frontend (static, on Firebase Hosting) |
-| [unhurried-extension](https://github.com/rafee/unhurried-extension) | Chrome MV3 apply assistant |
+| [unhurried-infra](https://github.com/Unhurried-Careers/unhurried-infra) | Terraform for GCP (API Gateway, Cloud Run, Firestore, Pub/Sub, Scheduler, Firebase Auth + Hosting) |
+| [unhurried-common](https://github.com/Unhurried-Careers/unhurried-common) | Shared Go library (auth, HTTP, Firestore, Pub/Sub) |
+| [unhurried-job-search](https://github.com/Unhurried-Careers/unhurried-job-search) | Discover jobs from official APIs using saved criteria |
+| [unhurried-resume](https://github.com/Unhurried-Careers/unhurried-resume) | Google Docs + Vertex AI resume create/rewrite |
+| [unhurried-applications](https://github.com/Unhurried-Careers/unhurried-applications) | Apply pipeline, Chrome extension API, tracking |
+| [unhurried-notifications](https://github.com/Unhurried-Careers/unhurried-notifications) | Email and SMS on job/application events |
+| [unhurried-inbox](https://github.com/Unhurried-Careers/unhurried-inbox) | Gmail ingest + Calendar interview booking |
+| [unhurried-web](https://github.com/Unhurried-Careers/unhurried-web) | TypeScript React frontend (static, on Firebase Hosting) |
+| [unhurried-extension](https://github.com/Unhurried-Careers/unhurried-extension) | Chrome MV3 apply assistant |
 
 Each folder is its **own git repository** (`git init` on `main`).
 
