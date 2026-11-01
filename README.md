@@ -60,4 +60,4 @@ Copy `unhurried-web/.env.example` to `.env.local` and set `VITE_AUTH_MODE=dev` f
 
 ## Deploy
 
-See `unhurried-infra/README.md`. Backend images are built from each service `Dockerfile` into Artifact Registry, then Cloud Run revisions are updated by Terraform or Cloud Build. The frontend is built and published to Firebase Hosting by `unhurried-web/cloudbuild.yaml` (see `unhurried-web/README.md`).
+See `unhurried-infra/README.md`. `main` deploys to production (https://unhurried-careers.com) and `staging` to staging, from each repo's GitHub Actions pipeline: service images go to Artifact Registry and roll out to Cloud Run, the frontend is published to Firebase Hosting, and Terraform applies the infrastructure. Promote by merging `staging` into `main`.
