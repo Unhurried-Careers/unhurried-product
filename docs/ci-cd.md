@@ -122,7 +122,7 @@ esac
 ### Release to production
 
 1. Merge the change into `staging` in each affected repository (once staging deploys are on, verify it there).
-2. Merge `staging` into `main`. Order matters only when changes depend on each other: infrastructure first (new environment variables, secrets, routes), then services, then web.
+2. Merge `staging` into `main`. Order matters when changes depend on each other: `unhurried-common` first, then the service repositories, then `unhurried-infra`, then web. Services go before infra because the infra pipeline's spec-sync check compares `gateway-specs/` with each service's `openapi.yaml` on the same branch, and skips the apply if they differ. A service deployed before its new environment variables or secrets exist must tolerate their absence (as the Gmail and Docs features do, by reporting themselves unconfigured).
 3. Watch the runs: `gh run list -R Unhurried-Careers/<repo> -b main`. Each deploy job writes what it deployed to the run summary.
 
 API changes touch three places that must agree: the service's `openapi.yaml`, `unhurried-infra/gateway-specs/<service>.yaml` (the spec-sync check enforces equality), and the web client in `src/api.ts`.
