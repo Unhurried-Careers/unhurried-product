@@ -11,7 +11,7 @@ Job search, resume tailoring, application tracking, and interview scheduling —
 | Know which companies you want, and why, before roles are posted widely | **Watchlist**: each company needs a written reason; Unhurried reads its own Greenhouse, Lever, or Ashby board so new roles surface as soon as they are published |
 | Select a small handful of roles and think critically about each | **Shortlist**: at most 5 active roles, each with a written "why this role" and "why this company"; applying is only possible from the shortlist |
 | Find team members and learn about the role, culture, and day-to-day | **Outreach kit**: LinkedIn searches you open yourself, a 300-character note that asks to learn rather than for a referral, questions for the conversation, and a contact tracker |
-| Keep track of the people you talk to and what you learn | **Google invites**: prefilled Google Calendar invites you send yourself, grouped by company, with what you learned from each person and a queue of who to reach out to again |
+| Keep track of the people you talk to and what you learn | **Google invites**: drafted messages asking people for a few minutes of their time; once they agree, your Google Calendar booking link or a request for them to send an invite. Grouped by company, with what you learned from each person and a queue of who to reach out to again |
 | Customize materials intentionally | **Resume studio**: tailor a Google Doc to one shortlisted role with a chosen skill focus |
 
 ## Documentation
