@@ -37,5 +37,4 @@ What is fully working in production today, what is partial, and what is not buil
 1. **In-memory stores** in job-search, notifications, and inbox interviews. Cloud Run scales to zero, so this data disappears after idle periods. The applications and resume stores (`internal/store` with Memory and Firestore implementations behind one interface) are the pattern to copy.
 2. **Third-party credentials** for Adzuna and USAJobs are not configured; the placeholder secrets in Secret Manager have no values and are not wired to the services. The SMTP relay for alert emails is not configured yet either.
 3. **AI tailoring** needs a model call (for example Vertex AI) that turns the job description and master resume into find-and-replace edits.
-4. **Leftover files**: `unhurried-infra/cloudbuild.yaml` and `firestore.indexes.json` are not used.
-5. **Security follow-ups** are listed in [Security → Known risks](security.md#known-risks-and-recommended-next-steps), notably turning off new signups, branch protection, Firestore rules, and a Content-Security-Policy.
+4. **Security follow-ups** are listed in [Security → Known risks](security.md#known-risks-and-recommended-next-steps), notably turning off new signups, branch protection, Firestore rules, and a Content-Security-Policy.

@@ -267,7 +267,7 @@ gateway-specs/     Copies of each service's openapi.yaml used by API Gateway
 tools/             check-specs.mjs: gateway spec linter (see CI/CD)
 ```
 
-Both environment folders contain identical `main.tf`, `variables.tf`, and `versions.tf`; only `settings.auto.tfvars` and the backend prefix differ. The single secret input, `google_oauth_client_secret`, comes from a gitignored `terraform.tfvars` locally or `TF_VAR_google_oauth_client_secret` in CI. `cloudbuild.yaml` and `firestore.indexes.json` are unused leftovers.
+Both environment folders contain identical `main.tf`, `variables.tf`, and `versions.tf`; only `settings.auto.tfvars` and the backend prefix differ. The single secret input, `google_oauth_client_secret`, comes from a gitignored `terraform.tfvars` locally or `TF_VAR_google_oauth_client_secret` in CI.
 
 ## Local development
 
