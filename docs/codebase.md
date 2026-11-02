@@ -6,7 +6,7 @@ The system is split into 10 repositories in the [Unhurried-Careers](https://gith
 | --- | --- | --- |
 | [unhurried-common](#unhurried-common) | Go | Shared library: auth, HTTP hardening, validation, models, IDs |
 | [unhurried-job-search](#unhurried-job-search) | Go | Saved searches, job boards, company watchlist |
-| [unhurried-resume](#unhurried-resume) | Go | Resume records, tailoring and tweak requests, LinkedIn text import |
+| [unhurried-resume](#unhurried-resume) | Go | Resumes as Google Docs in the user's Drive: master resume, tailored copies, edits |
 | [unhurried-applications](#unhurried-applications) | Go | Shortlist, outreach kit, applications, Gmail imports, extension API |
 | [unhurried-notifications](#unhurried-notifications) | Go | Email/SMS preferences and the notify hook |
 | [unhurried-inbox](#unhurried-inbox) | Go | Gmail connection and import, mail classification, interview slots |
@@ -49,7 +49,7 @@ Read by `unhurried-common/auth` and `httpx` in every service:
 | `INTERNAL_AUDIENCE` | Audience expected on `/internal/*` OIDC tokens (`unhurried-internal`) |
 | `INTERNAL_CALLERS` | Service accounts allowed on `/internal/*`; empty rejects all internal calls |
 | `CORS_ALLOWED_ORIGINS` | Browser origins allowed; defaults to the local Vite server |
-| `STORE=firestore` | Use Firestore where the service supports it (applications, inbox) |
+| `STORE=firestore` | Use Firestore where the service supports it (applications, inbox, resume) |
 | `PORT` | Listen port |
 
 Terraform sets all of these on Cloud Run (`envs/<env>/main.tf`, `local.commons`).
@@ -102,22 +102,34 @@ Configuration: `ADZUNA_APP_ID`, `ADZUNA_APP_KEY`, `USAJOBS_API_KEY`, `USAJOBS_EM
 ## unhurried-resume
 
 ```
-internal/api/         resume handlers
-internal/docsclient/  Google Docs/Drive client (synthetic document IDs today) and the tailoring prompt
-internal/store/       in-memory store
+internal/api/        resume and Google Drive handlers; template.go is the from-scratch resume
+internal/workspace/  OAuth (PKCE), sealed tokens, resume folder, master resume, copy, edit, trash
+internal/gdocs/      minimal Drive v3 and Docs v1 REST client
+internal/seal/       Cloud KMS sealer and a local AES-GCM sealer for development
+internal/store/      Store interface; Memory and Firestore implementations
 ```
+
+Resumes are Google Docs in an **"Unhurried resumes" folder in the user's own Google Drive**. The service uses the `drive.file` scope, so it can only see files it creates and the master resume the user chooses in Google Picker, never the rest of the Drive.
 
 | Endpoint | Purpose |
 | --- | --- |
-| `GET /v1/resumes` | The user's resume documents |
-| `POST /v1/resumes/from-scratch` | Create a new document |
-| `POST /v1/resumes/from-master` | Copy a master document (or `DEFAULT_MASTER_DOC`) |
-| `POST /v1/resumes/{id}/tailor` | Tailor to a role (title, company, description up to 20,000 characters, master text up to 50,000, focus skill) |
-| `POST /v1/resumes/{id}/tweak` | Apply a prompt-based change with a focus skill |
-| `POST /v1/linkedin/import` | Store pasted LinkedIn profile text for tailoring |
+| `GET /v1/docs/status` | Connected account, folder link, master resume, whether a reconnect is needed |
+| `POST /v1/docs/connect` | Start OAuth; returns Google's consent URL |
+| `POST /v1/docs/callback` | Finish OAuth with `code` and `state`; creates the folder |
+| `POST /v1/docs/disconnect` | Forget the connection; resumes stay in Drive |
+| `POST /v1/docs/picker-token` | Short-lived `drive.file` access token and app ID for Google Picker |
+| `PUT /v1/docs/master` | Record the Doc picked as the master resume (must be a Google Doc, not trashed) |
+| `GET /v1/resumes` | The user's resumes, most recently updated first |
+| `POST /v1/resumes/from-scratch` | Create a Doc from the template (name and email filled in); `asMaster` makes it the master |
+| `POST /v1/resumes/from-master` | Copy the master for a role; named "Resume – Company – Role" |
+| `POST /v1/resumes/{id}/edit` | Apply up to 20 find-and-replace edits to the Doc, keeping its formatting; returns how many places changed |
+| `DELETE /v1/resumes/{id}` | Move the Doc to the user's Drive trash (recoverable for 30 days) and forget it |
 
-`docsclient.TailorPrompt` builds the model prompt from the LinkedIn text, master resume, and job; the model call and real Docs API calls are not wired yet (see [status](status.md)).
+**Folder**: created on connect, reused on reconnect with the same Google account, and recreated automatically if the user deletes or trashes it. **Errors**: a deleted document answers 410, a missing master 409, revoked access 409 with `needsReconnect`; other Google errors answer a generic 502.
 
+Configuration: `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET` (the same OAuth client and Secret Manager secret as Gmail), `DOCS_REDIRECT_URL` (`/app/docs/callback`), `KMS_KEY_NAME` (required with Firestore), `FIREBASE_PROJECT_NUMBER` (Picker app ID). Without a client ID the Docs routes answer 503.
+
+AI rewriting is not built yet; it would produce the same find-and-replace edits the `edit` endpoint applies.
 ## unhurried-applications
 
 ```
@@ -200,8 +212,9 @@ src/api.ts                typed API clients; adds ID token, App Check token, API
 src/extensionBridge.ts    answers the extension's relayed requests
 src/paths.ts              route constants
 src/lib/boards.ts         detects ATS and board token from a careers URL
+src/lib/picker.ts         loads Google Picker and lets the user choose the master resume
 src/pages/                Home, SignIn, Jobs, Watchlist, Shortlist (with outreach), Criteria,
-                          ResumeStudio, Tracker (+ GmailPanel), GmailCallback, Interviews, Settings
+                          ResumeStudio, DocsCallback, Tracker (+ GmailPanel), GmailCallback, Interviews, Settings
 firebase.json             Hosting: SPA rewrite, caching, security headers
 .firebaserc               staging/production aliases and Hosting targets
 ```
@@ -212,7 +225,7 @@ firebase.json             Hosting: SPA rewrite, caching, security headers
 | `/app` | Opportunities (jobs found) |
 | `/app/watchlist`, `/app/shortlist`, `/app/criteria`, `/app/resume` | Watchlist, shortlist and outreach, search criteria, resume studio |
 | `/app/applications` | Tracker: Gmail panel, review queue, in-progress and closed applications |
-| `/app/gmail/callback` | Google returns here after Gmail consent; posts the code once, then returns to the tracker |
+| `/app/gmail/callback`, `/app/docs/callback` | Google returns here after Gmail or Drive consent; posts the code once (`OAuthCallback`), then returns to the tracker or resume studio |
 | `/app/interviews`, `/app/alerts` | Interview slots, notification settings |
 
 Signed-out visitors to `/app/*` see the sign-in screen (popup with `prompt=select_account`). Build-time configuration is `VITE_*` variables (`.env.example`); deployed builds read them from the `unhurried-web-build-config` secret. `VITE_AUTH_MODE=dev` with `VITE_TOKEN=user:<id>` works against services running with `AUTH_DEV_BYPASS=true`.
@@ -237,7 +250,8 @@ modules/service    Cloud Run service, its service account, API Gateway API/confi
 modules/data       Firestore, Pub/Sub topics, Scheduler jobs, placeholder secrets, Artifact Registry
 modules/auth       Firebase project, Identity Platform config, Google provider, web app, App Check
 modules/hosting    Hosting site, custom domain and redirects, web deployer service account
-modules/gmail      Gmail and KMS APIs, token key, OAuth client secret, inbox access
+modules/gmail      Gmail and KMS APIs, key ring, Gmail token key, OAuth client secret, inbox access
+modules/docs       Drive, Docs, and Picker APIs, Drive token key, resume access to the OAuth secret
 modules/cicd       Workload identity pool/provider, deploy service accounts, web build config secret
 envs/prod          Production root module (main), settings.auto.tfvars
 envs/staging       Staging root module (staging), settings.auto.tfvars with placeholders

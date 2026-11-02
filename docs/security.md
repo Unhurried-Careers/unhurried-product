@@ -108,6 +108,19 @@ Cloud Run's IAM binding enforces the same caller list a second time. Cloud Run i
 
 While the OAuth consent screen is in Testing mode, Google limits access to listed test users and expires Gmail refresh tokens after 7 days.
 
+## Google Drive (resumes)
+
+| Control | Detail |
+| --- | --- |
+| Least scope | `https://www.googleapis.com/auth/drive.file` only: the service can reach files it created and files the user picked in Google Picker, never the rest of the Drive. Google classifies it as non-sensitive |
+| Resumes stay with the user | Documents live in an "Unhurried resumes" folder in the user's own Drive; Firestore keeps only the title, role, document ID, and link |
+| Same OAuth protections as Gmail | PKCE (S256), single-use hashed state bound to the user with a 10-minute expiry, scope check, server-side code exchange |
+| Sealed refresh token | Cloud KMS key `docs-refresh-tokens`, separate from Gmail's, with the user ID as additional authenticated data; only the resume service account can use it; required in Firestore mode |
+| Picker token | Google Picker runs in the browser and needs an access token, so `POST /v1/docs/picker-token` returns a short-lived (about one hour) `drive.file` token. It carries no more access than the service already has and is never stored by the web app |
+| Input checks | The picked file ID must match `^[A-Za-z0-9_-]{10,200}$` and be a Google Doc that is not in the trash; edits are capped at 20 per request, 500 characters to find, 2,000 to replace |
+| Deleting | "Move to trash" uses Drive's trash, so the user can restore a resume for 30 days |
+| Disconnect | Deletes the stored token without revoking it at Google, because revocation would also end Gmail access granted to the same OAuth client; myaccount.google.com/permissions removes all access |
+
 ## Browser and frontend
 
 - **Hosting headers** (`firebase.json`): `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy: camera=(), microphone=(), geolocation=()`. HTTPS is enforced by Firebase Hosting, with automatic certificates for the custom domain.
@@ -127,9 +140,10 @@ While the OAuth consent screen is in Testing mode, Google limits access to liste
 
 | Secret | Where it lives | Who can read it |
 | --- | --- | --- |
-| Google OAuth client secret | Secret Manager `unhurried-gmail-oauth-client-secret`; Identity Platform config; Terraform state; GitHub `PRODUCTION_GOOGLE_OAUTH_CLIENT_SECRET`; local gitignored `envs/prod/terraform.tfvars` | Inbox service account; project owners; the Terraform pipeline |
+| Google OAuth client secret | Secret Manager `unhurried-gmail-oauth-client-secret`; Identity Platform config; Terraform state; GitHub `PRODUCTION_GOOGLE_OAUTH_CLIENT_SECRET`; local gitignored `envs/prod/terraform.tfvars` | Inbox and resume service accounts; project owners; the Terraform pipeline |
 | Web build configuration (includes the browser API key) | Secret Manager `unhurried-web-build-config` | Web deployer service account |
 | Gmail refresh tokens (per user) | Firestore, sealed with Cloud KMS | Inbox service account (decrypt) |
+| Google Drive refresh tokens (per user) | Firestore, sealed with a separate Cloud KMS key | Resume service account (decrypt) |
 | Cross-repo checkout token | GitHub `UNHURRIED_REPOS_TOKEN` | CI jobs |
 | Third-party keys (Adzuna, USAJobs, Twilio) | Placeholder secrets with no value; not wired | — |
 

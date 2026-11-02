@@ -155,7 +155,7 @@ Each environment is a separate Google Cloud project created from the same Terraf
 | Cloud Scheduler | `unhurried-job-search-scan` (`*/30`), `unhurried-inbox-poll` (`*/15`), time zone America/Chicago |
 | Pub/Sub | Topics `unhurried-job-found`, `-resume-ready`, `-application-updated`, `-interview-requested`, `-notify-user` (created; not yet used by code) |
 | Artifact Registry | Docker repository `unhurried` |
-| Cloud KMS | Key ring `unhurried`, key `gmail-refresh-tokens` (90-day rotation, destroy-protected) |
+| Cloud KMS | Key ring `unhurried`, keys `gmail-refresh-tokens` (inbox only) and `docs-refresh-tokens` (resume only), 90-day rotation, destroy-protected |
 | Secret Manager | `unhurried-gmail-oauth-client-secret`, `unhurried-web-build-config`, placeholders for Adzuna/Twilio |
 | Identity Platform | Google provider only; email/password and phone disabled; signup switch; user deletion disabled |
 | Firebase | Web app, App Check (reCAPTCHA Enterprise), Hosting site and custom domains |
@@ -174,8 +174,11 @@ Shared types live in `unhurried-common/models`. Where data is stored today:
 | Application timeline | applications | Firestore | `application_events` |
 | Gmail connections (sealed refresh token, sync cursor, counters) | inbox | Firestore | `gmail_connections` (document ID = user ID) |
 | Pending Gmail sign-ins | inbox | Firestore | `gmail_oauth_states` (document ID = SHA-256 of the state) |
+| Resume records (title, role, Google Doc ID and link, source) | resume | Firestore | `resumes` |
+| Google Drive connections (sealed refresh token, folder, master resume) | resume | Firestore | `docs_connections` (document ID = user ID) |
+| Pending Google Drive sign-ins | resume | Firestore | `docs_oauth_states` (document ID = SHA-256 of the state) |
+| Resume documents themselves | — | The user's Google Drive, folder "Unhurried resumes" | — |
 | Search criteria, found jobs, watchlist | job-search | In memory | — |
-| Resume records, LinkedIn text | resume | In memory | — |
 | Notification preferences | notifications | In memory | — |
 | Interview slots | inbox | In memory | — |
 
