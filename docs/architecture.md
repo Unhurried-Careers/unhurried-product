@@ -53,6 +53,7 @@ flowchart LR
   S5 --> GM
   SM -.->|OAuth client secret| S5
   S5 -->|/internal/imports, OIDC| S3
+  S1 -->|/internal/job-digest, OIDC| S4
   SCH -->|/internal/scan, OIDC| S1
   SCH -->|/internal/poll, OIDC| S5
 ```
@@ -93,13 +94,14 @@ Routes under `/internal/*` are never published on API Gateway; the gateway spec 
 
 | Caller | Target | Purpose | Schedule |
 | --- | --- | --- | --- |
-| Cloud Scheduler (`unhurried-scheduler` SA) | job-search `POST /internal/scan` | Run saved searches | Every 30 minutes |
+| Cloud Scheduler (`unhurried-scheduler` SA) | job-search `POST /internal/scan` | Run saved searches | Daily at 07:00 |
 | Cloud Scheduler (`unhurried-scheduler` SA) | inbox `POST /internal/poll` | Sync every connected Gmail mailbox | Every 15 minutes |
 | inbox (`unhurried-inbox-run` SA) | applications `POST /internal/imports` | Record an application found in Gmail | During each Gmail sync |
+| job-search (`unhurried-job-search-run` SA) | notifications `POST /internal/job-digest` | Email each user the new jobs their search criteria matched | After each scheduled scan |
 
-Each target allows only the listed caller twice over: Cloud Run's `roles/run.invoker` binding, and the service's own check of the token's audience and caller email (`INTERNAL_CALLERS`). Services with no listed caller (notifications) reject every internal call.
+Each target allows only the listed caller twice over: Cloud Run's `roles/run.invoker` binding, and the service's own check of the token's audience and caller email (`INTERNAL_CALLERS`). Services with no listed caller (resume) reject every internal call.
 
-The inbox calls applications through Cloud Run's deterministic URL (`https://unhurried-applications-<project-number>.<region>.run.app`), which avoids a Terraform dependency cycle between services.
+The inbox calls applications, and job-search calls notifications, through Cloud Run's deterministic URLs (`https://unhurried-<service>-<project-number>.<region>.run.app`), which avoids a Terraform dependency cycle between services. Notifications sends the email through the SMTP relay set by `smtp_host`; the relay password is in Secret Manager (`unhurried-smtp-password`), readable only by the notifications service account.
 
 ## Gmail import flow
 
@@ -152,11 +154,11 @@ Each environment is a separate Google Cloud project created from the same Terraf
 | Cloud Run services | 5, region `us-central1`, 0 to 10 instances, 1 vCPU and 512 MiB each, each running as its own `<service>-run` service account |
 | API Gateway | One API, config, and gateway per service, each with its own `<service>-gw` service account (the only Cloud Run invoker besides internal callers) |
 | Firestore | `(default)` database, Native mode, delete protection enabled |
-| Cloud Scheduler | `unhurried-job-search-scan` (`*/30`), `unhurried-inbox-poll` (`*/15`), time zone America/Chicago |
+| Cloud Scheduler | `unhurried-job-search-scan` (`0 7 * * *`, daily), `unhurried-inbox-poll` (`*/15`), time zone America/Chicago |
 | Pub/Sub | Topics `unhurried-job-found`, `-resume-ready`, `-application-updated`, `-interview-requested`, `-notify-user` (created; not yet used by code) |
 | Artifact Registry | Docker repository `unhurried` |
 | Cloud KMS | Key ring `unhurried`, keys `gmail-refresh-tokens` (inbox only) and `docs-refresh-tokens` (resume only), 90-day rotation, destroy-protected |
-| Secret Manager | `unhurried-gmail-oauth-client-secret`, `unhurried-web-build-config`, placeholders for Adzuna/Twilio |
+| Secret Manager | `unhurried-gmail-oauth-client-secret`, `unhurried-web-build-config`, `unhurried-smtp-password` (alert emails; notifications only), placeholders for Adzuna |
 | Identity Platform | Google provider only; email/password and phone disabled; signup switch; user deletion disabled |
 | Firebase | Web app, App Check (reCAPTCHA Enterprise), Hosting site and custom domains |
 | API key | `unhurried-web` browser key, restricted to the site's domains and the five gateways |
@@ -179,7 +181,7 @@ Shared types live in `unhurried-common/models`. Where data is stored today:
 | Pending Google Drive sign-ins | resume | Firestore | `docs_oauth_states` (document ID = SHA-256 of the state) |
 | Resume documents themselves | — | The user's Google Drive, folder "Unhurried resumes" | — |
 | Search criteria, found jobs, watchlist | job-search | In memory | — |
-| Notification preferences | notifications | In memory | — |
+| Email alert preferences | notifications | In memory | — |
 | Interview slots | inbox | In memory | — |
 
 In-memory data is lost when a Cloud Run instance stops; see [Implementation status](status.md). Firestore queries use equality filters only and sort in the service, so no composite indexes are required. Every document carries a `userId`, and every user-facing read checks it.

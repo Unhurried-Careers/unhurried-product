@@ -68,7 +68,7 @@ Each service's `openapi.yaml` (linted in CI by `tools/check-specs.mjs`) requires
 ### 4. Handlers
 
 - **Ownership.** Every read and write is scoped to the caller's user ID; another user's record answers 404. `/internal/events` takes the user from the stored application, not from the request; `/internal/imports` takes it from the finding, which only the inbox service account can send and which the inbox fills from its own connection record. Tests cover cross-user access for each service.
-- **Validation.** Every field has a length limit, enumerations are checked with `OneOf`, URLs must be https (`HTTPSURL`) or on an expected host (LinkedIn contacts must be on linkedin.com), emails and phone numbers are validated, list sizes are capped.
+- **Validation.** Every field has a length limit, enumerations are checked with `OneOf`, URLs must be https (`HTTPSURL`) or on an expected host (LinkedIn contacts must be on linkedin.com), email addresses are validated, list sizes are capped.
 - **Outbound requests (SSRF).** Job board clients call only fixed hosts; the board token a user supplies must match `^[A-Za-z0-9._-]{1,100}$`, so it cannot change the host or path. Responses are capped at 10 MiB with a 15-second timeout.
 - **No automated submission.** Recording a submit requires `confirmed: true`, sent only after the user confirms in the extension.
 
@@ -81,7 +81,8 @@ Each service's `openapi.yaml` (linted in CI by `tools/check-specs.mjs`) requires
 | job-search | `unhurried-scheduler` |
 | inbox | `unhurried-scheduler` |
 | applications | `unhurried-inbox-run` |
-| resume, notifications | none (all internal calls rejected) |
+| notifications | `unhurried-job-search-run` |
+| resume | none (all internal calls rejected) |
 
 Cloud Run's IAM binding enforces the same caller list a second time. Cloud Run is configured with `unhurried-internal` as a custom audience so it accepts these tokens.
 
@@ -145,7 +146,8 @@ While the OAuth consent screen is in Testing mode, Google limits access to liste
 | Gmail refresh tokens (per user) | Firestore, sealed with Cloud KMS | Inbox service account (decrypt) |
 | Google Drive refresh tokens (per user) | Firestore, sealed with a separate Cloud KMS key | Resume service account (decrypt) |
 | Cross-repo checkout token | GitHub `UNHURRIED_REPOS_TOKEN` | CI jobs |
-| Third-party keys (Adzuna, USAJobs, Twilio) | Placeholder secrets with no value; not wired | — |
+| SMTP relay password (alert emails) | Secret Manager `unhurried-smtp-password` (only once `smtp_password` is set); Terraform state; GitHub `PRODUCTION_SMTP_PASSWORD` | Notifications service account; project owners; the Terraform pipeline |
+| Third-party keys (Adzuna, USAJobs) | Placeholder secrets with no value; not wired | — |
 
 Everything else needs no stored secret: services reach Google APIs as their service accounts through the metadata server, internal calls use Google-signed identity tokens, user tokens are verified with Google's public keys, and pipelines use Workload Identity Federation. There are no service account keys.
 

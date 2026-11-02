@@ -8,7 +8,7 @@ The system is split into 10 repositories in the [Unhurried-Careers](https://gith
 | [unhurried-job-search](#unhurried-job-search) | Go | Saved searches, job boards, company watchlist |
 | [unhurried-resume](#unhurried-resume) | Go | Resumes as Google Docs in the user's Drive: master resume, tailored copies, edits |
 | [unhurried-applications](#unhurried-applications) | Go | Shortlist, outreach kit, applications, Gmail imports, extension API |
-| [unhurried-notifications](#unhurried-notifications) | Go | Email/SMS preferences and the notify hook |
+| [unhurried-notifications](#unhurried-notifications) | Go | Email alerts for new jobs that match the user's search criteria |
 | [unhurried-inbox](#unhurried-inbox) | Go | Gmail connection and import, mail classification, interview slots |
 | [unhurried-web](#unhurried-web) | TypeScript | React single-page app |
 | [unhurried-extension](#unhurried-extension) | JavaScript | Chrome apply assistant |
@@ -64,8 +64,8 @@ auth/internal.go    Google OIDC verification for /internal/* callers
 auth/allowlist.go   Wraps a verifier and admits only listed, verified emails
 auth/jwt.go         RS256 verification, Google key fetching and caching
 httpx/httpx.go      JSON helpers, CORS, Harden, Recover, AccessLog, Serve with timeouts
-validate/           Field validation (Required, MaxLen, MinLen, OneOf, HTTPSURL, URLHost, Email, Phone, Range, List, Pattern)
-models/models.go    Shared types: User, JobCriteria, Job, WatchedCompany, Pursuit, Contact, ResumeDoc, Application, ApplicationEvent, MailFinding, Interview, NotifyMessage
+validate/           Field validation (Required, MaxLen, MinLen, OneOf, HTTPSURL, URLHost, Email, Range, List, Pattern)
+models/models.go    Shared types: User, JobCriteria, Job, WatchedCompany, Pursuit, Contact, ResumeDoc, Application, ApplicationEvent, MailFinding, Interview, NotifyMessage, JobDigest
 ids/ids.go          Random UUIDs
 topics/topics.go    Pub/Sub topic names
 ```
@@ -93,11 +93,11 @@ internal/store/     in-memory store
 | `POST /v1/scan` | Run the user's saved searches now |
 | `GET/POST /v1/watchlist`, `DELETE /v1/watchlist/{id}` | Followed companies: name, written reason, ATS (`greenhouse`, `lever`, `ashby`), board token, title keywords; at most 50 per user |
 | `POST /v1/scan/watchlist` | Check every watched company's public board now |
-| `POST /internal/scan` | Scheduler entry point (every 30 minutes) |
+| `POST /internal/scan` | Scheduler entry point (daily at 07:00 Central); afterwards sends each user's new criteria matches to notifications to email |
 
 Board clients only call fixed hosts (`boards-api.greenhouse.io`, `api.lever.co`, `api.ashbyhq.com`, Adzuna, USAJobs) with a 15-second timeout and a 10 MiB response cap. Board tokens must match `^[A-Za-z0-9._-]{1,100}$`, so user input cannot redirect requests elsewhere.
 
-Configuration: `ADZUNA_APP_ID`, `ADZUNA_APP_KEY`, `USAJOBS_API_KEY`, `USAJOBS_EMAIL` (each board is skipped when unset), `GREENHOUSE_BOARD`, `LEVER_COMPANY` (single-company searches).
+Configuration: `ADZUNA_APP_ID`, `ADZUNA_APP_KEY`, `USAJOBS_API_KEY`, `USAJOBS_EMAIL` (each board is skipped when unset), `GREENHOUSE_BOARD`, `LEVER_COMPANY` (single-company searches), `NOTIFICATIONS_INTERNAL_URL` (notifications Cloud Run URL; unset sends no alert emails).
 
 ## unhurried-resume
 
@@ -165,10 +165,18 @@ Rules the service enforces:
 
 | Endpoint | Purpose |
 | --- | --- |
-| `GET/PUT /v1/preferences` | Email and SMS switches and destinations (email and phone validated when enabled) |
-| `POST /internal/notify` | Deliver a message by preference or channel |
+```
+internal/api/    preferences and delivery handlers
+internal/mail/   SMTP sender (STARTTLS or implicit TLS) and the job digest email (text and HTML)
+```
 
-Delivery is logged rather than sent today, and no service is allowed to call `/internal/notify` yet (see [status](status.md)). `TWILIO_TOKEN` gates the SMS path.
+| Endpoint | Purpose |
+| --- | --- |
+| `GET/PUT /v1/preferences` | Alert email address and the email alerts switch (address required when on) |
+| `POST /internal/job-digest` | Email one user the new jobs their criteria matched (job-search only; 1 to 100 jobs, up to 25 listed) |
+| `POST /internal/notify` | Plain-text email to one user |
+
+Emails go only to users who turned alerts on; responses report `sent`, `skipped`, or `logged`. Job fields are escaped in the HTML email and only https links are accepted. Configuration: `SMTP_HOST` (unset logs emails instead of sending), `SMTP_PORT` (default 587), `SMTP_USERNAME`, `SMTP_PASSWORD`, `MAIL_FROM`, `APP_URL` (links in emails).
 
 ## unhurried-inbox
 
@@ -226,7 +234,7 @@ firebase.json             Hosting: SPA rewrite, caching, security headers
 | `/app/watchlist`, `/app/shortlist`, `/app/criteria`, `/app/resume` | Watchlist, shortlist and outreach, search criteria, resume studio |
 | `/app/applications` | Tracker: Gmail panel, review queue, in-progress and closed applications |
 | `/app/gmail/callback`, `/app/docs/callback` | Google returns here after Gmail or Drive consent; posts the code once (`OAuthCallback`), then returns to the tracker or resume studio |
-| `/app/interviews`, `/app/alerts` | Interview slots, notification settings |
+| `/app/interviews`, `/app/alerts` | Interview slots, email alert settings |
 
 Signed-out visitors to `/app/*` see the sign-in screen (popup with `prompt=select_account`). Build-time configuration is `VITE_*` variables (`.env.example`); deployed builds read them from the `unhurried-web-build-config` secret. `VITE_AUTH_MODE=dev` with `VITE_TOKEN=user:<id>` works against services running with `AUTH_DEV_BYPASS=true`.
 

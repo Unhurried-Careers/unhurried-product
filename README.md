@@ -26,7 +26,7 @@ Full documentation is in [docs/](docs/README.md): [architecture](docs/architectu
 | [unhurried-job-search](https://github.com/Unhurried-Careers/unhurried-job-search) | Saved searches, job boards, and the company watchlist |
 | [unhurried-resume](https://github.com/Unhurried-Careers/unhurried-resume) | Resume records and tailoring requests (Google Docs and AI not wired yet) |
 | [unhurried-applications](https://github.com/Unhurried-Careers/unhurried-applications) | Shortlist, outreach kit, applications, Gmail imports, extension API |
-| [unhurried-notifications](https://github.com/Unhurried-Careers/unhurried-notifications) | Notification preferences (delivery not wired yet) |
+| [unhurried-notifications](https://github.com/Unhurried-Careers/unhurried-notifications) | Email alerts for new jobs that match saved search criteria |
 | [unhurried-inbox](https://github.com/Unhurried-Careers/unhurried-inbox) | Gmail connection and import, interview slot proposals |
 | [unhurried-web](https://github.com/Unhurried-Careers/unhurried-web) | TypeScript React frontend (static, on Firebase Hosting) |
 | [unhurried-extension](https://github.com/Unhurried-Careers/unhurried-extension) | Chrome MV3 apply assistant |
