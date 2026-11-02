@@ -7,7 +7,8 @@ This document lists every security control in Unhurried, where it is implemented
 | Asset | Why it matters |
 | --- | --- |
 | The user's job search data | Shortlist reasons, contacts, applications, and resume content are personal and career-sensitive |
-| Gmail access | A refresh token with `gmail.readonly` can read the user's entire mailbox |
+| Google Calendar access | A refresh token with `calendar.events.readonly` can read every event on the user's calendars |
+| Google Drive access | A refresh token with `drive.file` can read and change the resumes Unhurried created |
 | The Google Cloud projects | Owner-level access means control of all data and billing |
 | Deployment credentials | Whoever can deploy can change what runs in production |
 | OAuth client secret | Lets its holder impersonate the app in Google's OAuth flows |
@@ -21,7 +22,7 @@ This document lists every security control in Unhurried, where it is implemented
 | One user reads another's data | Every query scoped to the token's user ID; foreign IDs answer 404 |
 | Calls that skip API Gateway | Cloud Run IAM: only the gateway's service account (and listed internal callers) may invoke |
 | Forged internal calls | `/internal/*` not on the gateway; Google OIDC tokens with a fixed audience and an explicit caller list |
-| Stolen database contents | Gmail tokens sealed with Cloud KMS and bound to the user; no email bodies stored |
+| Stolen database contents | Calendar and Drive tokens sealed with Cloud KMS and bound to the user; calendar events not stored |
 | Compromised CI or repository | Keyless deploys, branch- and repository-bound identities, least-privilege deployers |
 | Vulnerable dependencies or base images | govulncheck (source and binary), npm audit, distroless non-root images |
 | Malicious job sites or pages | Extension never submits, relays only five operations from its own popup, holds no tokens |
@@ -31,7 +32,7 @@ This document lists every security control in Unhurried, where it is implemented
 
 - **Google is the only sign-in method.** Identity Platform has email/password and phone sign-in disabled, and multi-tenancy off (`modules/auth`).
 - **Allowlist.** Every service admits only the verified Google accounts in `ALLOWED_EMAILS` (from `allowed_emails` in Terraform); others get 403 even with a valid token. Services refuse to start if the list is empty.
-- **Signup switch.** `allow_new_signups = false` makes Identity Platform refuse to create any new user; user deletion through the client API is disabled.
+- **Signup switch.** `allow_new_signups = false` makes Identity Platform refuse to create any new user; user deletion through the client API is disabled. Production has signups closed; staging leaves them open until its owner signs in once.
 - **Authorized domains.** Sign-in only works from `localhost`, the Hosting domains, and the custom domain.
 - **Account picker.** The Google provider uses `prompt=select_account`, so a shared browser does not silently reuse another account.
 
@@ -49,7 +50,7 @@ Each service's `openapi.yaml` (linted in CI by `tools/check-specs.mjs`) requires
 
 ### 2. Cloud Run
 
-- **Invocation is IAM-only.** Each service's only `roles/run.invoker` grants are its gateway's service account and, for internal routes, the specific Scheduler or inbox accounts. Unauthenticated direct calls get 403 from Google before reaching the code.
+- **Invocation is IAM-only.** Each service's only `roles/run.invoker` grants are its gateway's service account and, for internal routes, the specific Scheduler or job-search accounts. Unauthenticated direct calls get 403 from Google before reaching the code.
 - **Each service runs as its own service account** with only what it needs (Firestore user, Pub/Sub publisher; the inbox additionally gets the KMS key and the OAuth secret).
 
 ### 3. Service middleware (`unhurried-common`)
@@ -67,7 +68,7 @@ Each service's `openapi.yaml` (linted in CI by `tools/check-specs.mjs`) requires
 
 ### 4. Handlers
 
-- **Ownership.** Every read and write is scoped to the caller's user ID; another user's record answers 404. `/internal/events` takes the user from the stored application, not from the request; `/internal/imports` takes it from the finding, which only the inbox service account can send and which the inbox fills from its own connection record. Tests cover cross-user access for each service.
+- **Ownership.** Every read and write is scoped to the caller's user ID; another user's record answers 404. `/internal/events` takes the user from the stored application, not from the request. Interview rounds are reached only through their own application, and a Google Calendar event can be linked to only one round per user. Tests cover cross-user access for each service.
 - **Validation.** Every field has a length limit, enumerations are checked with `OneOf`, URLs must be https (`HTTPSURL`) or on an expected host (LinkedIn contacts must be on linkedin.com), email addresses are validated, list sizes are capped.
 - **Outbound requests (SSRF).** Job board clients call only fixed hosts; the board token a user supplies must match `^[A-Za-z0-9._-]{1,100}$`, so it cannot change the host or path. Responses are capped at 10 MiB with a 15-second timeout.
 - **No automated submission.** Recording a submit requires `confirmed: true`, sent only after the user confirms in the extension.
@@ -79,35 +80,35 @@ Each service's `openapi.yaml` (linted in CI by `tools/check-specs.mjs`) requires
 | Service | Allowed internal caller |
 | --- | --- |
 | job-search | `unhurried-scheduler` |
-| inbox | `unhurried-scheduler` |
-| applications | `unhurried-inbox-run` |
 | notifications | `unhurried-job-search-run` |
-| resume | none (all internal calls rejected) |
+| resume, applications, inbox | none (all internal calls rejected) |
 
 Cloud Run's IAM binding enforces the same caller list a second time. Cloud Run is configured with `unhurried-internal` as a custom audience so it accepts these tokens.
 
 ## Data protection
 
-- **Firestore** has delete protection enabled. The web app never talks to Firestore; all access goes through the services' service accounts, which bypass security rules (no rules are deployed by Terraform; see the risks below).
-- **Gmail refresh tokens** are encrypted with Cloud KMS before storage, with the user ID as additional authenticated data, so a sealed token copied onto another user's record fails to decrypt. The key rotates every 90 days (old versions stay enabled to decrypt existing tokens), is protected from Terraform destroy, and only the inbox service account can encrypt or decrypt with it. Without a KMS key name the inbox refuses to start in Firestore mode, so tokens are never stored unsealed.
-- **Minimal email data.** Only the company, role, status, date, Gmail message and thread IDs, and the subject line are stored. Email bodies are never fetched (only `format=metadata` plus Gmail's snippet), and the snippet is used for parsing only, not stored.
+- **Firestore** has delete protection enabled. The web app never talks to Firestore; all access goes through the services' service accounts, which bypass security rules. Terraform (`modules/auth`) deploys rules that deny every read and write from client SDKs, so even someone holding the public Firebase config cannot reach the database directly.
+- **Google Calendar refresh tokens** are encrypted with Cloud KMS before storage, with the user ID as additional authenticated data, so a sealed token copied onto another user's record fails to decrypt. The key (`gmail-refresh-tokens`, named before Gmail was retired) rotates every 90 days (old versions stay enabled to decrypt existing tokens), is protected from Terraform destroy, and only the inbox service account can encrypt or decrypt with it. Without a KMS key name the inbox refuses to start in Firestore mode, so tokens are never stored unsealed.
+- **Minimal calendar data.** Events are read live when the tracker opens and never stored. Only each event's ID, title, link, times, and guest addresses are requested (never descriptions or attachments), and guests leave the inbox only as email domains. What is stored is what the user chooses to add to a round: the interview's title, times, and calendar event ID.
+- **Retired Gmail data.** The Gmail import has been removed. Applications it imported stay as ordinary applications. Gmail connections saved earlier (`gmail_connections` in Firestore, with sealed tokens) are no longer read; delete that collection, and remove Unhurried's Gmail access at myaccount.google.com/permissions.
 - **Extension data.** The user's contact details for form filling stay in `chrome.storage.local` in their browser. Portal passwords are never collected.
 - **Terraform state** is in a versioned Cloud Storage bucket in the same project.
 
-## Gmail connection
+## Google Calendar connection
 
 | Control | Detail |
 | --- | --- |
-| Least scope | `https://www.googleapis.com/auth/gmail.readonly` only |
+| Least scope | `https://www.googleapis.com/auth/calendar.events.readonly` (view events, no changes) and `userinfo.email` (to show which account is connected). Google classifies the calendar scope as sensitive, not restricted |
 | Authorization code flow with PKCE | S256 code challenge; the verifier never leaves the server |
 | State | 32 random bytes; only its SHA-256 hash is stored; bound to the user who started the flow; expires after 10 minutes; deleted on first use (Firestore transaction), so a replayed or stolen callback fails |
-| Scope check | If the user unticked Gmail on Google's consent screen, the partial grant is revoked and nothing is stored |
+| Scope check | If the user unticked the calendar on Google's consent screen, nothing is stored. The partial grant is not revoked, because that would also end Drive access granted to the same OAuth client |
 | Server-side exchange | The browser only relays the code; tokens are never sent to or stored in the browser |
-| Expired or revoked access | Detected (`invalid_grant`, 401/403) and shown as "Reconnect Gmail"; the scheduled poll skips such connections |
-| Disconnect | Revokes the refresh token at Google and deletes the connection |
-| Client secret | In Secret Manager, readable only by the inbox service account, injected by reference |
+| Expired or revoked access | Detected (`invalid_grant`, 401/403) and shown as "Reconnect Google Calendar"; Google is not called again until the user reconnects |
+| User confirms every link | Events that look like interviews are only suggestions; nothing is added to a round until the user picks the application and round |
+| Disconnect | Deletes the connection and its sealed token, without revoking at Google for the same reason as Drive; myaccount.google.com/permissions removes all access |
+| Client secret | In Secret Manager, readable only by the inbox and resume service accounts, injected by reference |
 
-While the OAuth consent screen is in Testing mode, Google limits access to listed test users and expires Gmail refresh tokens after 7 days.
+While the OAuth consent screen is in Testing mode, Google limits access to listed test users and expires refresh tokens after 7 days.
 
 ## Google Drive (resumes)
 
@@ -115,16 +116,18 @@ While the OAuth consent screen is in Testing mode, Google limits access to liste
 | --- | --- |
 | Least scope | `https://www.googleapis.com/auth/drive.file` only: the service can reach files it created and files the user picked in Google Picker, never the rest of the Drive. Google classifies it as non-sensitive |
 | Resumes stay with the user | Documents live in an "Unhurried resumes" folder in the user's own Drive; Firestore keeps only the title, role, document ID, and link |
-| Same OAuth protections as Gmail | PKCE (S256), single-use hashed state bound to the user with a 10-minute expiry, scope check, server-side code exchange |
-| Sealed refresh token | Cloud KMS key `docs-refresh-tokens`, separate from Gmail's, with the user ID as additional authenticated data; only the resume service account can use it; required in Firestore mode |
+| Same OAuth protections as Google Calendar | PKCE (S256), single-use hashed state bound to the user with a 10-minute expiry, scope check, server-side code exchange |
+| Sealed refresh token | Cloud KMS key `docs-refresh-tokens`, separate from the Calendar key, with the user ID as additional authenticated data; only the resume service account can use it; required in Firestore mode |
 | Picker token | Google Picker runs in the browser and needs an access token, so `POST /v1/docs/picker-token` returns a short-lived (about one hour) `drive.file` token. It carries no more access than the service already has and is never stored by the web app |
 | Input checks | The picked file ID must match `^[A-Za-z0-9_-]{10,200}$` and be a Google Doc that is not in the trash; edits are capped at 20 per request, 500 characters to find, 2,000 to replace |
 | Deleting | "Move to trash" uses Drive's trash, so the user can restore a resume for 30 days |
-| Disconnect | Deletes the stored token without revoking it at Google, because revocation would also end Gmail access granted to the same OAuth client; myaccount.google.com/permissions removes all access |
+| Disconnect | Deletes the stored token without revoking it at Google, because revocation would also end Google Calendar access granted to the same OAuth client; myaccount.google.com/permissions removes all access |
 
 ## Browser and frontend
 
 - **Hosting headers** (`firebase.json`): `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy: camera=(), microphone=(), geolocation=()`. HTTPS is enforced by Firebase Hosting, with automatic certificates for the custom domain.
+- **Content-Security-Policy**: scripts only from the site itself, `apis.google.com` (Google sign-in and Picker), and `www.google.com` / `www.gstatic.com` (reCAPTCHA Enterprise), with no inline or `eval` script; network calls only to the site, `*.googleapis.com`, the API gateways (`*.gateway.dev`), and reCAPTCHA; frames only from the Firebase sign-in domain (`*.firebaseapp.com`), reCAPTCHA, Google Picker (`docs.google.com`, `drive.google.com`), and `accounts.google.com`; `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`, `frame-ancestors 'none'`, `upgrade-insecure-requests`. Styles allow `'unsafe-inline'` because reCAPTCHA and Picker inject inline styles. `src/hosting.test.ts` checks every directive.
+- **One address**: production builds set `VITE_CANONICAL_ORIGIN=https://unhurried-careers.com`, and the app moves any other host (Firebase's built-in `unhurried-careers.web.app` and `.firebaseapp.com` addresses) to the same path on the custom domain before it starts. Firebase's own sign-in handler on `firebaseapp.com` is served by Firebase, not the app, so sign-in is unaffected.
 - **Caching**: `index.html` and routes are `no-cache` so security fixes reach users on the next load; hashed assets are immutable.
 - **Public configuration only**: the Firebase web config, browser API key, and reCAPTCHA site key are in the bundle by design. Their protection is restriction (domains, APIs, App Check), not secrecy. The deploy pipeline verifies the bundle contains no `localhost` URLs.
 - **Extension bridge** (`src/extensionBridge.ts`): answers only messages from the same window and origin, on its own channel, for five named operations; anything else is rejected. It requires the user to be signed in.
@@ -143,7 +146,7 @@ While the OAuth consent screen is in Testing mode, Google limits access to liste
 | --- | --- | --- |
 | Google OAuth client secret | Secret Manager `unhurried-gmail-oauth-client-secret`; Identity Platform config; Terraform state; GitHub `PRODUCTION_GOOGLE_OAUTH_CLIENT_SECRET`; local gitignored `envs/prod/terraform.tfvars` | Inbox and resume service accounts; project owners; the Terraform pipeline |
 | Web build configuration (includes the browser API key) | Secret Manager `unhurried-web-build-config` | Web deployer service account |
-| Gmail refresh tokens (per user) | Firestore, sealed with Cloud KMS | Inbox service account (decrypt) |
+| Google Calendar refresh tokens (per user) | Firestore, sealed with Cloud KMS | Inbox service account (decrypt) |
 | Google Drive refresh tokens (per user) | Firestore, sealed with a separate Cloud KMS key | Resume service account (decrypt) |
 | Cross-repo checkout token | GitHub `UNHURRIED_REPOS_TOKEN` | CI jobs |
 | SMTP relay password (alert emails) | Secret Manager `unhurried-smtp-password` (only once `smtp_password` is set); Terraform state; GitHub `PRODUCTION_SMTP_PASSWORD` | Notifications service account; project owners; the Terraform pipeline |
@@ -176,10 +179,7 @@ Everything else needs no stored secret: services reach Google APIs as their serv
 | Free GitHub plan: no branch protection or required reviewers, so anyone with write access to `main` deploys to production | Upgrade the organization to GitHub Team and require pull requests and reviews on `main`; add a `production` environment with required reviewers to the deploy jobs |
 | `unhurried-terraform` has project owner | Replace with a custom role or a list of admin roles once the resource set is stable; consider a read-only identity for plans |
 | The OAuth client secret is also in Terraform state and GitHub | Treat state-bucket access as secret access; consider creating the secret version out of band and reading it with a data source |
-| `allow_new_signups` is still `true` in production | Set it to `false` and apply now that the owner has signed in |
-| No Firestore security rules are deployed, so the database's default rules apply to any client SDK access | Deploy explicit deny-all rules (`google_firebaserules_ruleset` and release); the services are unaffected because service accounts bypass rules |
-| No Content-Security-Policy header | Add a CSP to `firebase.json` that allows only self, Google sign-in, reCAPTCHA, and the gateway hosts |
-| `unhurried-careers.web.app` still serves production | Redirect it to `unhurried-careers.com` in the app, or drop it from CORS and API key referrers once the custom domain is the only entry point |
 | `UNHURRIED_REPOS_TOKEN` is a long-lived token | Replace it with a GitHub App installation token or a fine-grained token limited to read access on these repositories, with an expiry |
-| Consent screen in Testing mode | Keep it while usage is personal (limits access to test users); publishing requires Google's verification for the restricted Gmail scope |
+| Consent screen in Testing mode | Keep it while usage is personal (limits access to test users); publishing requires Google's verification for the sensitive Calendar scope (lighter than the restricted-scope security assessment Gmail would have needed) |
+| Old Gmail connections still in Firestore | Delete the `gmail_connections` and `gmail_oauth_states` collections after deploying, and remove Unhurried's Gmail grant at myaccount.google.com/permissions |
 | Unused placeholder secrets and Pub/Sub topics | Remove them, or wire them with the features that need them |
