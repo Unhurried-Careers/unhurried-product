@@ -11,6 +11,7 @@ What is fully working in production today, what is partial, and what is not buil
 | Saved searches and opportunities | Partial, not persisted | Adzuna and USAJobs are skipped until their API keys are configured; Greenhouse/Lever single-company search via environment variables; in memory |
 | Shortlist, reasons, five-role limit | Working | Firestore |
 | Outreach kit and contact tracker | Working | Firestore; LinkedIn searches are links the user opens, no scraping |
+| Google invites | Working | Firestore; who the user reached out to at each company, invite status, what they learned, and when to reach out again. Prefills Google Calendar invites and reminders the user sends from their own calendar; no Calendar API access |
 | Apply from the shortlist | Working | Creates the application in Firestore |
 | Chrome extension form filling and submit recording | Working | Loaded unpacked; Greenhouse, Lever, Workday, Ashby |
 | Application tracker | Working | Firestore; shortlist and Gmail applications, timeline, review queue |
@@ -29,7 +30,7 @@ What is fully working in production today, what is partial, and what is not buil
 | Staging environment | Branches and configuration ready; project, OAuth client, reCAPTCHA key, and first apply pending; deploy jobs switched off |
 | CI on every repository | Working |
 | Deploys from `main` (services, web, Terraform) | Working, keyless |
-| Firestore persistence | applications, inbox (Gmail), and resume |
+| Firestore persistence | applications (including Google invites), inbox (Gmail), and resume |
 
 ## Known gaps
 

@@ -172,6 +172,7 @@ Shared types live in `unhurried-common/models`. Where data is stored today:
 | --- | --- | --- | --- |
 | Shortlist (pursuits) | applications | Firestore | `pursuits` |
 | Outreach contacts | applications | Firestore | `contacts` |
+| Google invites (person, company, meeting, learnings, reach-out date) | applications | Firestore | `invites` |
 | Applications | applications | Firestore | `applications` |
 | Application timeline | applications | Firestore | `application_events` |
 | Gmail connections (sealed refresh token, sync cursor, counters) | inbox | Firestore | `gmail_connections` (document ID = user ID) |
@@ -190,6 +191,7 @@ Key fields:
 
 - **Pursuit**: job, company, title, URL, `whyRole`, `whyCompany` (each at least 30 characters), `fitNotes`, status (`researching`, `reaching_out`, `ready_to_apply`, `applied`, `dropped`), linked application.
 - **Application**: company, role, `origin` (`shortlist` or `gmail`), status (`draft`, `submitted`, `viewed`, `interview`, `rejected`, `offer`, `no_response`), ATS, tracking portal URL and username, `needsReview`, `confidence`, Gmail `threadId`, `submittedAt`, `lastEventAt`.
+- **Invite**: company, optional linked pursuit, person (name, title, email, LinkedIn), subject, agenda, `startsAt`, `durationMinutes`, status (`planned`, `sent`, `accepted`, `declined`, `met`, `no_response`), `learnings`, `nextReachOut` (date) and note.
 - **ApplicationEvent**: kind (a status), source (`extension`, `gmail`, ...), summary, `rawMessageId` (Gmail message ID, used for deduplication), time.
 
 ## Technology
