@@ -1,0 +1,271 @@
+# Codebase guide
+
+The system is split into 10 repositories in the [Unhurried-Careers](https://github.com/Unhurried-Careers) organization. Locally they sit side by side in one `Unhurried/` folder, because the Go services import `unhurried-common` through a relative `replace github.com/unhurried/common => ../unhurried-common` in `go.mod`.
+
+| Repository | Language | Purpose |
+| --- | --- | --- |
+| [unhurried-common](#unhurried-common) | Go | Shared library: auth, HTTP hardening, validation, models, IDs |
+| [unhurried-job-search](#unhurried-job-search) | Go | Saved searches, job boards, company watchlist |
+| [unhurried-resume](#unhurried-resume) | Go | Resume records, tailoring and tweak requests, LinkedIn text import |
+| [unhurried-applications](#unhurried-applications) | Go | Shortlist, outreach kit, applications, Gmail imports, extension API |
+| [unhurried-notifications](#unhurried-notifications) | Go | Email/SMS preferences and the notify hook |
+| [unhurried-inbox](#unhurried-inbox) | Go | Gmail connection and import, mail classification, interview slots |
+| [unhurried-web](#unhurried-web) | TypeScript | React single-page app |
+| [unhurried-extension](#unhurried-extension) | JavaScript | Chrome apply assistant |
+| [unhurried-infra](#unhurried-infra) | Terraform | All cloud resources, gateway specs, CI/CD identities |
+| unhurried-product | Markdown | Product README, motivation, and this documentation |
+
+## Conventions shared by the Go services
+
+Every service has the same shape:
+
+```
+cmd/server/main.go        wiring: store selection, config, httpx.Serve
+internal/api/             routes and handlers (one Server struct)
+internal/store/           persistence (memory and, where implemented, Firestore)
+internal/<domain>/        domain logic (boards, outreach, classify, mailsync, ...)
+openapi.yaml              Swagger 2.0 spec for the service's API Gateway
+Dockerfile                multi-stage build; context is the parent folder
+.github/workflows/ci.yml  checks, image build, deploy
+```
+
+- **Routing** uses Go 1.22+ `http.ServeMux` method patterns (`"POST /v1/pursuits/{id}/apply"`).
+- **Middleware** is applied in `Routes()`: `httpx.CORS(httpx.Recover(httpx.Harden(httpx.AccessLog(auth.Middleware(mux)))))`.
+- **Handlers** decode with `httpx.DecodeOrReject` (400 on bad JSON, 413 over 1 MiB), validate with `validate.Errors`, read the caller with `auth.FromContext`, and answer with `httpx.JSON`, `httpx.Error`, or `httpx.ServerError` (logs the cause, returns a generic message).
+- **Ownership**: every user-facing lookup takes the caller's user ID; another user's record answers 404, not 403, so IDs cannot be probed.
+- **Health**: `GET /health` (used by CI smoke tests and gateways) and `GET /healthz` (kept for local runs; Cloud Run reserves `/healthz`). Both skip auth.
+- **Ports** locally: job-search 8081, resume 8082, applications 8083, notifications 8084, inbox 8085. Containers listen on `PORT=8080`.
+
+### Common environment variables
+
+Read by `unhurried-common/auth` and `httpx` in every service:
+
+| Variable | Meaning |
+| --- | --- |
+| `AUTH_DEV_BYPASS=true` | Local only: accept `user:<id>` tokens, skip App Check and internal-caller checks |
+| `FIREBASE_PROJECT_ID` / `PROJECT_ID` | Project whose Firebase ID tokens are accepted |
+| `ALLOWED_EMAILS` | Comma-separated Google accounts allowed in; required, the service refuses to start without it |
+| `APPCHECK_REQUIRED=true` + `FIREBASE_PROJECT_NUMBER` | Require a valid App Check token |
+| `INTERNAL_AUDIENCE` | Audience expected on `/internal/*` OIDC tokens (`unhurried-internal`) |
+| `INTERNAL_CALLERS` | Service accounts allowed on `/internal/*`; empty rejects all internal calls |
+| `CORS_ALLOWED_ORIGINS` | Browser origins allowed; defaults to the local Vite server |
+| `STORE=firestore` | Use Firestore where the service supports it (applications, inbox) |
+| `PORT` | Listen port |
+
+Terraform sets all of these on Cloud Run (`envs/<env>/main.tf`, `local.commons`).
+
+## unhurried-common
+
+```
+auth/auth.go        Guard, Middleware, FromEnv, Principal, request token extraction
+auth/firebase.go    Firebase ID token verification
+auth/appcheck.go    App Check token verification
+auth/internal.go    Google OIDC verification for /internal/* callers
+auth/allowlist.go   Wraps a verifier and admits only listed, verified emails
+auth/jwt.go         RS256 verification, Google key fetching and caching
+httpx/httpx.go      JSON helpers, CORS, Harden, Recover, AccessLog, Serve with timeouts
+validate/           Field validation (Required, MaxLen, MinLen, OneOf, HTTPSURL, URLHost, Email, Phone, Range, List, Pattern)
+models/models.go    Shared types: User, JobCriteria, Job, WatchedCompany, Pursuit, Contact, ResumeDoc, Application, ApplicationEvent, MailFinding, Interview, NotifyMessage
+ids/ids.go          Random UUIDs
+topics/topics.go    Pub/Sub topic names
+```
+
+**How auth decides** (`auth.Wrap`):
+
+1. `/health`, `/healthz`, and `OPTIONS` pass through.
+2. `/internal/*`: the `Authorization` bearer token must be a Google-signed OIDC token with issuer `accounts.google.com`, audience `INTERNAL_AUDIENCE`, a verified email in `INTERNAL_CALLERS`, and valid times.
+3. Everything else: App Check (when required), then the Firebase ID token from `X-Forwarded-Authorization` (set by API Gateway) or `Authorization` (direct calls), then the allowlist. The principal (user ID, email, name) goes into the request context.
+
+**Token verification** (`jwt.go`) implements RS256 by hand on the standard library: it accepts only `alg: RS256` with a key ID, fetches Google's public keys (x509 for Firebase, JWKS for App Check and OIDC), caches them for the `Cache-Control: max-age` Google returns, and checks `exp`/`iat` with one minute of clock skew. Firebase tokens additionally must have audience = project ID, issuer `https://securetoken.google.com/<project>`, a 1 to 128 character subject, and `auth_time` not in the future.
+
+## unhurried-job-search
+
+```
+internal/api/       criteria, jobs, scans, watchlist handlers
+internal/boards/    board clients: Adzuna, USAJobs, Greenhouse, Lever, Ashby
+internal/store/     in-memory store
+```
+
+| Endpoint | Purpose |
+| --- | --- |
+| `GET/POST /v1/criteria` | List or save search criteria (titles, locations, keywords, remote, minimum salary, boards) |
+| `GET /v1/jobs` | Jobs found for the user, newest first |
+| `POST /v1/scan` | Run the user's saved searches now |
+| `GET/POST /v1/watchlist`, `DELETE /v1/watchlist/{id}` | Followed companies: name, written reason, ATS (`greenhouse`, `lever`, `ashby`), board token, title keywords; at most 50 per user |
+| `POST /v1/scan/watchlist` | Check every watched company's public board now |
+| `POST /internal/scan` | Scheduler entry point (every 30 minutes) |
+
+Board clients only call fixed hosts (`boards-api.greenhouse.io`, `api.lever.co`, `api.ashbyhq.com`, Adzuna, USAJobs) with a 15-second timeout and a 10 MiB response cap. Board tokens must match `^[A-Za-z0-9._-]{1,100}$`, so user input cannot redirect requests elsewhere.
+
+Configuration: `ADZUNA_APP_ID`, `ADZUNA_APP_KEY`, `USAJOBS_API_KEY`, `USAJOBS_EMAIL` (each board is skipped when unset), `GREENHOUSE_BOARD`, `LEVER_COMPANY` (single-company searches).
+
+## unhurried-resume
+
+```
+internal/api/         resume handlers
+internal/docsclient/  Google Docs/Drive client (synthetic document IDs today) and the tailoring prompt
+internal/store/       in-memory store
+```
+
+| Endpoint | Purpose |
+| --- | --- |
+| `GET /v1/resumes` | The user's resume documents |
+| `POST /v1/resumes/from-scratch` | Create a new document |
+| `POST /v1/resumes/from-master` | Copy a master document (or `DEFAULT_MASTER_DOC`) |
+| `POST /v1/resumes/{id}/tailor` | Tailor to a role (title, company, description up to 20,000 characters, master text up to 50,000, focus skill) |
+| `POST /v1/resumes/{id}/tweak` | Apply a prompt-based change with a focus skill |
+| `POST /v1/linkedin/import` | Store pasted LinkedIn profile text for tailoring |
+
+`docsclient.TailorPrompt` builds the model prompt from the LinkedIn text, master resume, and job; the model call and real Docs API calls are not wired yet (see [status](status.md)).
+
+## unhurried-applications
+
+```
+internal/api/api.go        applications, extension endpoints, internal events
+internal/api/pursuits.go   shortlist and contacts
+internal/api/imports.go    Gmail import matching
+internal/outreach/         outreach kit text and LinkedIn search links
+internal/store/            Store interface; Memory and Firestore implementations
+```
+
+| Endpoint | Purpose |
+| --- | --- |
+| `GET/POST /v1/pursuits` | List (with active count and limit) or add a shortlisted role |
+| `GET/PATCH /v1/pursuits/{id}` | Read with contacts, or edit reasons and status |
+| `GET /v1/pursuits/{id}/outreach?name=` | Outreach kit |
+| `POST /v1/pursuits/{id}/contacts`, `PATCH .../contacts/{contactId}` | Track people contacted (at most 20 per role; LinkedIn URLs must be on linkedin.com) |
+| `POST /v1/pursuits/{id}/apply` | Create the application; the only way a user creates one |
+| `GET /v1/applications`, `GET /v1/applications/{id}` | Tracker list (most recent first) and detail with timeline |
+| `POST /v1/applications/{id}/confirm` | Accept an imported application, optionally correcting company and role |
+| `DELETE /v1/applications/{id}` | Dismiss an imported application (Gmail origin only) |
+| `GET /v1/applications/{id}/fill-payload` | Data the extension fills into a form |
+| `POST /v1/applications/{id}/submit` | Record a submit; requires `confirmed: true` and an https page URL |
+| `POST /v1/applications/{id}/tracking` | Save the employer portal URL, username, notes |
+| `POST /internal/events` | Add a status event to an application |
+| `POST /internal/imports` | Record a Gmail finding (inbox service only) |
+
+Rules the service enforces:
+
+- **Shortlist**: at most `MAX_ACTIVE_PURSUITS` (default 5) active roles; `whyRole` and `whyCompany` at least 30 characters; one pursuit per job; applied roles cannot be edited.
+- **Imports** (`imports.go`): each Gmail message is applied once (`HasMessage`). A finding matches an application by Gmail thread, then by normalized company (case, punctuation, and suffixes like Inc/LLC/Corp removed) plus role. Status only changes when the email is at least as new as the last event, so importing older mail later cannot roll a status back. New applications below 0.7 confidence are flagged `needsReview`.
+
+## unhurried-notifications
+
+| Endpoint | Purpose |
+| --- | --- |
+| `GET/PUT /v1/preferences` | Email and SMS switches and destinations (email and phone validated when enabled) |
+| `POST /internal/notify` | Deliver a message by preference or channel |
+
+Delivery is logged rather than sent today, and no service is allowed to call `/internal/notify` yet (see [status](status.md)). `TWILIO_TOKEN` gates the SMS path.
+
+## unhurried-inbox
+
+```
+internal/api/api.go      classify and interview handlers
+internal/api/gmail.go    Gmail connection handlers and the scheduled poll
+internal/classify/       status rules and the email parser (company, role, ATS, confidence)
+internal/gmail/          minimal read-only Gmail REST client and search query
+internal/mailsync/       OAuth (PKCE), sealing, backfill and incremental sync, import client
+internal/seal/           Cloud KMS sealer and a local AES-GCM sealer for development
+internal/store/          Gmail connections and OAuth state: Memory and Firestore
+internal/cal/            interview slot proposals
+```
+
+| Endpoint | Purpose |
+| --- | --- |
+| `GET /v1/gmail/status` | Connected mailbox, progress, last sync, errors, whether a reconnect is needed |
+| `POST /v1/gmail/connect` | Start OAuth; returns Google's consent URL |
+| `POST /v1/gmail/callback` | Finish OAuth with `code` and `state` from the web callback page |
+| `POST /v1/gmail/sync` | Run one sync pass (the web app loops this during the first import) |
+| `POST /v1/gmail/disconnect` | Revoke Google access and delete the connection; imported applications stay |
+| `POST /v1/mail/classify` | Classify a subject/body into a status (testing and tooling) |
+| `GET /v1/interviews`, `POST /v1/interviews/propose`, `POST /v1/interviews/{id}/confirm` | Propose five one-hour slots avoiding busy periods, starting a day out; confirm one |
+| `POST /internal/poll` | Scheduler entry point: one sync pass per active connection (1 minute each) |
+
+**Sync**: the search query combines ATS sender domains (Greenhouse, Lever, Ashby, Workday, SmartRecruiters, iCIMS, Jobvite, Workable, LinkedIn) with application-style subjects, excluding Promotions and Social. The first passes walk the past 365 days one page (100 messages) at a time, storing the page token; after that each pass searches mail since the previous pass minus an hour (up to 500 messages). Four workers fetch metadata in parallel. The cursor only advances when every message in the pass succeeded; reprocessing is safe because imports are deduplicated.
+
+**Parsing** (`classify.Parse`): newsletters and job alerts are skipped; status rules check rejections first, then offers, then interviews (strict phrases outside the subject), then "viewed", then "submitted". Company and role come from subject patterns, then the snippet, then the sender's display name (or the Workday tenant). Confidence starts at 0.3 and adds 0.3 for an ATS sender, 0.3/0.25/0.15 for company from subject/snippet/sender, and 0.05 for a role, capped at 0.95.
+
+Configuration: `GMAIL_OAUTH_CLIENT_ID`, `GMAIL_OAUTH_CLIENT_SECRET` (from Secret Manager), `GMAIL_REDIRECT_URL`, `KMS_KEY_NAME` (required with Firestore), `APPLICATIONS_INTERNAL_URL`. Without a client ID the Gmail routes answer 503 and the poll is a no-op.
+
+## unhurried-web
+
+```
+src/main.tsx              mounts the app, installs the extension bridge
+src/Root.tsx              routes: / (Home) and /app/* (App)
+src/App.tsx               signed-in shell: navigation and pages
+src/auth.tsx              auth context (Firebase or dev mode)
+src/firebase.ts           Firebase app, Google provider, App Check, token helpers
+src/api.ts                typed API clients; adds ID token, App Check token, API key
+src/extensionBridge.ts    answers the extension's relayed requests
+src/paths.ts              route constants
+src/lib/boards.ts         detects ATS and board token from a careers URL
+src/pages/                Home, SignIn, Jobs, Watchlist, Shortlist (with outreach), Criteria,
+                          ResumeStudio, Tracker (+ GmailPanel), GmailCallback, Interviews, Settings
+firebase.json             Hosting: SPA rewrite, caching, security headers
+.firebaserc               staging/production aliases and Hosting targets
+```
+
+| Route | Page |
+| --- | --- |
+| `/` | Public homepage; no API calls; Sign in / Open app at top right |
+| `/app` | Opportunities (jobs found) |
+| `/app/watchlist`, `/app/shortlist`, `/app/criteria`, `/app/resume` | Watchlist, shortlist and outreach, search criteria, resume studio |
+| `/app/applications` | Tracker: Gmail panel, review queue, in-progress and closed applications |
+| `/app/gmail/callback` | Google returns here after Gmail consent; posts the code once, then returns to the tracker |
+| `/app/interviews`, `/app/alerts` | Interview slots, notification settings |
+
+Signed-out visitors to `/app/*` see the sign-in screen (popup with `prompt=select_account`). Build-time configuration is `VITE_*` variables (`.env.example`); deployed builds read them from the `unhurried-web-build-config` secret. `VITE_AUTH_MODE=dev` with `VITE_TOKEN=user:<id>` works against services running with `AUTH_DEV_BYPASS=true`.
+
+## unhurried-extension
+
+```
+manifest.json   MV3: storage, activeTab, scripting; host access to the Unhurried web app only
+content.js      form filler for Greenhouse, Lever, Workday, Ashby
+bridge.js       content script on the Unhurried web app; relays requests to extensionBridge.ts
+background.js   service worker: finds or opens an Unhurried tab, relays five operations
+popup.html/js   choose the application, fill the page, record the submit, save portal details, settings
+build.mjs       copies the files into dist/
+```
+
+The extension holds no tokens: requests go popup → background → `bridge.js` in a signed-in Unhurried tab → `window.postMessage` → `extensionBridge.ts`, which calls the API with the page's own credentials. The filler skips files, passwords, hidden fields, checkboxes, free-text questions, and fields the user already filled, and never submits.
+
+## unhurried-infra
+
+```
+modules/service    Cloud Run service, its service account, API Gateway API/config/gateway, gateway invoker binding
+modules/data       Firestore, Pub/Sub topics, Scheduler jobs, placeholder secrets, Artifact Registry
+modules/auth       Firebase project, Identity Platform config, Google provider, web app, App Check
+modules/hosting    Hosting site, custom domain and redirects, web deployer service account
+modules/gmail      Gmail and KMS APIs, token key, OAuth client secret, inbox access
+modules/cicd       Workload identity pool/provider, deploy service accounts, web build config secret
+envs/prod          Production root module (main), settings.auto.tfvars
+envs/staging       Staging root module (staging), settings.auto.tfvars with placeholders
+gateway-specs/     Copies of each service's openapi.yaml used by API Gateway
+tools/             check-specs.mjs: gateway spec linter (see CI/CD)
+```
+
+Both environment folders contain identical `main.tf`, `variables.tf`, and `versions.tf`; only `settings.auto.tfvars` and the backend prefix differ. The single secret input, `google_oauth_client_secret`, comes from a gitignored `terraform.tfvars` locally or `TF_VAR_google_oauth_client_secret` in CI. `cloudbuild.yaml` and `firestore.indexes.json` are unused leftovers.
+
+## Local development
+
+```powershell
+$env:AUTH_DEV_BYPASS = "true"; $env:STORE = "memory"
+$env:PORT = "8081"; go -C unhurried-job-search run ./cmd/server
+$env:PORT = "8082"; go -C unhurried-resume run ./cmd/server
+$env:PORT = "8083"; go -C unhurried-applications run ./cmd/server
+$env:PORT = "8084"; go -C unhurried-notifications run ./cmd/server
+$env:PORT = "8085"; go -C unhurried-inbox run ./cmd/server
+cd unhurried-web; npm ci; npm run dev   # .env.local with VITE_AUTH_MODE=dev
+```
+
+Gmail works locally when `GMAIL_OAUTH_CLIENT_ID`/`SECRET` and `GMAIL_REDIRECT_URL=http://localhost:5173/app/gmail/callback` are set; connections then live in memory and tokens are sealed with a per-process key.
+
+## Tests
+
+| Repo | Command | What is covered |
+| --- | --- | --- |
+| Go services, common | `go test ./...` (CI adds `-race` and coverage) | Handlers through `httptest`, ownership scoping, validation, auth verifiers with test keys, board clients against local servers, Gmail OAuth and sync against a fake Google, parser cases, import matching, store contract (memory; Firestore when `FIRESTORE_EMULATOR_HOST` is set) |
+| unhurried-web | `npm test`, `npm run test:coverage` | Pages, API client headers and paths, auth, Firebase config, Hosting config, extension bridge; thresholds 85% lines, 75% branches |
+| unhurried-extension | `npm test`, `npm run test:coverage` | Filler, bridge, popup, background relay, manifest permissions; 90% line threshold |
+| unhurried-infra | `terraform -chdir=<dir> test` | Every module and both environments with mocked providers: IAM bindings, deploy restrictions, key restrictions, internal audiences, custom domain wiring, Gmail wiring |
