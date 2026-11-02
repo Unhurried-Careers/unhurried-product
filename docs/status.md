@@ -11,7 +11,7 @@ What is fully working in production today, what is partial, and what is not buil
 | Saved searches and opportunities | Partial, not persisted | Adzuna and USAJobs are skipped until their API keys are configured; Greenhouse/Lever single-company search via environment variables; in memory |
 | Shortlist, reasons, five-role limit | Working | Firestore |
 | Outreach kit and contact tracker | Working | Firestore; LinkedIn searches are links the user opens, no scraping |
-| Google invites | Working | Firestore; who the user asked for their time at each company, whether they agreed, the meeting time, what the user learned, and when to reach out again. Drafts the ask, then (once they agree) a message with the user's Google Calendar booking page or asking them to send an invite. The user sends every message; no Calendar API access |
+| Conversations | Working | Firestore; who the user asked for their time at each company, whether they agreed, the meeting time, what the user learned, and when to reach out again. Drafts the ask, then (once they agree) a message with the user's Google Calendar booking page or asking them to send an invite. The user sends every message; no Calendar API access |
 | Apply from the shortlist | Working | Creates the application in Firestore |
 | Chrome extension form filling and submit recording | Working | Loaded unpacked; Greenhouse, Lever, Workday, Ashby |
 | Application tracker | Working | Firestore; the user sets each status; timeline; interview rounds with interviews held and scheduled, skills to show and shown, learnings about the company, notes, and a prep checklist; "prepare for the next round" summary |
@@ -31,7 +31,7 @@ What is fully working in production today, what is partial, and what is not buil
 | Staging environment | Branches and configuration ready; project, OAuth client, reCAPTCHA key, and first apply pending; deploy jobs switched off |
 | CI on every repository | Working |
 | Deploys from `main` (services, web, Terraform) | Working, keyless |
-| Firestore persistence | applications (including Google invites and interview rounds), inbox (Google Calendar connections), and resume |
+| Firestore persistence | applications (including Conversations and interview rounds), inbox (Google Calendar connections), and resume |
 
 ## Known gaps
 

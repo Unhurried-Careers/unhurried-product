@@ -172,8 +172,8 @@ Shared types live in `unhurried-common/models`. Where data is stored today:
 | --- | --- | --- | --- |
 | Shortlist (pursuits) | applications | Firestore | `pursuits` |
 | Outreach contacts | applications | Firestore | `contacts` |
-| Google invites (person, company, ask, meeting, learnings, reach-out date) | applications | Firestore | `invites` |
-| Google invite settings (booking page link, availability) | applications | Firestore | `invite_settings` (document ID = user ID) |
+| Conversations, stored as invites (person, company, ask, meeting, learnings, reach-out date) | applications | Firestore | `invites` |
+| Conversation settings (booking page link, availability) | applications | Firestore | `invite_settings` (document ID = user ID) |
 | Applications | applications | Firestore | `applications` |
 | Application timeline | applications | Firestore | `application_events` |
 | Gmail connections (sealed refresh token, sync cursor, counters) | inbox | Firestore | `gmail_connections` (document ID = user ID) |
