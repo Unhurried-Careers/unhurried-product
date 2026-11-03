@@ -162,7 +162,7 @@ Each environment is a separate Google Cloud project created from the same Terraf
 | Identity Platform | Google provider only; email/password and phone disabled; signup switch; user deletion disabled |
 | Firebase | Web app, App Check (reCAPTCHA Enterprise), Hosting site and custom domains |
 | API key | `unhurried-web` browser key, restricted to the site's domains and the five gateways |
-| CI/CD (Cloud Build + Cloud Deploy) | 2nd-gen GitHub connection & triggers, Cloud Deploy custom target + 5 delivery pipelines, `<project>-cicd-artifacts` bucket, `unhurried-ci`, `unhurried-builder`, `unhurried-deployer`, `unhurried-web-deployer`, `unhurried-terraform` |
+| CD (Cloud Build + Cloud Deploy) | 2nd-gen GitHub connection & branch deploy triggers, Cloud Deploy custom target + 5 delivery pipelines, `<project>-cicd-artifacts` bucket, `unhurried-builder`, `unhurried-deployer`, `unhurried-web-deployer`, `unhurried-terraform` |
 
 ## Data model and persistence
 
@@ -205,4 +205,4 @@ Key fields:
 | Extension | Plain JavaScript, Manifest V3, built with a small Node script |
 | Tests | Go `testing` with `httptest`; Vitest + Testing Library (web, jsdom); Vitest (extension); Terraform `terraform test` with mocked providers |
 | Infrastructure | Terraform 1.16, `hashicorp/google` and `google-beta` ~> 6.0, GCS backend |
-| CI/CD | Google Cloud Build (2nd-gen GitHub triggers) + Google Cloud Deploy + Cloud Scheduler nightly checks |
+| CI/CD | GitHub Actions (pure CI on PRs, pushes & daily cron) + Google Cloud Build & Google Cloud Deploy (pure CD on `staging`/`main`) |

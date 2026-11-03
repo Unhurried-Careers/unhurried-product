@@ -8,7 +8,7 @@ This folder is the reference for how the system is built, delivered, and secured
 | --- | --- |
 | [Architecture](architecture.md) | The three tiers, how a request travels from the browser to Firestore, the environments, and where each kind of data lives |
 | [Codebase guide](codebase.md) | Every repository: layout, packages, API endpoints, configuration, local development, and tests |
-| [CI/CD](ci-cd.md) | Branches and environments, what Cloud Build and Google Cloud Deploy check and roll out, least-privilege service accounts, and operational runbooks |
+| [CI/CD](ci-cd.md) | Branches and environments, GitHub Actions CI checks, Google Cloud Build & Cloud Deploy CD rollouts, least-privilege service accounts, secrets, and operational runbooks |
 | [Security](security.md) | The threat model and every control, layer by layer: identity, API protection, service-to-service trust, data, secrets, Gmail, the extension, supply chain, and CI/CD |
 | [Implementation status](status.md) | Which features are fully working, which are partial or stubbed, and the known gaps and risks |
 

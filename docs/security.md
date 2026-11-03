@@ -23,7 +23,7 @@ This document lists every security control in Unhurried, where it is implemented
 | Calls that skip API Gateway | Cloud Run IAM: only the gateway's service account (and listed internal callers) may invoke |
 | Forged internal calls | `/internal/*` not on the gateway; Google OIDC tokens with a fixed audience and an explicit caller list |
 | Stolen database contents | Calendar and Drive tokens sealed with Cloud KMS and bound to the user; calendar events not stored |
-| Compromised CI or repository | GCP-native Cloud Build + Cloud Deploy, zero GitHub secrets, read-only PR identity, least-privilege build/deploy service accounts |
+| Compromised CI or repository | GitHub Actions runs pure CI (`contents: read`, zero GCP credentials); all CD runs natively in Google Cloud Build + Cloud Deploy under least-privilege service accounts |
 | Vulnerable dependencies or base images | govulncheck (source and binary), npm audit, distroless non-root images |
 | Malicious job sites or pages | Extension never submits, relays only five operations from its own popup, holds no tokens |
 | Clickjacking and content sniffing | Hosting security headers, API `nosniff` and `no-store` |
@@ -148,11 +148,12 @@ While the OAuth consent screen is in Testing mode, Google limits access to liste
 | Web build configuration (includes the browser API key) | Secret Manager `unhurried-web-build-config` | `unhurried-web-deployer` service account |
 | Google Calendar refresh tokens (per user) | Firestore, sealed with Cloud KMS | Inbox service account (decrypt) |
 | Google Drive refresh tokens (per user) | Firestore, sealed with a separate Cloud KMS key | Resume service account (decrypt) |
-| Cross-repo GitHub clone tokens | Ephemeral tokens minted on demand via Cloud Build v2 `repositories:accessReadToken` (never stored) | `unhurried-ci`, `unhurried-builder`, and `unhurried-terraform` service accounts |
+| Cross-repo GitHub clone tokens (CD) | Ephemeral tokens minted on demand via Cloud Build v2 `repositories:accessReadToken` (never stored) | `unhurried-builder` and `unhurried-terraform` service accounts |
+| Cross-repo GitHub App credentials (CI) | GitHub Actions repository secrets `CI_APP_CLIENT_ID` and `CI_APP_PRIVATE_KEY` for internal `Unhurried-Careers CI Reader` App (`Contents: Read-only` only; mints downscoped, auto-revoked tokens via `actions/create-github-app-token@v3`) | `.github/workflows/ci.yml` in the 5 Go services (downscoped to `unhurried-common`) and `unhurried-infra` (downscoped per matrix service repo) |
 | SMTP relay password (alert emails) | Secret Manager `unhurried-smtp-password` (only once `smtp_password` is set); Terraform state | Notifications service account; project owners; the `unhurried-terraform` Cloud Build account |
 | Third-party keys (Adzuna, USAJobs) | Placeholder secrets with no value; not wired | — |
 
-Everything else needs no stored secret: services reach Google APIs as their service accounts through the metadata server, internal calls use Google-signed identity tokens, user tokens are verified with Google's public keys, and CI/CD runs natively inside Google Cloud Build and Google Cloud Deploy under dedicated GCP service accounts. Zero secrets or service account keys exist in GitHub.
+Everything else needs no stored secret: services reach Google APIs as their service accounts through the metadata server, internal calls use Google-signed identity tokens, user tokens are verified with Google's public keys, and CD runs natively inside Google Cloud Build and Google Cloud Deploy under dedicated GCP service accounts. Zero Google Cloud credentials, Workload Identity bindings, or deployment secrets exist in GitHub.
 
 `.gitignore` rules keep `*.tfvars` (except the non-secret `settings.auto.tfvars`), Terraform state, `.terraform/`, and `.env.local` out of git.
 
@@ -166,9 +167,9 @@ Everything else needs no stored secret: services reach Google APIs as their serv
 
 ## CI/CD security
 
-- **100% GCP-native execution, zero GitHub secrets.** Cloud Build connects via Google's 2nd-generation GitHub App integration; no secrets, PATs, or service account keys live in GitHub.
-- **Strict identity separation.** Pull requests and daily drift/vulnerability scans run `cloudbuild-ci.yaml` under the read-only `unhurried-ci` account (log writer + GitHub read token accessor only). Service builds run as `unhurried-builder` (pushes images and creates Cloud Deploy releases, cannot touch Cloud Run directly); Cloud Deploy rollouts run as `unhurried-deployer` (updates only the container image on the five services); web Hosting publishes run as `unhurried-web-deployer`; infrastructure applies run as `unhurried-terraform`.
-- **Untrusted fork PR protection.** Every pull-request trigger enforces `COMMENTS_ENABLED_FOR_EXTERNAL_CONTRIBUTORS_ONLY`.
+- **Strict CI/CD plane separation.** GitHub Actions (`.github/workflows/ci.yml`) runs pure CI with `permissions: contents: read` and holds zero GCP credentials or deployment secrets (not even OIDC `id-token: write`). Continuous Delivery runs exclusively inside Google Cloud Build (`cloudbuild.yaml`) and Google Cloud Deploy via Google's 2nd-generation GitHub App integration.
+- **Least-privilege CD identities.** Service builds run as `unhurried-builder` (pushes images and creates Cloud Deploy releases, cannot touch Cloud Run directly); Cloud Deploy rollouts run as `unhurried-deployer` (updates only the container image on the five services); web Hosting publishes run as `unhurried-web-deployer`; infrastructure applies run as `unhurried-terraform`.
+- **Org-owned read-only GitHub App for CI (zero user PATs).** Cross-repo checkouts in GitHub Actions mint short-lived, auto-revoked tokens from an internal `Unhurried-Careers` GitHub App (`Contents: Read-only` only) downscoped per step to the single required repository; `unhurried-common`, `unhurried-web`, `unhurried-extension`, and `unhurried-product` hold zero secrets.
 - **Verified rollouts and approval gates.** Google Cloud Deploy verifies both Cloud Run revision readiness and API Gateway `/health` after every rollout, and supports manual production approval gates via `require_deploy_approval = true`.
 - **Production is separate from staging** by GCP project and exact branch regex (`^main$` vs `^staging$`); staging credentials cannot touch production and vice versa.
 

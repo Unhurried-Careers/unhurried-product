@@ -26,8 +26,8 @@ internal/store/           persistence (memory and, where implemented, Firestore)
 internal/<domain>/        domain logic (boards, outreach, classify, mailsync, ...)
 openapi.yaml              Swagger 2.0 spec for the service's API Gateway
 Dockerfile                multi-stage build; context is the parent folder
-cloudbuild-ci.yaml        PR and daily 06:00 check pipeline (unhurried-ci)
-cloudbuild.yaml           branch build, SLSA image push, and Cloud Deploy release
+.github/workflows/ci.yml  GitHub Actions CI (PRs, pushes, daily 06:00 UTC; zero GCP access)
+cloudbuild.yaml           GCP CD: SLSA VERIFIED image push + Google Cloud Deploy release
 ```
 
 - **Routing** uses Go 1.22+ `http.ServeMux` method patterns (`"POST /v1/pursuits/{id}/apply"`).
@@ -261,7 +261,7 @@ modules/auth       Firebase project, Identity Platform config, Google provider, 
 modules/hosting    Hosting site, custom domain and redirects, web deployer service account
 modules/gmail      Gmail and KMS APIs, key ring, Gmail token key, OAuth client secret, inbox access
 modules/docs       Drive, Docs, and Picker APIs, Drive token key, resume access to the OAuth secret
-modules/cicd       Cloud Build 2nd-gen GitHub connection/triggers, Cloud Deploy pipelines, CI/CD service accounts, web build config secret
+modules/cicd       Cloud Build 2nd-gen GitHub connection & CD triggers, Cloud Deploy pipelines, CD service accounts, web build config secret
 envs/prod          Production root module (main), settings.auto.tfvars
 envs/staging       Staging root module (staging), settings.auto.tfvars with placeholders
 gateway-specs/     Copies of each service's openapi.yaml used by API Gateway

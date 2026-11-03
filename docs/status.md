@@ -29,8 +29,8 @@ What is fully working in production today, what is partial, and what is not buil
 | --- | --- |
 | Production at https://unhurried-careers.com | Live; `www` redirects |
 | Staging environment | Branches and `envs/staging` ready; turns on automatically once the staging GCP project is created and applied |
-| CI on every repository | Google Cloud Build (`cloudbuild-ci.yaml` on PRs & daily 06:00 scans) |
-| Deploys from `main` (services, web, Terraform) | Google Cloud Build + Google Cloud Deploy, zero GitHub secrets |
+| CI on every repository | GitHub Actions (`.github/workflows/ci.yml` on PRs, pushes & daily 06:00 UTC scans; zero GCP credentials) |
+| Deploys from `main` (services, web, Terraform) | Google Cloud Build + Google Cloud Deploy (`cloudbuild.yaml`); all deployment secrets in GCP Secret Manager |
 | Firestore persistence | applications (including Conversations and interview rounds), inbox (Google Calendar connections), and resume |
 
 ## Known gaps
@@ -38,4 +38,4 @@ What is fully working in production today, what is partial, and what is not buil
 1. **In-memory stores** in job-search, notifications, and inbox interviews. Cloud Run scales to zero, so this data disappears after idle periods. The applications and resume stores (`internal/store` with Memory and Firestore implementations behind one interface) are the pattern to copy.
 2. **Third-party credentials** for Adzuna and USAJobs are not configured; the placeholder secrets in Secret Manager have no values and are not wired to the services. The SMTP relay for alert emails is not configured yet either.
 3. **AI tailoring** needs a model call (for example Vertex AI) that turns the job description and master resume into find-and-replace edits.
-4. **Security follow-ups** are listed in [Security → Known risks](security.md#known-risks-and-recommended-next-steps), notably enabling `require_deploy_approval = true` on production Cloud Deploy rollouts (or GitHub branch protection on `main`) and removing the unused placeholder secrets and Pub/Sub topics. Closed signups, deny-all Firestore rules, the Content-Security-Policy, GCP-native CI/CD with zero GitHub secrets, and the redirect to the custom domain are in place.
+4. **Security follow-ups** are listed in [Security → Known risks](security.md#known-risks-and-recommended-next-steps), notably enabling `require_deploy_approval = true` on production Cloud Deploy rollouts (or GitHub branch protection on `main`) and removing the unused placeholder secrets and Pub/Sub topics. Closed signups, deny-all Firestore rules, the Content-Security-Policy, split CI (GitHub Actions with zero GCP access) + CD (Google Cloud Build & Cloud Deploy), and the redirect to the custom domain are in place.
