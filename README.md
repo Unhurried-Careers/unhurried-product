@@ -63,4 +63,4 @@ Copy `unhurried-web/.env.example` to `.env.local` and set `VITE_AUTH_MODE=dev` f
 
 ## Deploy
 
-See `unhurried-infra/README.md`. `main` deploys to production (https://unhurried-careers.com) and `staging` to staging, from each repo's GitHub Actions pipeline: service images go to Artifact Registry and roll out to Cloud Run, the frontend is published to Firebase Hosting, and Terraform applies the infrastructure. Promote by merging `staging` into `main`.
+See `unhurried-infra/README.md` and `docs/ci-cd.md`. `main` deploys to production (https://unhurried-careers.com) and `staging` to staging, entirely inside Google Cloud via **Cloud Build** and **Google Cloud Deploy**: service images go to Artifact Registry with verified SLSA provenance and roll out to Cloud Run with post-deploy health verification, the frontend is published to Firebase Hosting, and Terraform applies the infrastructure. Zero secrets live in GitHub. Promote by merging `staging` into `main`.

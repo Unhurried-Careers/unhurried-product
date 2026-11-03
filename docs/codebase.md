@@ -26,7 +26,8 @@ internal/store/           persistence (memory and, where implemented, Firestore)
 internal/<domain>/        domain logic (boards, outreach, classify, mailsync, ...)
 openapi.yaml              Swagger 2.0 spec for the service's API Gateway
 Dockerfile                multi-stage build; context is the parent folder
-.github/workflows/ci.yml  checks, image build, deploy
+cloudbuild-ci.yaml        PR and daily 06:00 check pipeline (unhurried-ci)
+cloudbuild.yaml           branch build, SLSA image push, and Cloud Deploy release
 ```
 
 - **Routing** uses Go 1.22+ `http.ServeMux` method patterns (`"POST /v1/pursuits/{id}/apply"`).
@@ -260,14 +261,14 @@ modules/auth       Firebase project, Identity Platform config, Google provider, 
 modules/hosting    Hosting site, custom domain and redirects, web deployer service account
 modules/gmail      Gmail and KMS APIs, key ring, Gmail token key, OAuth client secret, inbox access
 modules/docs       Drive, Docs, and Picker APIs, Drive token key, resume access to the OAuth secret
-modules/cicd       Workload identity pool/provider, deploy service accounts, web build config secret
+modules/cicd       Cloud Build 2nd-gen GitHub connection/triggers, Cloud Deploy pipelines, CI/CD service accounts, web build config secret
 envs/prod          Production root module (main), settings.auto.tfvars
 envs/staging       Staging root module (staging), settings.auto.tfvars with placeholders
 gateway-specs/     Copies of each service's openapi.yaml used by API Gateway
 tools/             check-specs.mjs: gateway spec linter (see CI/CD)
 ```
 
-Both environment folders contain identical `main.tf`, `variables.tf`, and `versions.tf`; only `settings.auto.tfvars` and the backend prefix differ. The single secret input, `google_oauth_client_secret`, comes from a gitignored `terraform.tfvars` locally or `TF_VAR_google_oauth_client_secret` in CI.
+Both environment folders contain identical `main.tf`, `variables.tf`, and `versions.tf`; only `settings.auto.tfvars` and the backend prefix differ. Sensitive inputs (`google_oauth_client_secret` and optional `smtp_password`) come from a gitignored `terraform.tfvars` locally or directly from Secret Manager inside Cloud Build.
 
 ## Local development
 

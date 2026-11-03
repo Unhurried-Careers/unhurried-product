@@ -8,7 +8,7 @@ This folder is the reference for how the system is built, delivered, and secured
 | --- | --- |
 | [Architecture](architecture.md) | The three tiers, how a request travels from the browser to Firestore, the environments, and where each kind of data lives |
 | [Codebase guide](codebase.md) | Every repository: layout, packages, API endpoints, configuration, local development, and tests |
-| [CI/CD](ci-cd.md) | Branches and environments, what each pipeline checks and deploys, how GitHub authenticates to Google Cloud, and operational runbooks |
+| [CI/CD](ci-cd.md) | Branches and environments, what Cloud Build and Google Cloud Deploy check and roll out, least-privilege service accounts, and operational runbooks |
 | [Security](security.md) | The threat model and every control, layer by layer: identity, API protection, service-to-service trust, data, secrets, Gmail, the extension, supply chain, and CI/CD |
 | [Implementation status](status.md) | Which features are fully working, which are partial or stubbed, and the known gaps and risks |
 
@@ -24,7 +24,7 @@ The product reasoning behind the features is in [MOTIVATION.md](../MOTIVATION.md
 | Backend | Five Go services on Cloud Run, each behind its own API Gateway |
 | Data | Cloud Firestore (Native mode), Cloud KMS for Gmail tokens |
 | Identity | Google sign-in through Firebase Authentication (Identity Platform), App Check with reCAPTCHA Enterprise |
-| Infrastructure | Terraform, applied by GitHub Actions |
+| Infrastructure | Terraform, applied by Google Cloud Build |
 | Source | 10 private repositories in the [Unhurried-Careers](https://github.com/Unhurried-Careers) GitHub organization |
 
 ## Glossary
@@ -39,4 +39,4 @@ The product reasoning behind the features is in [MOTIVATION.md](../MOTIVATION.md
 | Review queue | Imported applications below 0.7 confidence that the user confirms or dismisses |
 | ATS | Applicant tracking system: Greenhouse, Lever, Ashby, Workday, SmartRecruiters, iCIMS, Jobvite, Workable |
 | Internal route | An endpoint under `/internal/*` that only Google-signed service identities can call; never published on API Gateway |
-| WIF | Workload Identity Federation: Google Cloud trusting GitHub's OIDC tokens, so pipelines need no keys |
+| Cloud Deploy | Google Cloud's managed continuous delivery service; rolls out verified SHA images to Cloud Run and supports approval gates and one-click rollbacks |

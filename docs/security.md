@@ -23,7 +23,7 @@ This document lists every security control in Unhurried, where it is implemented
 | Calls that skip API Gateway | Cloud Run IAM: only the gateway's service account (and listed internal callers) may invoke |
 | Forged internal calls | `/internal/*` not on the gateway; Google OIDC tokens with a fixed audience and an explicit caller list |
 | Stolen database contents | Calendar and Drive tokens sealed with Cloud KMS and bound to the user; calendar events not stored |
-| Compromised CI or repository | Keyless deploys, branch- and repository-bound identities, least-privilege deployers |
+| Compromised CI or repository | GCP-native Cloud Build + Cloud Deploy, zero GitHub secrets, read-only PR identity, least-privilege build/deploy service accounts |
 | Vulnerable dependencies or base images | govulncheck (source and binary), npm audit, distroless non-root images |
 | Malicious job sites or pages | Extension never submits, relays only five operations from its own popup, holds no tokens |
 | Clickjacking and content sniffing | Hosting security headers, API `nosniff` and `no-store` |
@@ -144,15 +144,15 @@ While the OAuth consent screen is in Testing mode, Google limits access to liste
 
 | Secret | Where it lives | Who can read it |
 | --- | --- | --- |
-| Google OAuth client secret | Secret Manager `unhurried-gmail-oauth-client-secret`; Identity Platform config; Terraform state; GitHub `PRODUCTION_GOOGLE_OAUTH_CLIENT_SECRET`; local gitignored `envs/prod/terraform.tfvars` | Inbox and resume service accounts; project owners; the Terraform pipeline |
-| Web build configuration (includes the browser API key) | Secret Manager `unhurried-web-build-config` | Web deployer service account |
+| Google OAuth client secret | Secret Manager `unhurried-gmail-oauth-client-secret`; Identity Platform config; Terraform state; local gitignored `envs/prod/terraform.tfvars` | Inbox and resume service accounts; project owners; the `unhurried-terraform` Cloud Build account |
+| Web build configuration (includes the browser API key) | Secret Manager `unhurried-web-build-config` | `unhurried-web-deployer` service account |
 | Google Calendar refresh tokens (per user) | Firestore, sealed with Cloud KMS | Inbox service account (decrypt) |
 | Google Drive refresh tokens (per user) | Firestore, sealed with a separate Cloud KMS key | Resume service account (decrypt) |
-| Cross-repo checkout token | GitHub `UNHURRIED_REPOS_TOKEN` | CI jobs |
-| SMTP relay password (alert emails) | Secret Manager `unhurried-smtp-password` (only once `smtp_password` is set); Terraform state; GitHub `PRODUCTION_SMTP_PASSWORD` | Notifications service account; project owners; the Terraform pipeline |
+| Cross-repo GitHub clone tokens | Ephemeral tokens minted on demand via Cloud Build v2 `repositories:accessReadToken` (never stored) | `unhurried-ci`, `unhurried-builder`, and `unhurried-terraform` service accounts |
+| SMTP relay password (alert emails) | Secret Manager `unhurried-smtp-password` (only once `smtp_password` is set); Terraform state | Notifications service account; project owners; the `unhurried-terraform` Cloud Build account |
 | Third-party keys (Adzuna, USAJobs) | Placeholder secrets with no value; not wired | — |
 
-Everything else needs no stored secret: services reach Google APIs as their service accounts through the metadata server, internal calls use Google-signed identity tokens, user tokens are verified with Google's public keys, and pipelines use Workload Identity Federation. There are no service account keys.
+Everything else needs no stored secret: services reach Google APIs as their service accounts through the metadata server, internal calls use Google-signed identity tokens, user tokens are verified with Google's public keys, and CI/CD runs natively inside Google Cloud Build and Google Cloud Deploy under dedicated GCP service accounts. Zero secrets or service account keys exist in GitHub.
 
 `.gitignore` rules keep `*.tfvars` (except the non-secret `settings.auto.tfvars`), Terraform state, `.terraform/`, and `.env.local` out of git.
 
@@ -160,26 +160,25 @@ Everything else needs no stored secret: services reach Google APIs as their serv
 
 - **Go**: `govulncheck` on the source in every CI run and daily, and on the compiled binary from the image (catches standard library issues in the shipped Go version); `go vet`; race detector in tests.
 - **Images**: multi-stage builds; the runtime image is `distroless/static-debian13:nonroot` (no shell or package manager), the binary is static (`CGO_ENABLED=0`, `-trimpath`), and CI verifies the image runs as `nonroot:nonroot` and refuses to start without auth configuration.
-- **Images are immutable per commit**: tagged with the full commit SHA.
+- **Images are immutable per commit and provenance-attested**: tagged with the full commit SHA and built with Cloud Build `requestedVerifyOption: VERIFIED` (SLSA build provenance in Artifact Registry / Container Analysis).
 - **npm**: lockfiles with `npm ci`; `npm audit --omit=dev --audit-level=high` fails the web build on high-severity runtime vulnerabilities.
 - **Infrastructure**: Terraform tests assert security properties (who can invoke what, key restrictions, internal audiences, deploy identity scoping, signup and App Check switches); Checkov scans Terraform (informational).
 
 ## CI/CD security
 
-- **No long-lived credentials.** Workload Identity Federation with tokens bound to the organization's numeric ID and the environment's branch; each repository can impersonate only its own deploy account.
-- **Least privilege.** The service deployer can only push images and update the five services; the web deployer can only publish Hosting and read its build config.
-- **Workflow permissions** default to `contents: read`; only deploy jobs get `id-token: write`.
-- **Deploys only after checks pass** (`needs:`), and are never cancelled mid-run.
-- **Production is separate from staging** by project; staging credentials cannot touch production and vice versa.
+- **100% GCP-native execution, zero GitHub secrets.** Cloud Build connects via Google's 2nd-generation GitHub App integration; no secrets, PATs, or service account keys live in GitHub.
+- **Strict identity separation.** Pull requests and daily drift/vulnerability scans run `cloudbuild-ci.yaml` under the read-only `unhurried-ci` account (log writer + GitHub read token accessor only). Service builds run as `unhurried-builder` (pushes images and creates Cloud Deploy releases, cannot touch Cloud Run directly); Cloud Deploy rollouts run as `unhurried-deployer` (updates only the container image on the five services); web Hosting publishes run as `unhurried-web-deployer`; infrastructure applies run as `unhurried-terraform`.
+- **Untrusted fork PR protection.** Every pull-request trigger enforces `COMMENTS_ENABLED_FOR_EXTERNAL_CONTRIBUTORS_ONLY`.
+- **Verified rollouts and approval gates.** Google Cloud Deploy verifies both Cloud Run revision readiness and API Gateway `/health` after every rollout, and supports manual production approval gates via `require_deploy_approval = true`.
+- **Production is separate from staging** by GCP project and exact branch regex (`^main$` vs `^staging$`); staging credentials cannot touch production and vice versa.
 
 ## Known risks and recommended next steps
 
 | Risk | Recommendation |
 | --- | --- |
-| Free GitHub plan: no branch protection or required reviewers, so anyone with write access to `main` deploys to production | Upgrade the organization to GitHub Team and require pull requests and reviews on `main`; add a `production` environment with required reviewers to the deploy jobs |
-| `unhurried-terraform` has project owner | Replace with a custom role or a list of admin roles once the resource set is stable; consider a read-only identity for plans |
-| The OAuth client secret is also in Terraform state and GitHub | Treat state-bucket access as secret access; consider creating the secret version out of band and reading it with a data source |
-| `UNHURRIED_REPOS_TOKEN` is a long-lived token | Replace it with a GitHub App installation token or a fine-grained token limited to read access on these repositories, with an expiry |
+| Free GitHub plan: no GitHub branch protection on private repos, so anyone with write access to `main` triggers production builds | Set `require_deploy_approval = true` in `envs/prod/settings.auto.tfvars` to require manual approval in Google Cloud Deploy before Cloud Run rollouts, or upgrade GitHub to require PR reviews on `main` |
+| `unhurried-terraform` has project owner | Replace with a custom role or a list of admin roles once the resource set is stable |
+| The OAuth client secret is also in Terraform state | Treat state-bucket access as secret access; consider creating the secret version out of band and reading it with a data source |
 | Consent screen in Testing mode | Keep it while usage is personal (limits access to test users); publishing requires Google's verification for the sensitive Calendar scope (lighter than the restricted-scope security assessment Gmail would have needed) |
 | Old Gmail connections still in Firestore | Delete the `gmail_connections` and `gmail_oauth_states` collections after deploying, and remove Unhurried's Gmail grant at myaccount.google.com/permissions |
 | Unused placeholder secrets and Pub/Sub topics | Remove them, or wire them with the features that need them |
