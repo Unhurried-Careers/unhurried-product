@@ -50,7 +50,7 @@ Read by `unhurried-common/auth` and `httpx` in every service:
 | `INTERNAL_AUDIENCE` | Audience expected on `/internal/*` OIDC tokens (`unhurried-internal`) |
 | `INTERNAL_CALLERS` | Service accounts allowed on `/internal/*`; empty rejects all internal calls |
 | `CORS_ALLOWED_ORIGINS` | Browser origins allowed; defaults to the local Vite server |
-| `STORE=firestore` | Use Firestore where the service supports it (applications, inbox, resume) |
+| `STORE=firestore` | Use Firestore (supported across all five services: applications, inbox, resume, job-search, notifications) |
 | `PORT` | Listen port |
 
 Terraform sets all of these on Cloud Run (`envs/<env>/main.tf`, `local.commons`).
@@ -84,7 +84,7 @@ topics/topics.go    Pub/Sub topic names
 ```
 internal/api/       criteria, jobs, scans, watchlist handlers
 internal/boards/    board clients: Adzuna, USAJobs, Greenhouse, Lever, Ashby
-internal/store/     in-memory store
+internal/store/     Store interface; Memory and Firestore implementations (job_criteria, jobs, watched_companies)
 ```
 
 | Endpoint | Purpose |
@@ -103,11 +103,12 @@ Configuration: `ADZUNA_APP_ID`, `ADZUNA_APP_KEY`, `USAJOBS_API_KEY`, `USAJOBS_EM
 ## unhurried-resume
 
 ```
-internal/api/        resume and Google Drive handlers; template.go is the from-scratch resume
+internal/api/        resume, Google Drive, and AI tailoring handlers; template.go is the from-scratch resume
 internal/workspace/  OAuth (PKCE), sealed tokens, resume folder, master resume, copy, edit, trash
 internal/gdocs/      minimal Drive v3 and Docs v1 REST client
+internal/vertex/     Vertex AI Gemini 2.0 Flash client for resume tailoring
 internal/seal/       Cloud KMS sealer and a local AES-GCM sealer for development
-internal/store/      Store interface; Memory and Firestore implementations
+internal/store/      Store interface; Memory and Firestore implementations (resumes, docs_connections, docs_oauth_states)
 ```
 
 Resumes are Google Docs in an **"Unhurried resumes" folder in the user's own Google Drive**. The service uses the `drive.file` scope, so it can only see files it creates and the master resume the user chooses in Google Picker, never the rest of the Drive.
@@ -123,14 +124,15 @@ Resumes are Google Docs in an **"Unhurried resumes" folder in the user's own Goo
 | `GET /v1/resumes` | The user's resumes, most recently updated first |
 | `POST /v1/resumes/from-scratch` | Create a Doc from the template (name and email filled in); `asMaster` makes it the master |
 | `POST /v1/resumes/from-master` | Copy the master for a role; named "Resume – Company – Role" |
+| `POST /v1/resumes/{id}/tailor` | Tailor a resume copy for a job description using Vertex AI (Gemini 2.0 Flash); analyzes gaps, enforces honesty rules, and proposes find-and-replace edits |
 | `POST /v1/resumes/{id}/edit` | Apply up to 20 find-and-replace edits to the Doc, keeping its formatting; returns how many places changed |
 | `DELETE /v1/resumes/{id}` | Move the Doc to the user's Drive trash (recoverable for 30 days) and forget it |
 
 **Folder**: created on connect, reused on reconnect with the same Google account, and recreated automatically if the user deletes or trashes it. **Errors**: a deleted document answers 410, a missing master 409, revoked access 409 with `needsReconnect`; other Google errors answer a generic 502.
 
-Configuration: `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET` (the same OAuth client and Secret Manager secret unhurried-google-oauth-client-secret as Google sign-in and Calendar), `DOCS_REDIRECT_URL` (`/app/docs/callback`), `KMS_KEY_NAME` (required with Firestore), `FIREBASE_PROJECT_NUMBER` (Picker app ID). Without a client ID the Docs routes answer 503.
+Configuration: `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET` (the same OAuth client and Secret Manager secret unhurried-google-oauth-client-secret as Google sign-in and Calendar), `DOCS_REDIRECT_URL` (`/app/docs/callback`), `KMS_KEY_NAME` (required with Firestore), `FIREBASE_PROJECT_NUMBER` (Picker app ID), `VERTEX_PROJECT`, `VERTEX_LOCATION` (`us-central1`), `VERTEX_MODEL` (`gemini-2.0-flash`). Without a client ID the Docs routes answer 503.
 
-AI rewriting is not built yet; it would produce the same find-and-replace edits the `edit` endpoint applies.
+AI resume tailoring uses Google Cloud Vertex AI (Gemini 2.0 Flash) via `POST /v1/resumes/{id}/tailor`. It compares the existing Google Doc resume with the target job description under strict honesty rules (never inventing facts, skills, or employment history). It returns a match score, gaps analysis, and exact find-and-replace text diffs that the user reviews and applies directly to their Google Doc via `POST /v1/resumes/{id}/edit`.
 ## unhurried-applications
 
 ```
@@ -173,11 +175,10 @@ Rules the service enforces:
 
 ## unhurried-notifications
 
-| Endpoint | Purpose |
-| --- | --- |
 ```
 internal/api/    preferences and delivery handlers
 internal/mail/   SMTP sender (STARTTLS or implicit TLS) and the job digest email (text and HTML)
+internal/store/  Store interface; Memory and Firestore implementations (notification_preferences)
 ```
 
 | Endpoint | Purpose |
@@ -186,7 +187,7 @@ internal/mail/   SMTP sender (STARTTLS or implicit TLS) and the job digest email
 | `POST /internal/job-digest` | Email one user the new jobs their criteria matched (job-search only; 1 to 100 jobs, up to 25 listed) |
 | `POST /internal/notify` | Plain-text email to one user |
 
-Emails go only to users who turned alerts on; responses report `sent`, `skipped`, or `logged`. Job fields are escaped in the HTML email and only https links are accepted. Configuration: `SMTP_HOST` (unset logs emails instead of sending), `SMTP_PORT` (default 587), `SMTP_USERNAME`, `SMTP_PASSWORD`, `MAIL_FROM`, `APP_URL` (links in emails).
+Emails go only to users who turned alerts on; responses report `sent`, `skipped`, or `logged`. Job fields are escaped in the HTML email and only https links are accepted. Configuration: `SMTP_HOST` (default `smtp.resend.com`; unset logs emails instead of sending), `SMTP_PORT` (default 587), `SMTP_USERNAME` (`resend`), `SMTP_PASSWORD` (from Secret Manager `unhurried-smtp-password`), `MAIL_FROM` (`Unhurried <alerts@unhurried-careers.com>`), `APP_URL` (links in emails).
 
 ## unhurried-inbox
 
@@ -197,7 +198,7 @@ internal/cal/               interview slot proposal generation
 internal/calsync/           OAuth (PKCE), sealing, and calendar sync service
 internal/gcal/              Google Calendar REST client (events)
 internal/seal/              Cloud KMS sealer and dev AES-GCM sealer
-internal/store/             calendar connections and OAuth state: Memory and Firestore
+internal/store/             Store interface; Memory and Firestore implementations (calendar_connections, calendar_oauth_states, interviews)
 ```
 
 | Endpoint | Purpose |

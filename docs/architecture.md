@@ -1,205 +1,437 @@
 # Architecture
 
-## Overview
+Unhurried is a deliberate, privacy-first job pursuit system built on Google Cloud managed services. Nothing runs on servers the project maintains: the frontend is a single-page application served from Firebase Hosting's global CDN, each backend microservice is a container on Cloud Run that scales to zero, and all persistent state lives in Cloud Firestore with envelope encryption via Cloud KMS.
 
-Unhurried is a three-tier application on Google Cloud managed services. Nothing runs on servers the project maintains: the frontend is static files on a CDN, each backend service is a container on Cloud Run that scales to zero, and the database is Firestore.
+---
+
+## 1. System Topology
+
+Unhurried consists of five Go microservices, a React 18 TypeScript web application, a Chrome Manifest V3 browser extension, and supporting Google Cloud managed services.
+
+```mermaid
+flowchart TD
+  subgraph Clients["Client Tier"]
+    WEB["Browser SPA<br/>(unhurried-web: React 18 / Vite)"]
+    EXT["Chrome Extension MV3<br/>(unhurried-extension: Apply Assistant)"]
+  end
+
+  subgraph Edge["Edge & Ingress Tier"]
+    FH["Firebase Hosting CDN<br/>unhurried-careers.com"]
+    FA["Identity Platform / Firebase Auth<br/>(Google Sign-in, allowlist)"]
+    AC["App Check<br/>(reCAPTCHA Enterprise)"]
+    KEY["API Key Protection<br/>(Domain & Gateway restricted)"]
+    subgraph Gateways["API Gateways (OpenAPI 2.0 specs)"]
+      GW1["job-search-gw"]
+      GW2["resume-gw"]
+      GW3["applications-gw"]
+      GW4["notifications-gw"]
+      GW5["inbox-gw"]
+    end
+  end
+
+  subgraph Compute["Compute Tier (Cloud Run Services, us-central1)"]
+    S1["unhurried-job-search<br/>(Criteria, Board Scrapers, Watched Companies)"]
+    S2["unhurried-resume<br/>(Google Docs Workspace, AI Tailoring)"]
+    S3["unhurried-applications<br/>(Shortlist, Outreach, Conversations, Tracker)"]
+    S4["unhurried-notifications<br/>(Alert Preferences, Resend SMTP Relay)"]
+    S5["unhurried-inbox<br/>(Calendar Sync, Interview Heuristics, Free Slots)"]
+  end
+
+  subgraph Managed["GCP Managed Platform & Data Tier"]
+    FS[("Cloud Firestore<br/>(Native mode, us-central1)")]
+    KMS["Cloud KMS Key Ring: unhurried<br/>(calendar-refresh-tokens, docs-refresh-tokens)"]
+    SM["Secret Manager<br/>(OAuth client secrets, SMTP password, build config)"]
+    SCH["Cloud Scheduler<br/>(unhurried-job-search-scan: 07:00 Central)"]
+    VERTEX["Vertex AI<br/>(Gemini 2.0 Flash)"]
+  end
+
+  subgraph External["External Integrations & Services"]
+    BOARDS["Public ATS Boards<br/>(Greenhouse, Lever, Ashby, Adzuna, USAJobs)"]
+    GDOCS["Google Drive & Docs API<br/>(drive.file scope)"]
+    GCAL["Google Calendar API<br/>(calendar.events.readonly scope)"]
+    RESEND["Resend SMTP Relay<br/>(smtp.resend.com:587)"]
+    INBOX["User Email Inbox<br/>(Job Alert Digest)"]
+  end
+
+  WEB -->|"static assets"| FH
+  WEB -->|"Google OAuth"| FA
+  WEB -->|"attestation"| AC
+  EXT -.->|"window.postMessage relay"| WEB
+  WEB -->|"HTTPS + ID Token + App Check + x-api-key"| Gateways
+
+  GW1 -->|"IAM invoke"| S1
+  GW2 -->|"IAM invoke"| S2
+  GW3 -->|"IAM invoke"| S3
+  GW4 -->|"IAM invoke"| S4
+  GW5 -->|"IAM invoke"| S5
+
+  SCH -->|"POST /internal/scan (OIDC)"| S1
+  S1 -->|"POST /internal/job-digest (OIDC)"| S4
+
+  S1 -->|"read criteria, jobs, watchlist"| FS
+  S1 -->|"scrape public job feeds"| BOARDS
+
+  S2 -->|"read/write resumes"| FS
+  S2 -->|"decrypt OAuth tokens"| KMS
+  S2 -->|"read/write docs"| GDOCS
+  S2 -->|"tailor resume copy"| VERTEX
+
+  S3 -->|"read/write pursuits, applications, conversations, rounds"| FS
+
+  S4 -->|"read preferences"| FS
+  S4 -->|"read smtp password"| SM
+  S4 -->|"send email digest"| RESEND
+  RESEND -->|"deliver alerts"| INBOX
+
+  S5 -->|"read/write connections, interviews"| FS
+  S5 -->|"decrypt Calendar tokens"| KMS
+  S5 -->|"live query events"| GCAL
+```
+
+| Tier | Components | Responsibilities |
+| --- | --- | --- |
+| **Frontend** | `unhurried-web` | React 18 single-page application built with TypeScript and Vite. Deployed to Firebase Hosting (`unhurried-careers.com`). Manages authenticated state, Google Picker, Resume Studio, Application Tracker, and Settings. |
+| **Extension** | `unhurried-extension` | Chrome Manifest V3 apply assistant. Communicates exclusively through the active signed-in tab of `unhurried-web` via `window.postMessage`. Detects ATS platforms (Greenhouse, Lever, Ashby, Workday), pre-fills applicant data, and records submissions without storing user credentials or auto-submitting. |
+| **API Gateways** | 5 managed Google API Gateways | Validates caller API keys, rate limits client traffic (300 req/min per service), validates Firebase ID tokens (signature, issuer, audience), and invokes Cloud Run backend services via dedicated gateway service accounts. |
+| **Compute** | 5 Go Cloud Run services | Containerized Go 1.27 applications (`golang:1.27-alpine` build, `gcr.io/distroless/static-debian13:nonroot` runtime). Each enforces ownership scoping, App Check attestation, user email allowlisting, and specific domain rules. |
+| **Data & Secrets** | Firestore, KMS, Secret Manager | Cloud Firestore (Native mode, `us-central1`) for document persistence. Cloud KMS key ring `unhurried` for envelope encryption of external OAuth tokens. Secret Manager for sensitive third-party credentials. |
+| **AI & External APIs** | Vertex AI, Google Workspace, Resend | Vertex AI Gemini 2.0 Flash for structured resume tailoring. Google Drive & Docs APIs for document management. Google Calendar API for interview discovery. Resend SMTP for outbound alert delivery. |
+
+---
+
+## 2. Request Lifecycle and Security Defense-in-Depth
+
+Every request from the browser to any backend API undergoes validation across multiple independent security boundaries. Each boundary fails closed:
+
+```mermaid
+sequenceDiagram
+  autonumber
+  participant B as Browser (unhurried-web)
+  participant GW as Google API Gateway
+  participant CR as Cloud Run (Go Service)
+  participant MW as Common Middleware Chain
+  participant HD as API Route Handler
+  participant FS as Cloud Firestore
+
+  B->>B: Acquire Firebase ID Token (Google OAuth)<br/>Acquire App Check Token (reCAPTCHA Enterprise)
+  B->>GW: HTTPS Request<br/>Authorization: Bearer <Firebase ID Token><br/>X-Firebase-AppCheck: <Token><br/>x-api-key: <Browser Key>
+  
+  Note over GW: 1. Verify API Key & HTTP Referrer<br/>2. Apply Rate Limit Quota (300/min)<br/>3. Verify Firebase ID Token RS256 signature, exp, aud
+  GW->>CR: Forward request with Gateway SA Identity Token<br/>Original caller token placed in X-Forwarded-Authorization
+  
+  Note over CR: Cloud Run IAM Invoker Check<br/>(Only Gateway SA or explicit internal SAs permitted)
+  CR->>MW: Enter Service Middleware Pipeline
+  Note over MW: CORS Allowlist -> Panic Recovery -> Harden Headers<br/>-> Access Logging -> Auth & App Check Verification<br/>-> Verify User Email in ALLOWED_EMAILS
+  
+  MW->>HD: Dispatch to Scoped Route Handler
+  Note over HD: Decode JSON (max 1 MiB) -> Validate fields<br/>Scope query strictly to Authenticated User ID
+  HD->>FS: Query or Mutate Firestore (doc ID / userId filter)
+  FS-->>HD: Return User Scoped Document
+  HD-->>B: Return 200 OK (no-store, nosniff, CORS headers)
+```
+
+### Middleware Pipeline Architecture
+
+Each Go microservice constructs its HTTP pipeline using `unhurried-common`:
+
+```
+Request ──► httpx.CORS ──► httpx.Recover ──► httpx.Harden ──► httpx.AccessLog ──► auth.Middleware ──► Route Handler
+```
+
+1. **`httpx.CORS`**: Rejects unapproved origins with `403 Forbidden`. Only authorized origins (e.g. `https://unhurried-careers.com`) receive CORS response headers.
+2. **`httpx.Recover`**: Intercepts unhandled panics, logs stack traces securely, and returns a safe `500 Internal Server Error`.
+3. **`httpx.Harden`**: Attaches strict security headers: `X-Content-Type-Options: nosniff`, `Cache-Control: no-store`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`.
+4. **`httpx.AccessLog`**: Emits structured JSON access logs with request method, path, status, latency, and client IP.
+5. **`auth.Middleware`**:
+   - Skips authentication only for `GET /health`, `GET /healthz`, and `OPTIONS`.
+   - On `/internal/*` endpoints: validates Google OIDC token (`accounts.google.com`, audience `INTERNAL_AUDIENCE`, email in `INTERNAL_CALLERS`).
+   - On public `/v1/*` endpoints: validates App Check token, extracts Firebase ID token from `X-Forwarded-Authorization`, verifies RS256 signature against cached Google x509 certificates, and checks that the verified email matches `ALLOWED_EMAILS`.
+6. **Route Handler**: Validates request parameters and payload structure (`validate.Errors`), reads the principal from context (`auth.FromContext`), and enforces strict ownership scoping.
+
+---
+
+## 3. Daily Outbound Job Alerts & Scanning Pipeline
+
+Every morning, Cloud Scheduler triggers an automated scan for newly posted jobs across public ATS feeds and user-watched companies. New matching jobs are recorded and emailed in a digest via Resend SMTP.
+
+```mermaid
+sequenceDiagram
+  autonumber
+  participant SCH as Cloud Scheduler (07:00 Central)
+  participant JS as unhurried-job-search
+  participant BOARDS as ATS Job Feeds (Greenhouse, Lever, Ashby)
+  participant FS as Cloud Firestore
+  participant NOTIF as unhurried-notifications
+  participant RESEND as Resend SMTP Relay
+  participant USER as User Email Inbox
+
+  SCH->>JS: POST /internal/scan (Google OIDC token, SA: unhurried-scheduler)
+  Note over JS: Verify OIDC token: issuer, audience, and SA email
+
+  JS->>FS: Query active saved criteria (job_criteria) & watched companies (watched_companies)
+  FS-->>JS: Return criteria and company watchlists
+
+  par Scan Public Boards
+    JS->>BOARDS: Fetch Greenhouse, Lever, Ashby, Adzuna, USAJobs public listings
+    BOARDS-->>JS: Return current open roles
+  end
+
+  JS->>JS: Deduplicate jobs via SHA-256 (userID, source, externalID)<br/>Match jobs against user keywords & title criteria
+  JS->>FS: Upsert newly discovered jobs into 'jobs' collection
+
+  loop For each user with net-new matching jobs
+    JS->>NOTIF: POST /internal/job-digest (Google OIDC token, SA: unhurried-job-search-run)
+    Note over NOTIF: Verify OIDC token: SA in INTERNAL_CALLERS
+
+    NOTIF->>FS: Fetch notification preferences (notification_preferences)
+    FS-->>NOTIF: Return alert status and destination email
+
+    alt Alerts enabled and valid email configured
+      NOTIF->>NOTIF: Render HTML & plaintext morning digest (mail.Digest)
+      NOTIF->>RESEND: Relay email over TLS (smtp.resend.com:587, unhurried-smtp-password)
+      RESEND->>USER: Deliver daily job digest email
+      NOTIF-->>JS: 200 OK {status: "sent"}
+    else Alerts disabled or no email
+      NOTIF-->>JS: 200 OK {status: "skipped"}
+    end
+  end
+
+  JS-->>SCH: 200 OK {status: "ok", scansRun: N, digestsSent: M}
+```
+
+---
+
+## 4. AI Resume Tailoring Architecture
+
+The Resume Studio allows users to maintain a master resume as a native Google Doc in their personal Google Drive. For each shortlisted pursuit, the user can create an AI-tailored copy optimized for the target job description using Google Cloud Vertex AI (Gemini 2.0 Flash) while strictly enforcing honesty rules.
+
+```mermaid
+sequenceDiagram
+  autonumber
+  participant U as User (Resume Studio)
+  participant WEB as unhurried-web
+  participant RES as unhurried-resume
+  participant KMS as Cloud KMS
+  participant GDOCS as Google Docs API
+  participant VERTEX as Vertex AI (Gemini 2.0 Flash)
+  participant FS as Cloud Firestore
+
+  U->>WEB: Open Resume Studio, select resume copy, paste job description
+  WEB->>RES: POST /v1/resumes/{id}/tailor {jobTitle, company, jobDescription}
+
+  RES->>FS: Read resume metadata (resumes) & user connection (docs_connections)
+  FS-->>RES: Return doc ID and KMS-sealed refresh token
+
+  RES->>KMS: Decrypt refresh token (key: docs-refresh-tokens, AAD: userID)
+  KMS-->>RES: Plaintext OAuth token
+
+  RES->>GDOCS: GET /v1/documents/{docId} (fetch structural text)
+  GDOCS-->>RES: Document structural elements & body text
+
+  Note over RES: Assemble prompt with strict Honesty Rules:<br/>- Never fabricate employers, dates, degrees, or skills<br/>- Rephrase genuine experience using target role keywords<br/>- Output JSON: summary, matchScore, gaps, exact find/replace edits
+
+  RES->>VERTEX: POST models/gemini-2.0-flash:generateContent (JSON Schema)
+  VERTEX-->>RES: Candidate tailoring payload (analysis, score, gaps, edits)
+
+  Note over RES: Sanitization & Verification:<br/>- Strip markdown backticks & extra whitespace<br/>- Verify every findText exists verbatim in the Doc<br/>- Limit to max 20 atomic find-and-replace edits
+
+  RES-->>WEB: Return {overallAnalysis, matchScore, gaps, edits}
+  WEB-->>U: Render interactive diff preview (match score, gaps, proposed edits)
+
+  U->>WEB: Review proposed changes, uncheck unwanted edits, click "Apply to Doc"
+  WEB->>RES: POST /v1/resumes/{id}/edit {edits: [{findText, replaceWith}, ...]}
+
+  RES->>KMS: Decrypt refresh token
+  RES->>GDOCS: POST /v1/documents/{docId}:batchUpdate (replaceAllText)
+  Note over GDOCS: Atomic text replacement preserving fonts, sizes, and layout
+  GDOCS-->>RES: batchUpdate response ({replacementsCount})
+
+  RES-->>WEB: Return {updatedCount: N}
+  WEB-->>U: Confirm changes applied directly to user's Google Doc
+```
+
+---
+
+## 5. Applications, Shortlist, and Conversations Subsystem
+
+Unhurried enforces a deliberate, low-volume job search workflow. Users select at most five active roles to pursue at any time, write substantive reasons for pursuing each, reach out to team members for informational conversations, and track interview rounds with preparation checklists.
+
+```mermaid
+stateDiagram-v2
+  [*] --> Shortlist: Add pursuit (max 5 active, whyRole >= 30 chars, whyCompany >= 30 chars)
+  
+  state Shortlist {
+    [*] --> Researching
+    Researching --> ReachingOut: Review team & draft outreach kit
+    ReachingOut --> ReadyToApply: Completed conversations & tailored resume
+    ReadyToApply --> Applied: Promote to tracked application
+    Researching --> Dropped: Not aligned
+    ReachingOut --> Dropped: Not aligned
+  }
+
+  state ConversationsTracker {
+    [*] --> ToAsk: Identify contact
+    ToAsk --> Asked: Send outreach ask message
+    Asked --> Agreed: Contact agrees to meet
+    Agreed --> Scheduled: Send Google Calendar booking link
+    Scheduled --> Met: Conduct coffee chat
+    Met --> FollowUp: Record learnings & next reach-out date
+    Asked --> Declined
+    Asked --> NoResponse
+  }
+
+  state ApplicationTracker {
+    [*] --> Draft: Created from shortlist
+    Draft --> Submitted: Applied via extension or direct
+    Submitted --> Viewed: Employer reviewed application
+    Viewed --> Interview: Recruiter screening scheduled
+    Interview --> Offer: All rounds passed
+    Interview --> Rejected
+    Submitted --> NoResponse
+  }
+
+  Applied --> Draft: Creates application record & timeline event
+```
 
 ```mermaid
 flowchart LR
-  subgraph Client
-    B[Browser: unhurried-web SPA]
-    X[Chrome extension]
+  subgraph ExtensionBridge["Chrome Extension Apply Flow"]
+    PAGE["Target Job Board<br/>(Greenhouse, Lever, Ashby, Workday)"]
+    EXT_POPUP["Extension Popup<br/>(Select Application)"]
+    EXT_BG["Extension Background Worker"]
+    BRIDGE["bridge.js<br/>(Content Script on web app)"]
+    WEB_BRIDGE["extensionBridge.ts<br/>(Unhurried Web App)"]
+    APP_API["unhurried-applications<br/>(GET /fill-payload, POST /submit)"]
   end
-  subgraph Google Cloud project
-    H[Firebase Hosting<br/>unhurried-careers.com]
-    FA[Firebase Auth<br/>Identity Platform]
-    AC[App Check<br/>reCAPTCHA Enterprise]
-    subgraph Gateways[API Gateway, one per service]
-      G1[job-search]
-      G2[resume]
-      G3[applications]
-      G4[notifications]
-      G5[inbox]
-    end
-    subgraph Run[Cloud Run]
-      S1[unhurried-job-search]
-      S2[unhurried-resume]
-      S3[unhurried-applications]
-      S4[unhurried-notifications]
-      S5[unhurried-inbox]
-    end
-    FS[(Firestore)]
-    KMS[Cloud KMS]
-    SM[Secret Manager]
-    SCH[Cloud Scheduler]
-  end
-  EXT[Public job boards<br/>Greenhouse, Lever, Ashby,<br/>Adzuna, USAJobs]
-  GCAL[Google Calendar API]
-  GD[Google Drive / Docs API]
 
-  B -->|static files| H
-  B -->|Google sign-in| FA
-  B -->|attestation| AC
-  X -.->|relays through the signed-in tab| B
-  B -->|HTTPS + ID token + App Check + API key| Gateways
-  G1 --> S1
-  G2 --> S2
-  G3 --> S3
-  G4 --> S4
-  G5 --> S5
-  S1 --> EXT
-  S2 --> GD
-  S3 --> FS
-  S5 --> FS
-  S5 --> KMS
-  S5 --> GCAL
-  SM -.->|OAuth client secret| S2
-  SM -.->|OAuth client secret| S5
-  S1 -->|/internal/job-digest, OIDC| S4
-  SCH -->|/internal/scan, OIDC| S1
+  PAGE -->|"activeTab"| EXT_POPUP
+  EXT_POPUP -->|"relay command"| EXT_BG
+  EXT_BG -->|"chrome.tabs.sendMessage"| BRIDGE
+  BRIDGE -->|"window.postMessage"| WEB_BRIDGE
+  WEB_BRIDGE -->|"authenticated API call"| APP_API
+  APP_API -->>|"fill fields"| WEB_BRIDGE
+  WEB_BRIDGE -->>|"DOM form input"| PAGE
+  PAGE -.->|"user manually clicks submit"| PAGE
+  EXT_POPUP -->|"POST /submit with confirmation"| APP_API
 ```
 
-| Tier | Components |
-| --- | --- |
-| Frontend | `unhurried-web`: React 18 + TypeScript + Vite single-page app on Firebase Hosting. Public homepage at `/`, signed-in app under `/app/*`. `unhurried-extension`: Chrome Manifest V3 apply assistant. |
-| Backend | Five Go services (`unhurried-job-search`, `-resume`, `-applications`, `-notifications`, `-inbox`) on Cloud Run, each with its own API Gateway and OpenAPI spec. Shared code in `unhurried-common`. |
-| Data | Cloud Firestore (Native mode, `us-central1`, delete protection on). Cloud KMS seals Google Calendar and Google Drive refresh tokens. |
+---
 
-## Request lifecycle
+## 6. Google Calendar Interview Detection & Free Slot Proposal
 
-Every call from the web app to an API follows the same path. Each layer rejects the request on its own if its check fails.
+Unhurried connects to Google Calendar with read-only permissions (`calendar.events.readonly`) to help candidates track interviews and generate free meeting slots for recruiters without ever storing raw calendar events.
 
 ```mermaid
-sequenceDiagram
-  participant B as Browser
-  participant GW as API Gateway
-  participant CR as Cloud Run (Go service)
-  participant FS as Firestore
-  B->>B: Firebase ID token (Google sign-in)<br/>App Check token (reCAPTCHA Enterprise)
-  B->>GW: HTTPS request<br/>Authorization: Bearer <ID token><br/>X-Firebase-AppCheck, x-api-key
-  GW->>GW: API key valid, referrer allowed, quota (300/min/service)<br/>ID token signature, issuer, audience
-  GW->>CR: Forward with its own service-account token<br/>caller token moved to X-Forwarded-Authorization
-  CR->>CR: Cloud Run IAM: only the gateway's service account may invoke
-  CR->>CR: CORS origin allowlist, 1 MiB body cap, timeouts
-  CR->>CR: App Check token, ID token re-verified,<br/>email in ALLOWED_EMAILS
-  CR->>CR: Route handler: validate input, scope to the user's ID
-  CR->>FS: Read/write the user's documents
-  CR-->>B: JSON response (no-store, nosniff)
+flowchart TD
+  subgraph OAuthConnect["OAuth Connection Lifecycle"]
+    U1["User clicks 'Connect Calendar'"] --> CONNECT["POST /v1/calendar/connect"]
+    CONNECT --> PKCE["Generate SHA-256 PKCE & state in calendar_oauth_states"]
+    PKCE --> GOOG_CONSENT["Redirect to Google OAuth Consent<br/>(calendar.events.readonly)"]
+    GOOG_CONSENT --> CALLBACK["POST /v1/calendar/callback {code, state}"]
+    CALLBACK --> EXCHANGE["Exchange code for refresh token"]
+    EXCHANGE --> SEAL["Cloud KMS Encrypt<br/>(Key: calendar-refresh-tokens, AAD: userId)"]
+    SEAL --> SAVE_CONN["Store in calendar_connections<br/>(Sealed token, email, status)"]
+  end
+
+  subgraph EventDiscovery["Privacy-First Interview Detection"]
+    U2["User views Tracker page"] --> GET_EVENTS["GET /v1/calendar/events?from=&to="]
+    GET_EVENTS --> DECRYPT["Cloud KMS Decrypt Refresh Token"]
+    DECRYPT --> GCAL_API["Google Calendar API: list events (past 60 to next 60 days)"]
+    GCAL_API --> HEURISTICS["Heuristic Classification Engine<br/>- Match recruiter emails & domains<br/>- Video links (Meet, Zoom, Teams)<br/>- Keywords: Interview, Screen, Debrief, Chat"]
+    HEURISTICS --> FLAGGED["Return timed events with likelyInterview: true/false<br/>(Events are NEVER stored in Firestore)"]
+    FLAGGED --> CONFIRM["User confirms interview link to Application Round<br/>(POST /v1/applications/{id}/rounds/{roundId}/interviews)"]
+  end
+
+  subgraph SlotProposals["Free Slot Proposal Engine"]
+    U3["User requests interview proposal"] --> PROPOSE["POST /v1/interviews/propose"]
+    PROPOSE --> BUSY_TIMES["Compute busy periods from user calendar"]
+    BUSY_TIMES --> GEN_SLOTS["Generate 5 one-hour non-overlapping candidate slots<br/>within business hours across upcoming days"]
+    GEN_SLOTS --> SAVE_SLOTS["Persist proposed slots in 'interviews' collection"]
+    SAVE_SLOTS --> SHARE["Copy formatted availability text with booking link"]
+  end
 ```
 
-The middleware chain in each service is, from outermost: `CORS → Recover → Harden → AccessLog → auth.Middleware → routes` (`unhurried-common/httpx` and `unhurried-common/auth`).
+---
 
-## Service-to-service and scheduled calls
+## 7. CI/CD Architecture (GitHub Actions CI vs. Google Cloud CD)
 
-Routes under `/internal/*` are never published on API Gateway; the gateway spec checker fails CI if one appears. Callers reach Cloud Run directly with a Google-signed OIDC token whose audience is `unhurried-internal`:
-
-| Caller | Target | Purpose | Schedule |
-| --- | --- | --- | --- |
-| Cloud Scheduler (`unhurried-scheduler` SA) | job-search `POST /internal/scan` | Run saved searches | Daily at 07:00 |
-| job-search (`unhurried-job-search-run` SA) | notifications `POST /internal/job-digest` | Email each user the new jobs their search criteria matched | After each scheduled scan |
-
-Each target allows only the listed caller twice over: Cloud Run's `roles/run.invoker` binding, and the service's own check of the token's audience and caller email (`INTERNAL_CALLERS`). Services with no listed caller (`applications`, `inbox`, `resume`) reject every internal call.
-
-Job-search calls notifications through Cloud Run's deterministic URL (`https://unhurried-notifications-<project-number>.<region>.run.app`), which avoids a Terraform dependency cycle between services. Notifications sends the email through the SMTP relay set by `smtp_host`; the relay password is in Secret Manager (`unhurried-smtp-password`), readable only by the notifications service account.
-
-## Google Calendar interview integration
+Unhurried enforces a strict architectural boundary between Continuous Integration and Continuous Delivery:
 
 ```mermaid
-sequenceDiagram
-  participant U as User (web app)
-  participant IN as inbox service
-  participant G as Google OAuth & Calendar API
-  participant K as Cloud KMS
-  participant AP as applications service
-  U->>IN: POST /v1/calendar/connect
-  IN->>IN: Generate state (SHA-256) + PKCE verifier
-  IN-->>U: Google consent URL (calendar.events.readonly, offline, S256)
-  U->>G: User consents to read-only Calendar access
-  G-->>U: Redirect to /app/calendar/callback?code&state
-  U->>IN: POST /v1/calendar/callback {code, state}
-  IN->>G: Exchange code + PKCE verifier for refresh token
-  IN->>K: Encrypt refresh token (AAD = user ID)
-  IN->>IN: Store connection in Firestore (calendar_connections)
-  U->>IN: GET /v1/calendar/events (past and next 60 days)
-  IN->>K: Decrypt refresh token
-  IN->>G: Read timed events live (never stored)
-  IN-->>U: Return events flagged likelyInterview
-  U->>AP: POST /v1/applications/{id}/rounds/{roundId}/interviews (confirm link)
+flowchart TD
+  subgraph GITHUB["GitHub (Unhurried-Careers) — Pure CI"]
+    DEV["Developer / PR Author"] -->|"git push / open PR"| GH_REPO["GitHub Repository"]
+    GH_REPO -->|"Trigger"| GHA["GitHub Actions (.github/workflows/ci.yml)<br/>- permissions: contents: read<br/>- ZERO Google Cloud credentials<br/>- gofmt, go vet, go test -race<br/>- govulncheck (code & binary)<br/>- Vitest (web: 85% coverage threshold)<br/>- check-specs.mjs (gateway spec linter)<br/>- terraform test (mocked providers)<br/>- Container smoke test"]
+  end
+
+  subgraph GCP["Google Cloud — Pure CD (Cloud Build + Cloud Deploy)"]
+    MERGE["Merge PR to staging or main"] -->|"2nd-gen GitHub App webhook"| CB["Cloud Build (cloudbuild.yaml)"]
+    
+    subgraph BuildPipeline["Cloud Build Execution (unhurried-builder SA)"]
+      CB --> DOCKER_BUILD["Multi-stage Docker Build<br/>(Go 1.27 static binary + Distroless non-root)"]
+      DOCKER_BUILD --> ARTIFACTS["Artifact Registry<br/>(us-central1-docker.pkg.dev/.../unhurried:<SHA>)<br/>SLSA Provenance Verified"]
+      CB --> CREATE_RELEASE["Create Release in Google Cloud Deploy"]
+    end
+
+    subgraph DeployPipeline["Cloud Deploy Progressive Rollout"]
+      CREATE_RELEASE --> CD_PIPELINE["Cloud Deploy Delivery Pipeline<br/>(per service: job-search, resume, applications, notifications, inbox)"]
+      CD_PIPELINE --> ROLLOUT["Rollout to Target: unhurried-prod (Cloud Run)"]
+      ROLLOUT --> POST_VERIFY["Post-Deploy Verify Hook<br/>(Query gateway /health endpoint)"]
+      ROLLOUT -.->|"One-Click Rollback"| PREV_SHA["Instant Rollback to Previous Revision"]
+    end
+
+    subgraph WebAndInfraCD["Web & Infrastructure Delivery"]
+      CB -->|"unhurried-web-deployer"| VITE_BUILD["Build React SPA + inject build secrets"]
+      VITE_BUILD --> FH_DEPLOY["Deploy to Firebase Hosting CDN"]
+      CB -->|"unhurried-terraform"| TF_APPLY["Run check-specs.mjs + terraform apply"]
+    end
+  end
+
+  GHA -.->|"Pass required checks"| MERGE
 ```
 
-## Environments
+---
 
-Each environment is a separate Google Cloud project created from the same Terraform (`unhurried-infra/envs/<env>`), deployed from its own branch.
+## 8. Data Model & Firestore Persistence
 
-| | Production | Staging |
+All five backend services utilize Cloud Firestore (Native mode in `us-central1`) for document persistence. Client direct access to Firestore is permanently disabled via security rules (`allow read, write: if false;`), ensuring all data access is mediated through the Go backend services.
+
+| Service | Firestore Collection | Document ID Scheme | Scoped By | Purpose |
+| --- | --- | --- | --- | --- |
+| **`job-search`** | `job_criteria` | Random UUID (`ids.New()`) | `userId` | User saved job search criteria (titles, locations, keywords, salary) |
+| **`job-search`** | `jobs` | SHA-256 of `(userId, source, externalId)` | `userId` | Deduplicated discovered job listings from scrapers |
+| **`job-search`** | `watched_companies` | Random UUID (`ids.New()`) | `userId` | Followed companies with ATS platform and board token (max 50) |
+| **`resume`** | `resumes` | Random UUID (`ids.New()`) | `userId` | Resumes metadata (title, role, Google Doc ID, match scores) |
+| **`resume`** | `docs_connections` | User ID (`userID`) | `userId` | Sealed Google Drive refresh token, folder ID, and master resume ID |
+| **`resume`** | `docs_oauth_states` | SHA-256 of state token | — | Pending Google Drive OAuth 2.0 PKCE state verifiers |
+| **`applications`**| `pursuits` | Random UUID (`ids.New()`) | `userId` | Shortlisted roles (max 5 active), `whyRole`, `whyCompany`, status |
+| **`applications`**| `contacts` | Random UUID (`ids.New()`) | `userId` | Outreach networking contacts per pursuit (max 20 per role) |
+| **`applications`**| `conversations` | Random UUID (`ids.New()`) | `userId` | Coffee chats and informational interview records |
+| **`applications`**| `conversation_settings` | User ID (`userID`) | `userId` | User Google Calendar booking page link and availability notes |
+| **`applications`**| `applications` | Random UUID (`ids.New()`) | `userId` | Tracked job applications (draft, submitted, interview, offer) |
+| **`applications`**| `application_events` | Random UUID (`ids.New()`) | `userId` | Audit event timeline for application status changes |
+| **`applications`**| `interview_rounds` | Random UUID (`ids.New()`) | `userId` | Interview stages, skills to show/shown, learnings, prep checklist |
+| **`notifications`**| `notification_preferences` | User ID (`userID`) | `userId` | Alert preferences, destination email, enabled toggle |
+| **`inbox`** | `calendar_connections` | User ID (`userID`) | `userId` | Sealed Google Calendar refresh token, Google email, sync status |
+| **`inbox`** | `calendar_oauth_states`| SHA-256 of state token | — | Pending Google Calendar OAuth 2.0 PKCE state verifiers |
+| **`inbox`** | `interviews` | Random UUID (`ids.New()`) | `userId` | Proposed and confirmed interview slots |
+
+> [!NOTE]
+> Queries against Firestore use equality filters (`Where("userId", "==", userID)`) and sort in Go memory, eliminating the need for composite index maintenance. Every document contains a `userId` field, and foreign lookups return `404 Not Found` rather than `403 Forbidden` to prevent object identifier enumeration.
+
+---
+
+## 9. Technology Stack Summary
+
+| Area | Technology & Tooling | Version / Configuration |
 | --- | --- | --- |
-| Branch | `main` | `staging` |
-| Project | `project-191091d4-b2e5-4294-9e7` (number 954425970179) | Not created yet (`STAGING_PROJECT_ID` placeholder) |
-| Web | https://unhurried-careers.com, `www` redirects; Hosting site `unhurried-careers` | https://unhurried-careers-staging-web.web.app |
-| Sign-in domain | `unhurried-careers.firebaseapp.com` | `unhurried-careers-staging-web.firebaseapp.com` |
-| Terraform state | `gs://project-191091d4-b2e5-4294-9e7-tfstate/prod` | `gs://<project>-tfstate/staging` |
-| Settings | `envs/prod/settings.auto.tfvars` | `envs/staging/settings.auto.tfvars` |
-
-`unhurried-careers.web.app`, Firebase's built-in address for the production site, still serves the same content; it cannot be removed.
-
-## Cloud resources per environment
-
-| Resource | Details |
-| --- | --- |
-| Cloud Run services | 5, region `us-central1`, 0 to 10 instances, 1 vCPU and 512 MiB each, each running as its own `<service>-run` service account |
-| API Gateway | One API, config, and gateway per service, each with its own `<service>-gw` service account (the only Cloud Run invoker besides internal callers) |
-| Firestore | `(default)` database, Native mode, delete protection enabled |
-| Cloud Scheduler | `unhurried-job-search-scan` (`0 7 * * *`, daily), time zone America/Chicago |
-| Pub/Sub | Topics `unhurried-job-found`, `-resume-ready`, `-application-updated`, `-interview-requested`, `-notify-user` (created; not yet used by code) |
-| Artifact Registry | Docker repository `unhurried` |
-| Cloud KMS | Key ring `unhurried`, keys `calendar-refresh-tokens` (inbox only) and `docs-refresh-tokens` (resume only), 90-day rotation, destroy-protected |
-| Secret Manager | `unhurried-google-oauth-client-secret`, `unhurried-web-build-config`, `unhurried-smtp-password` (alert emails; notifications only), placeholders for Adzuna |
-| Identity Platform | Google provider only; email/password and phone disabled; signup switch; user deletion disabled |
-| Firebase | Web app, App Check (reCAPTCHA Enterprise), Hosting site and custom domains |
-| API key | `unhurried-web` browser key, restricted to the site's domains and the five gateways |
-| CD (Cloud Build + Cloud Deploy) | 2nd-gen GitHub connection & branch deploy triggers, Cloud Deploy custom target + 5 delivery pipelines, `<project>-cicd-artifacts` bucket, `unhurried-builder`, `unhurried-deployer`, `unhurried-web-deployer`, `unhurried-terraform` |
-
-## Data model and persistence
-
-Shared types live in `unhurried-common/models`. Where data is stored today:
-
-| Data | Service | Storage | Firestore collection |
-| --- | --- | --- | --- |
-| Shortlist (pursuits) | applications | Firestore | `pursuits` |
-| Outreach contacts | applications | Firestore | `contacts` |
-| Conversations (person, company, ask, meeting, learnings, reach-out date) | applications | Firestore | `conversations` |
-| Conversation settings (booking page link, availability) | applications | Firestore | `conversation_settings` (document ID = user ID) |
-| Applications | applications | Firestore | `applications` |
-| Application timeline | applications | Firestore | `application_events` |
-| Interview rounds (interviews, skills, learnings, notes, prep) | applications | Firestore | `interview_rounds` |
-| Google Calendar connections (sealed refresh token, email, status) | inbox | Firestore | `calendar_connections` (document ID = user ID) |
-| Pending Google Calendar sign-ins | inbox | Firestore | `calendar_oauth_states` (document ID = SHA-256 of the state) |
-| Resume records (title, role, Google Doc ID and link, source) | resume | Firestore | `resumes` |
-| Google Drive connections (sealed refresh token, folder, master resume) | resume | Firestore | `docs_connections` (document ID = user ID) |
-| Pending Google Drive sign-ins | resume | Firestore | `docs_oauth_states` (document ID = SHA-256 of the state) |
-| Resume documents themselves | — | The user's Google Drive, folder "Unhurried resumes" | — |
-| Search criteria, found jobs, watchlist | job-search | In memory | — |
-| Email alert preferences | notifications | In memory | — |
-| Interview slots | inbox | In memory | — |
-
-In-memory data is lost when a Cloud Run instance stops; see [Implementation status](status.md). Firestore queries use equality filters only and sort in the service, so no composite indexes are required. Every document carries a `userId`, and every user-facing read checks it.
-
-Key fields:
-
-- **Pursuit**: job, company, title, URL, `whyRole`, `whyCompany` (each at least 30 characters), `fitNotes`, status (`researching`, `reaching_out`, `ready_to_apply`, `applied`, `dropped`), linked application.
-- **Application**: company, role, `origin` (`shortlist` or `""`), status (`draft`, `submitted`, `viewed`, `interview`, `rejected`, `offer`, `no_response`), ATS, tracking portal URL and username, `submittedAt`, `lastEventAt`.
-- **Conversation**: company, optional linked pursuit, person (name, title, email, LinkedIn), `message` asking for their time, `minutes` asked for, `meetingAt`, status (`to_ask`, `asked`, `agreed`, `scheduled`, `met`, `declined`, `no_response`), `learnings`, `nextReachOut` (date) and note.
-- **Round**: application ID, position, name, status (`upcoming`, `awaiting`, `passed`, `not_passed`, `cancelled`), `interviews` (calendar event ID, title, start/end), `skillsToShow`, `skillsShown`, `learnings`, `notes`, `prep`.
-- **ApplicationEvent**: kind (a status), source (`extension`, `you`, ...), summary, time.
-
-## Technology
-
-| Area | Choice |
-| --- | --- |
-| Backend language | Go: modules require 1.23 (1.26 for applications and inbox, which use Google Cloud client libraries); images are built with Go 1.27. Standard library `net/http` routing |
-| Backend images | `golang:1.27-alpine` build, `gcr.io/distroless/static-debian13:nonroot` runtime, static binary |
-| Frontend | React 18, TypeScript 5, Vite 5, react-router-dom 7, Firebase JS SDK 13 |
-| Extension | Plain JavaScript, Manifest V3, built with a small Node script |
-| Tests | Go `testing` with `httptest`; Vitest + Testing Library (web, jsdom); Vitest (extension); Terraform `terraform test` with mocked providers |
-| Infrastructure | Terraform 1.16, `hashicorp/google` and `google-beta` ~> 6.0, GCS backend |
-| CI/CD | GitHub Actions (pure CI on PRs, pushes & daily cron) + Google Cloud Build & Google Cloud Deploy (pure CD on `staging`/`main`) |
+| **Frontend** | React, TypeScript, Vite, React Router, Firebase JS SDK | React 18, TypeScript 5, Vite 5, React Router v7, Firebase SDK v13 |
+| **Extension** | Vanilla JavaScript, Chrome Extensions Manifest V3 | Manifest V3, content scripts, background service worker |
+| **Backend Services** | Go, Standard Library `net/http` | Go 1.23+ modules, Go 1.27 Alpine build, Distroless Debian 13 runtime |
+| **AI Engine** | Google Cloud Vertex AI | Gemini 2.0 Flash (`gemini-2.0-flash`), region `us-central1` |
+| **Database** | Google Cloud Firestore | Native Mode, delete protection enabled, `us-central1` |
+| **Envelope Encryption** | Google Cloud KMS | Key ring `unhurried`, symmetric encryption (`GOOGLE_SYMMETRIC_ENCRYPTION`), 90-day automatic rotation |
+| **Email Delivery** | Resend SMTP Relay | Host `smtp.resend.com:587`, STARTTLS, credentials in Secret Manager |
+| **Infrastructure** | HashiCorp Terraform | Terraform 1.16, Google & Google-Beta providers ~> 6.0 |
+| **CI Platform** | GitHub Actions | Pure CI, `permissions: contents: read`, zero GCP credentials |
+| **CD Platform** | Google Cloud Build & Google Cloud Deploy | 2nd-gen GitHub connections, SLSA verified builds, progressive rollouts |
