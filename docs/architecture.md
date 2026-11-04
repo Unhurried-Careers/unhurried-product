@@ -34,7 +34,8 @@ flowchart LR
     SCH[Cloud Scheduler]
   end
   EXT[Public job boards<br/>Greenhouse, Lever, Ashby,<br/>Adzuna, USAJobs]
-  GM[Gmail API]
+  GCAL[Google Calendar API]
+  GD[Google Drive / Docs API]
 
   B -->|static files| H
   B -->|Google sign-in| FA
@@ -47,22 +48,22 @@ flowchart LR
   G4 --> S4
   G5 --> S5
   S1 --> EXT
+  S2 --> GD
   S3 --> FS
   S5 --> FS
   S5 --> KMS
-  S5 --> GM
+  S5 --> GCAL
+  SM -.->|OAuth client secret| S2
   SM -.->|OAuth client secret| S5
-  S5 -->|/internal/imports, OIDC| S3
   S1 -->|/internal/job-digest, OIDC| S4
   SCH -->|/internal/scan, OIDC| S1
-  SCH -->|/internal/poll, OIDC| S5
 ```
 
 | Tier | Components |
 | --- | --- |
 | Frontend | `unhurried-web`: React 18 + TypeScript + Vite single-page app on Firebase Hosting. Public homepage at `/`, signed-in app under `/app/*`. `unhurried-extension`: Chrome Manifest V3 apply assistant. |
 | Backend | Five Go services (`unhurried-job-search`, `-resume`, `-applications`, `-notifications`, `-inbox`) on Cloud Run, each with its own API Gateway and OpenAPI spec. Shared code in `unhurried-common`. |
-| Data | Cloud Firestore (Native mode, `us-central1`, delete protection on). Cloud KMS seals Gmail refresh tokens. Gmail is a read-only source system. |
+| Data | Cloud Firestore (Native mode, `us-central1`, delete protection on). Cloud KMS seals Google Calendar and Google Drive refresh tokens. |
 
 ## Request lifecycle
 
@@ -95,41 +96,35 @@ Routes under `/internal/*` are never published on API Gateway; the gateway spec 
 | Caller | Target | Purpose | Schedule |
 | --- | --- | --- | --- |
 | Cloud Scheduler (`unhurried-scheduler` SA) | job-search `POST /internal/scan` | Run saved searches | Daily at 07:00 |
-| Cloud Scheduler (`unhurried-scheduler` SA) | inbox `POST /internal/poll` | Sync every connected Gmail mailbox | Every 15 minutes |
-| inbox (`unhurried-inbox-run` SA) | applications `POST /internal/imports` | Record an application found in Gmail | During each Gmail sync |
 | job-search (`unhurried-job-search-run` SA) | notifications `POST /internal/job-digest` | Email each user the new jobs their search criteria matched | After each scheduled scan |
 
-Each target allows only the listed caller twice over: Cloud Run's `roles/run.invoker` binding, and the service's own check of the token's audience and caller email (`INTERNAL_CALLERS`). Services with no listed caller (resume) reject every internal call.
+Each target allows only the listed caller twice over: Cloud Run's `roles/run.invoker` binding, and the service's own check of the token's audience and caller email (`INTERNAL_CALLERS`). Services with no listed caller (`applications`, `inbox`, `resume`) reject every internal call.
 
-The inbox calls applications, and job-search calls notifications, through Cloud Run's deterministic URLs (`https://unhurried-<service>-<project-number>.<region>.run.app`), which avoids a Terraform dependency cycle between services. Notifications sends the email through the SMTP relay set by `smtp_host`; the relay password is in Secret Manager (`unhurried-smtp-password`), readable only by the notifications service account.
+Job-search calls notifications through Cloud Run's deterministic URL (`https://unhurried-notifications-<project-number>.<region>.run.app`), which avoids a Terraform dependency cycle between services. Notifications sends the email through the SMTP relay set by `smtp_host`; the relay password is in Secret Manager (`unhurried-smtp-password`), readable only by the notifications service account.
 
-## Gmail import flow
+## Google Calendar interview integration
 
 ```mermaid
 sequenceDiagram
   participant U as User (web app)
   participant IN as inbox service
-  participant G as Google OAuth + Gmail API
+  participant G as Google OAuth & Calendar API
   participant K as Cloud KMS
   participant AP as applications service
-  U->>IN: POST /v1/gmail/connect
-  IN->>IN: state (random, stored as SHA-256 hash, 10 min) + PKCE verifier
-  IN-->>U: Google consent URL (gmail.readonly, offline, S256 challenge)
-  U->>G: Consent
-  G-->>U: Redirect to /app/gmail/callback?code&state
-  U->>IN: POST /v1/gmail/callback {code, state}
-  IN->>G: Exchange code + PKCE verifier
-  IN->>IN: Check state owner, age, scope granted, refresh token present
+  U->>IN: POST /v1/calendar/connect
+  IN->>IN: Generate state (SHA-256) + PKCE verifier
+  IN-->>U: Google consent URL (calendar.events.readonly, offline, S256)
+  U->>G: User consents to read-only Calendar access
+  G-->>U: Redirect to /app/calendar/callback?code&state
+  U->>IN: POST /v1/calendar/callback {code, state}
+  IN->>G: Exchange code + PKCE verifier for refresh token
   IN->>K: Encrypt refresh token (AAD = user ID)
-  IN->>IN: Save connection in Firestore
-  loop Each sync pass (web app until backfill done, then every 15 min)
-    IN->>K: Decrypt refresh token
-    IN->>G: Search ATS senders / application subjects (one page)
-    IN->>G: Fetch metadata only (From, Subject, date, snippet)
-    IN->>IN: Parse company, role, status, confidence
-    IN->>AP: POST /internal/imports (finding, no body text)
-    AP->>AP: Dedupe by message ID, match thread or company+role,<br/>only move status forward in time, flag < 0.7 for review
-  end
+  IN->>IN: Store connection in Firestore (calendar_connections)
+  U->>IN: GET /v1/calendar/events (past and next 60 days)
+  IN->>K: Decrypt refresh token
+  IN->>G: Read timed events live (never stored)
+  IN-->>U: Return events flagged likelyInterview
+  U->>AP: POST /v1/applications/{id}/rounds/{roundId}/interviews (confirm link)
 ```
 
 ## Environments
@@ -154,11 +149,11 @@ Each environment is a separate Google Cloud project created from the same Terraf
 | Cloud Run services | 5, region `us-central1`, 0 to 10 instances, 1 vCPU and 512 MiB each, each running as its own `<service>-run` service account |
 | API Gateway | One API, config, and gateway per service, each with its own `<service>-gw` service account (the only Cloud Run invoker besides internal callers) |
 | Firestore | `(default)` database, Native mode, delete protection enabled |
-| Cloud Scheduler | `unhurried-job-search-scan` (`0 7 * * *`, daily), `unhurried-inbox-poll` (`*/15`), time zone America/Chicago |
+| Cloud Scheduler | `unhurried-job-search-scan` (`0 7 * * *`, daily), time zone America/Chicago |
 | Pub/Sub | Topics `unhurried-job-found`, `-resume-ready`, `-application-updated`, `-interview-requested`, `-notify-user` (created; not yet used by code) |
 | Artifact Registry | Docker repository `unhurried` |
-| Cloud KMS | Key ring `unhurried`, keys `gmail-refresh-tokens` (inbox only) and `docs-refresh-tokens` (resume only), 90-day rotation, destroy-protected |
-| Secret Manager | `unhurried-gmail-oauth-client-secret`, `unhurried-web-build-config`, `unhurried-smtp-password` (alert emails; notifications only), placeholders for Adzuna |
+| Cloud KMS | Key ring `unhurried`, keys `calendar-refresh-tokens` (inbox only) and `docs-refresh-tokens` (resume only), 90-day rotation, destroy-protected |
+| Secret Manager | `unhurried-google-oauth-client-secret`, `unhurried-web-build-config`, `unhurried-smtp-password` (alert emails; notifications only), placeholders for Adzuna |
 | Identity Platform | Google provider only; email/password and phone disabled; signup switch; user deletion disabled |
 | Firebase | Web app, App Check (reCAPTCHA Enterprise), Hosting site and custom domains |
 | API key | `unhurried-web` browser key, restricted to the site's domains and the five gateways |
@@ -172,12 +167,13 @@ Shared types live in `unhurried-common/models`. Where data is stored today:
 | --- | --- | --- | --- |
 | Shortlist (pursuits) | applications | Firestore | `pursuits` |
 | Outreach contacts | applications | Firestore | `contacts` |
-| Conversations, stored as invites (person, company, ask, meeting, learnings, reach-out date) | applications | Firestore | `invites` |
-| Conversation settings (booking page link, availability) | applications | Firestore | `invite_settings` (document ID = user ID) |
+| Conversations (person, company, ask, meeting, learnings, reach-out date) | applications | Firestore | `conversations` |
+| Conversation settings (booking page link, availability) | applications | Firestore | `conversation_settings` (document ID = user ID) |
 | Applications | applications | Firestore | `applications` |
 | Application timeline | applications | Firestore | `application_events` |
-| Gmail connections (sealed refresh token, sync cursor, counters) | inbox | Firestore | `gmail_connections` (document ID = user ID) |
-| Pending Gmail sign-ins | inbox | Firestore | `gmail_oauth_states` (document ID = SHA-256 of the state) |
+| Interview rounds (interviews, skills, learnings, notes, prep) | applications | Firestore | `interview_rounds` |
+| Google Calendar connections (sealed refresh token, email, status) | inbox | Firestore | `calendar_connections` (document ID = user ID) |
+| Pending Google Calendar sign-ins | inbox | Firestore | `calendar_oauth_states` (document ID = SHA-256 of the state) |
 | Resume records (title, role, Google Doc ID and link, source) | resume | Firestore | `resumes` |
 | Google Drive connections (sealed refresh token, folder, master resume) | resume | Firestore | `docs_connections` (document ID = user ID) |
 | Pending Google Drive sign-ins | resume | Firestore | `docs_oauth_states` (document ID = SHA-256 of the state) |
@@ -191,9 +187,10 @@ In-memory data is lost when a Cloud Run instance stops; see [Implementation stat
 Key fields:
 
 - **Pursuit**: job, company, title, URL, `whyRole`, `whyCompany` (each at least 30 characters), `fitNotes`, status (`researching`, `reaching_out`, `ready_to_apply`, `applied`, `dropped`), linked application.
-- **Application**: company, role, `origin` (`shortlist` or `gmail`), status (`draft`, `submitted`, `viewed`, `interview`, `rejected`, `offer`, `no_response`), ATS, tracking portal URL and username, `needsReview`, `confidence`, Gmail `threadId`, `submittedAt`, `lastEventAt`.
-- **Invite**: company, optional linked pursuit, person (name, title, email, LinkedIn), `message` asking for their time, `minutes` asked for, `meetingAt`, status (`to_ask`, `asked`, `agreed`, `scheduled`, `met`, `declined`, `no_response`), `learnings`, `nextReachOut` (date) and note.
-- **ApplicationEvent**: kind (a status), source (`extension`, `gmail`, ...), summary, `rawMessageId` (Gmail message ID, used for deduplication), time.
+- **Application**: company, role, `origin` (`shortlist` or `""`), status (`draft`, `submitted`, `viewed`, `interview`, `rejected`, `offer`, `no_response`), ATS, tracking portal URL and username, `submittedAt`, `lastEventAt`.
+- **Conversation**: company, optional linked pursuit, person (name, title, email, LinkedIn), `message` asking for their time, `minutes` asked for, `meetingAt`, status (`to_ask`, `asked`, `agreed`, `scheduled`, `met`, `declined`, `no_response`), `learnings`, `nextReachOut` (date) and note.
+- **Round**: application ID, position, name, status (`upcoming`, `awaiting`, `passed`, `not_passed`, `cancelled`), `interviews` (calendar event ID, title, start/end), `skillsToShow`, `skillsShown`, `learnings`, `notes`, `prep`.
+- **ApplicationEvent**: kind (a status), source (`extension`, `you`, ...), summary, time.
 
 ## Technology
 

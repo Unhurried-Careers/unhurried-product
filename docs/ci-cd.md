@@ -80,7 +80,7 @@ Why a Cloud Deploy **Custom Target Type** (`cloud-run-image`) instead of the bui
 | Plane | File | Steps |
 | --- | --- | --- |
 | **CI (GitHub Actions)** | `.github/workflows/ci.yml` | `terraform fmt -check -recursive -diff` · matrix `init -backend=false`, `validate`, and `test` (mocked providers, no credentials) across all 8 modules (`service`, `data`, `auth`, `hosting`, `google_oauth`, `docs`, `mail`, `cicd`) and both environments (`envs/staging`, `envs/prod`) · `tools/check-specs.mjs` gateway spec linter · matrix spec-sync diff against `openapi.yaml` in all 5 service repos · Checkov Terraform scan (`soft_fail: true`) |
-| **CD (Cloud Build)** | `cloudbuild.yaml` | Runs `tools/check-specs.mjs` and `verify-gateway-spec-sync` (via Cloud Build v2 `accessReadToken`) as a pre-apply safety guard · reads `unhurried-gmail-oauth-client-secret` (required) and `unhurried-smtp-password` (optional) from Secret Manager into an isolated `/tf-secrets` volume · runs `terraform init -reconfigure`, `plan -lock-timeout=10m -out=tfplan`, and `apply -lock-timeout=10m tfplan` against `gs://<project>-tfstate` as `unhurried-terraform` |
+| **CD (Cloud Build)** | `cloudbuild.yaml` | Runs `tools/check-specs.mjs` and `verify-gateway-spec-sync` (via Cloud Build v2 `accessReadToken`) as a pre-apply safety guard · reads `unhurried-google-oauth-client-secret` (required) and `unhurried-smtp-password` (optional) from Secret Manager into an isolated `/tf-secrets` volume · runs `terraform init -reconfigure`, `plan -lock-timeout=10m -out=tfplan`, and `apply -lock-timeout=10m tfplan` against `gs://<project>-tfstate` as `unhurried-terraform` |
 
 ## Least-privilege identities & secrets
 
@@ -100,7 +100,7 @@ Why a Cloud Deploy **Custom Target Type** (`cloud-run-image`) instead of the bui
 1. **Zero GCP credentials or deployment secrets in GitHub**: No GCP Workload Identity Federation, service account keys, OAuth secrets, or SMTP passwords exist in GitHub Actions.
 2. **GitHub CI cross-repo read App (`CI_APP_CLIENT_ID` + `CI_APP_PRIVATE_KEY`)**: Because `Unhurried-Careers` repositories are private, an internal GitHub App owned by `Unhurried-Careers` (`Unhurried-Careers CI Reader`, `Contents: Read-only` only, webhooks disabled) is installed on `unhurried-common` and the 5 Go service repos. Only the **6 repositories** that read sibling repos during CI (`5 Go services` + `unhurried-infra`) store `CI_APP_CLIENT_ID` and `CI_APP_PRIVATE_KEY`, and mint 1-hour auto-revoked tokens via `actions/create-github-app-token@v3` downscoped to the exact target repo (`unhurried-common` or `${{ matrix.repo }}`). Zero personal access tokens exist, and `unhurried-common`, `unhurried-web`, `unhurried-extension`, and `unhurried-product` have zero GitHub secrets.
 3. **Google Cloud CD cross-repo clones without PATs**: Inside Cloud Build, steps call `POST https://cloudbuild.googleapis.com/v2/.../repositories/<repo>:accessReadToken` using their GCP service account identity to mint a short-lived, read-only GitHub App token and pass it via a transient `http.https://github.com/.extraheader` git flag (never written to `.git/config` or logs).
-4. **Deployment & runtime secrets in GCP Secret Manager**: `unhurried-gmail-oauth-client-secret`, `unhurried-smtp-password`, and `unhurried-web-build-config` live exclusively in each environment's Google Secret Manager.
+4. **Deployment & runtime secrets in GCP Secret Manager**: `unhurried-google-oauth-client-secret`, `unhurried-smtp-password`, and `unhurried-web-build-config` live exclusively in each environment's Google Secret Manager.
 
 ## Runbooks
 
@@ -151,7 +151,7 @@ Covered in `unhurried-infra/README.md`: create the staging GCP project, link bil
 ### Rotate the OAuth client secret
 
 1. Create a new client secret on the Web OAuth client in Google Auth Platform.
-2. Update `envs/prod/terraform.tfvars` locally (or add a new version directly to `unhurried-gmail-oauth-client-secret` in Secret Manager: `printf '%s' "$NEW_SECRET" | gcloud secrets versions add unhurried-gmail-oauth-client-secret --data-file=- --project=project-191091d4-b2e5-4294-9e7`) and run `unhurried-infra-apply` (updates Identity Platform and Secret Manager).
+2. Update `envs/prod/terraform.tfvars` locally (or add a new version directly to `unhurried-google-oauth-client-secret` in Secret Manager: `printf '%s' "$NEW_SECRET" | gcloud secrets versions add unhurried-google-oauth-client-secret --data-file=- --project=project-191091d4-b2e5-4294-9e7`) and run `unhurried-infra-apply` (updates Identity Platform and Secret Manager).
 3. Trigger a rollout of `unhurried-inbox` and `unhurried-resume` so new Cloud Run revisions pick up `latest`, then delete the old secret in Google Auth Platform.
 
 ### Bootstrap or rotate the GitHub CI Reader App

@@ -25,10 +25,10 @@ Full documentation is in [docs/](docs/README.md): [architecture](docs/architectu
 | [unhurried-infra](https://github.com/Unhurried-Careers/unhurried-infra) | Terraform for GCP (API Gateway, Cloud Run, Firestore, Pub/Sub, Scheduler, Firebase Auth + Hosting) |
 | [unhurried-common](https://github.com/Unhurried-Careers/unhurried-common) | Shared Go library (auth, HTTP hardening, validation, models) |
 | [unhurried-job-search](https://github.com/Unhurried-Careers/unhurried-job-search) | Saved searches, job boards, and the company watchlist |
-| [unhurried-resume](https://github.com/Unhurried-Careers/unhurried-resume) | Resume records and tailoring requests (Google Docs and AI not wired yet) |
-| [unhurried-applications](https://github.com/Unhurried-Careers/unhurried-applications) | Shortlist, outreach kit, applications, Gmail imports, extension API |
+| [unhurried-resume](https://github.com/Unhurried-Careers/unhurried-resume) | Resume records, Google Docs/Drive connection, and AI resume tailoring (Vertex AI) |
+| [unhurried-applications](https://github.com/Unhurried-Careers/unhurried-applications) | Shortlist, outreach kit, conversations, application tracker, interview rounds, extension API |
 | [unhurried-notifications](https://github.com/Unhurried-Careers/unhurried-notifications) | Email alerts for new jobs that match saved search criteria |
-| [unhurried-inbox](https://github.com/Unhurried-Careers/unhurried-inbox) | Gmail connection and import, interview slot proposals |
+| [unhurried-inbox](https://github.com/Unhurried-Careers/unhurried-inbox) | Google Calendar interview discovery, interview slot proposals |
 | [unhurried-web](https://github.com/Unhurried-Careers/unhurried-web) | TypeScript React frontend (static, on Firebase Hosting) |
 | [unhurried-extension](https://github.com/Unhurried-Careers/unhurried-extension) | Chrome MV3 apply assistant |
 
@@ -38,7 +38,7 @@ Each folder is its **own git repository** with `main` (production) and `staging`
 
 1. **Frontend** — `unhurried-web` is a static single-page app on Firebase Hosting (global CDN): a public homepage at `/` and the signed-in app at `/app`. It and `unhurried-extension` call the HTTPS API Gateways.
 2. **Backend** — five Go Cloud Run services, each fronted by its own API Gateway.
-3. **Data** — Cloud Firestore (Native mode) plus Gmail as a read-only source system.
+3. **Data** — Cloud Firestore (Native mode), plus read-only Google Calendar (interviews) and Google Drive (resumes) connections.
 
 ## Sign in
 

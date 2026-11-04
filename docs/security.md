@@ -68,7 +68,7 @@ Each service's `openapi.yaml` (linted in CI by `tools/check-specs.mjs`) requires
 
 ### 4. Handlers
 
-- **Ownership.** Every read and write is scoped to the caller's user ID; another user's record answers 404. `/internal/events` takes the user from the stored application, not from the request. Interview rounds are reached only through their own application, and a Google Calendar event can be linked to only one round per user. Tests cover cross-user access for each service.
+- **Ownership.** Every read and write is scoped to the caller's user ID; another user's record answers 404. Interview rounds are reached only through their own application, and a Google Calendar event can be linked to only one round per user. Tests cover cross-user access for each service.
 - **Validation.** Every field has a length limit, enumerations are checked with `OneOf`, URLs must be https (`HTTPSURL`) or on an expected host (LinkedIn contacts must be on linkedin.com), email addresses are validated, list sizes are capped.
 - **Outbound requests (SSRF).** Job board clients call only fixed hosts; the board token a user supplies must match `^[A-Za-z0-9._-]{1,100}$`, so it cannot change the host or path. Responses are capped at 10 MiB with a 15-second timeout.
 - **No automated submission.** Recording a submit requires `confirmed: true`, sent only after the user confirms in the extension.
@@ -88,9 +88,8 @@ Cloud Run's IAM binding enforces the same caller list a second time. Cloud Run i
 ## Data protection
 
 - **Firestore** has delete protection enabled. The web app never talks to Firestore; all access goes through the services' service accounts, which bypass security rules. Terraform (`modules/auth`) deploys rules that deny every read and write from client SDKs, so even someone holding the public Firebase config cannot reach the database directly.
-- **Google Calendar refresh tokens** are encrypted with Cloud KMS before storage, with the user ID as additional authenticated data, so a sealed token copied onto another user's record fails to decrypt. The key (`gmail-refresh-tokens`, named before Gmail was retired) rotates every 90 days (old versions stay enabled to decrypt existing tokens), is protected from Terraform destroy, and only the inbox service account can encrypt or decrypt with it. Without a KMS key name the inbox refuses to start in Firestore mode, so tokens are never stored unsealed.
+- **Google Calendar refresh tokens** are encrypted with Cloud KMS before storage, with the user ID as additional authenticated data, so a sealed token copied onto another user's record fails to decrypt. The key (`calendar-refresh-tokens`) rotates every 90 days (old versions stay enabled to decrypt existing tokens), is protected from Terraform destroy, and only the inbox service account can encrypt or decrypt with it. Without a KMS key name the inbox refuses to start in Firestore mode, so tokens are never stored unsealed.
 - **Minimal calendar data.** Events are read live when the tracker opens and never stored. Only each event's ID, title, link, times, and guest addresses are requested (never descriptions or attachments), and guests leave the inbox only as email domains. What is stored is what the user chooses to add to a round: the interview's title, times, and calendar event ID.
-- **Retired Gmail data.** The Gmail import has been removed. Applications it imported stay as ordinary applications. Gmail connections saved earlier (`gmail_connections` in Firestore, with sealed tokens) are no longer read; delete that collection, and remove Unhurried's Gmail access at myaccount.google.com/permissions.
 - **Extension data.** The user's contact details for form filling stay in `chrome.storage.local` in their browser. Portal passwords are never collected.
 - **Terraform state** is in a versioned Cloud Storage bucket in the same project.
 
@@ -144,7 +143,7 @@ While the OAuth consent screen is in Testing mode, Google limits access to liste
 
 | Secret | Where it lives | Who can read it |
 | --- | --- | --- |
-| Google OAuth client secret | Secret Manager `unhurried-gmail-oauth-client-secret`; Identity Platform config; Terraform state; local gitignored `envs/prod/terraform.tfvars` | Inbox and resume service accounts; project owners; the `unhurried-terraform` Cloud Build account |
+| Google OAuth client secret | Secret Manager `unhurried-google-oauth-client-secret`; Identity Platform config; Terraform state; local gitignored `envs/prod/terraform.tfvars` | Inbox and resume service accounts; project owners; the `unhurried-terraform` Cloud Build account |
 | Web build configuration (includes the browser API key) | Secret Manager `unhurried-web-build-config` | `unhurried-web-deployer` service account |
 | Google Calendar refresh tokens (per user) | Firestore, sealed with Cloud KMS | Inbox service account (decrypt) |
 | Google Drive refresh tokens (per user) | Firestore, sealed with a separate Cloud KMS key | Resume service account (decrypt) |
@@ -180,6 +179,5 @@ Everything else needs no stored secret: services reach Google APIs as their serv
 | Free GitHub plan: no GitHub branch protection on private repos, so anyone with write access to `main` triggers production builds | Set `require_deploy_approval = true` in `envs/prod/settings.auto.tfvars` to require manual approval in Google Cloud Deploy before Cloud Run rollouts, or upgrade GitHub to require PR reviews on `main` |
 | `unhurried-terraform` has project owner | Replace with a custom role or a list of admin roles once the resource set is stable |
 | The OAuth client secret is also in Terraform state | Treat state-bucket access as secret access; consider creating the secret version out of band and reading it with a data source |
-| Consent screen in Testing mode | Keep it while usage is personal (limits access to test users); publishing requires Google's verification for the sensitive Calendar scope (lighter than the restricted-scope security assessment Gmail would have needed) |
-| Old Gmail connections still in Firestore | Delete the `gmail_connections` and `gmail_oauth_states` collections after deploying, and remove Unhurried's Gmail grant at myaccount.google.com/permissions |
+| Consent screen in Testing mode | Keep it while usage is personal (limits access to test users); publishing requires Google's verification for the sensitive Calendar scope |
 | Unused placeholder secrets and Pub/Sub topics | Remove them, or wire them with the features that need them |
