@@ -1,15 +1,15 @@
 {
-  "generatedAt": "2026-11-06T18:40:50.864Z",
+  "generatedAt": "2026-11-06T18:53:15.708Z",
   "org": "Unhurried-Careers",
   "summary": {
     "totalRepositories": 10,
-    "trackedPipelines": 9,
+    "trackedPipelines": 10,
     "successful": 9,
     "failed": 0,
-    "inProgress": 0,
-    "successRate": 100,
-    "avgDurationSeconds": 117,
-    "overallStatus": "healthy"
+    "inProgress": 1,
+    "successRate": 90,
+    "avgDurationSeconds": 106,
+    "overallStatus": "running"
   },
   "repositories": [
     {
@@ -2212,10 +2212,110 @@
       "ciWorkflow": "CI",
       "org": "Unhurried-Careers",
       "repoUrl": "https://github.com/Unhurried-Careers/unhurried-product",
-      "hasActiveRuns": false,
-      "latestRun": null,
-      "runDetails": null,
-      "history": []
+      "hasActiveRuns": true,
+      "latestRun": {
+        "id": 42274700710,
+        "workflow": "CI/CD Pipeline Dashboard",
+        "status": "in_progress",
+        "conclusion": "running",
+        "branch": "main",
+        "commitSha": "e97fe16",
+        "fullSha": "e97fe16e224f6a71a5f5cb86d9d9cc17974d9ffc",
+        "commitTitle": "feat: add native GitHub Actions workflow dashboard and README matrix",
+        "createdAt": "2026-11-06T18:53:03Z",
+        "updatedAt": "2026-11-06T18:53:07Z",
+        "durationSeconds": 4,
+        "url": "https://github.com/Unhurried-Careers/unhurried-product/actions/runs/42274700710"
+      },
+      "runDetails": {
+        "jobs": [
+          {
+            "name": "Refresh Status & Generate Dashboard",
+            "conclusion": "running",
+            "status": "in_progress",
+            "steps": [
+              {
+                "name": "Set up job",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Check out unhurried-product",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Set up Node.js",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Fetch pipeline statuses across all repositories",
+                "status": "in_progress",
+                "conclusion": ""
+              },
+              {
+                "name": "Validate dashboard test suite",
+                "status": "pending",
+                "conclusion": ""
+              },
+              {
+                "name": "Generate GitHub Step Summary & update README.md",
+                "status": "pending",
+                "conclusion": ""
+              },
+              {
+                "name": "Commit and push updated status matrix",
+                "status": "pending",
+                "conclusion": ""
+              },
+              {
+                "name": "Upload dashboard artifact",
+                "status": "pending",
+                "conclusion": ""
+              },
+              {
+                "name": "Setup Pages",
+                "status": "pending",
+                "conclusion": ""
+              },
+              {
+                "name": "Upload Pages artifact",
+                "status": "pending",
+                "conclusion": ""
+              },
+              {
+                "name": "Deploy to GitHub Pages",
+                "status": "pending",
+                "conclusion": ""
+              },
+              {
+                "name": "Post Set up Node.js",
+                "status": "pending",
+                "conclusion": ""
+              },
+              {
+                "name": "Post Check out unhurried-product",
+                "status": "pending",
+                "conclusion": ""
+              }
+            ]
+          }
+        ]
+      },
+      "history": [
+        {
+          "id": 42274700710,
+          "branch": "main",
+          "commitSha": "e97fe16",
+          "commitTitle": "feat: add native GitHub Actions workflow dashboard and README matrix",
+          "status": "in_progress",
+          "conclusion": "running",
+          "durationSeconds": 4,
+          "createdAt": "2026-11-06T18:53:03Z",
+          "url": "https://github.com/Unhurried-Careers/unhurried-product/actions/runs/42274700710"
+        }
+      ]
     }
   ]
 }
