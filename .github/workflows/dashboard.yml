@@ -1,0 +1,85 @@
+name: CI/CD Pipeline Dashboard
+
+on:
+  schedule:
+    # Refresh dashboard every 2 hours
+    - cron: "0 */2 * * *"
+  workflow_dispatch:
+    # Enables one-click manual refresh directly in GitHub Actions
+  push:
+    branches: [main]
+    paths:
+      - "dashboard/**"
+      - ".github/workflows/dashboard.yml"
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: cicd-dashboard
+  cancel-in-progress: true
+
+jobs:
+  update-dashboard:
+    name: Refresh Status & Generate Dashboard
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out unhurried-product
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.DASHBOARD_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Fetch pipeline statuses across all repositories
+        env:
+          GH_TOKEN: ${{ secrets.DASHBOARD_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
+        run: |
+          node dashboard/fetch-status.mjs
+
+      - name: Validate dashboard test suite
+        run: |
+          node dashboard/dashboard.test.mjs
+
+      - name: Generate GitHub Step Summary & update README.md
+        run: |
+          node dashboard/generate-markdown-dashboard.mjs
+
+      - name: Commit and push updated status matrix
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add dashboard/data/ci-status.json README.md
+          if ! git diff --cached --quiet; then
+            git commit -m "chore(dashboard): update CI/CD status matrix [skip ci]"
+            git push origin main
+          else
+            echo "No changes to status matrix."
+          fi
+
+      - name: Upload dashboard artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: unhurried-cicd-dashboard
+          path: dashboard/
+
+      # Optional GitHub Pages deployment (automatically activates if Pages is enabled)
+      - name: Setup Pages
+        continue-on-error: true
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        continue-on-error: true
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dashboard/
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        continue-on-error: true
+        uses: actions/deploy-pages@v4
