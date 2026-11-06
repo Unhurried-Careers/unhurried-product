@@ -18,6 +18,13 @@ Job search, resume tailoring, application tracking, and interview scheduling —
 
 Full documentation is in [docs/](docs/README.md): [architecture](docs/architecture.md), [codebase guide](docs/codebase.md), [CI/CD](docs/ci-cd.md), [security](docs/security.md), and [implementation status](docs/status.md).
 
+## CI/CD Status Dashboard
+
+Monitor real-time pipeline status, test runs, and deployment health across all 10 repositories via the [CI/CD Dashboard](dashboard/README.md):
+- Open `dashboard/index.html` directly in your browser, or
+- Start the live dashboard server: `cd dashboard && npm start` (runs on `http://localhost:3000`)
+- Update the status snapshot anytime: `cd dashboard && npm run fetch`
+
 ## Repositories
 
 | Repo | Role |

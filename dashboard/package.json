@@ -1,0 +1,14 @@
+{
+  "name": "unhurried-cicd-dashboard",
+  "version": "0.1.0",
+  "description": "Continuous Integration & Continuous Delivery Status Dashboard for Unhurried",
+  "type": "module",
+  "scripts": {
+    "start": "node fetch-status.mjs --serve",
+    "fetch": "node fetch-status.mjs",
+    "test": "node dashboard.test.mjs"
+  },
+  "keywords": ["ci-cd", "dashboard", "unhurried", "observability"],
+  "author": "Unhurried Team",
+  "license": "ISC"
+}

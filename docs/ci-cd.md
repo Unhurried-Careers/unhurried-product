@@ -159,6 +159,14 @@ Covered in `unhurried-infra/README.md`: create the staging GCP project, link bil
 - **Initial setup**: Run `node unhurried-infra/tools/setup-ci-github-app.mjs` to launch the 2-click GitHub App Manifest registration + installation flow, verify downscoped token minting, and set `CI_APP_CLIENT_ID` + `CI_APP_PRIVATE_KEY` across all 6 CI reader repositories.
 - **Key rotation**: Generate a new private key on the `Unhurried-Careers CI Reader` GitHub App, run `node unhurried-infra/tools/setup-ci-github-app.mjs --client-id <Iv23...> --private-key-file <new-key.pem>`, delete the `.pem` file from disk, and revoke the old key in GitHub App settings.
 
+### CI/CD Pipeline Status Dashboard
+
+A dedicated real-time observability dashboard is maintained in `unhurried-product/dashboard/`:
+- **Real-Time Matrix**: Monitors CI status across all 10 repositories (5 Go backend services, `unhurried-web`, `unhurried-extension`, `unhurried-infra`, `unhurried-common`, and `unhurried-product`).
+- **Deep Step Inspection**: Inspects all individual CI steps (`gofmt`, `go vet`, `go test -race`, `govulncheck`, `Docker smoke check`, `typecheck`, `spec-sync`) and Cloud Deploy targets.
+- **Run Directly**: Open `dashboard/index.html` in any browser or run `npm start` in `dashboard/` to serve at `http://localhost:3000`.
+- **Data Snapshot**: Run `npm run fetch` in `dashboard/` to update `dashboard/data/ci-status.json`.
+
 ### Troubleshooting
 
 | Symptom | Cause |
