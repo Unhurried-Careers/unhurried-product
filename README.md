@@ -25,14 +25,14 @@ Full documentation is in [docs/](docs/README.md): [architecture](docs/architectu
 ## 🚀 Unhurried CI/CD Pipeline Status Dashboard
 
 > **Global Status:** 🟡 **Workflows In Progress**  
-> **Last Synchronized:** `Fri, 06 Nov 2026 18:53:15 GMT`  
+> **Last Synchronized:** `Fri, 06 Nov 2026 23:57:34 GMT`  
 > **Security Boundary:** Pure Continuous Integration (GitHub Actions) with `permissions: contents: read` · Zero Google Cloud secrets in GitHub
 
 ### 📊 Health & Reliability Summary
 
 | Total Repositories | Tracked CI Pipelines | Passing on `main` | Success Rate | Average Runtime | Security Model |
 | :---: | :---: | :---: | :---: | :---: | :---: |
-| **10** | **10** | **9 / 10** | **90%** | **1m 46s** | **Zero GCP Keys** |
+| **10** | **10** | **9 / 10** | **90%** | **1m 45s** | **Zero GCP Keys** |
 
 ### 🛠 Pipeline Matrix
 
@@ -47,7 +47,7 @@ Full documentation is in [docs/](docs/README.md): [architecture](docs/architectu
 | 🟢 **Passing** | [**Web App (SPA)**](https://github.com/Unhurried-Careers/unhurried-web)<br/>`unhurried-web` | TypeScript React frontend deployed to Firebase Hosting CDN | `Firebase Hosting · Global CDN` | `main` | [`c247aa7`](https://github.com/Unhurried-Careers/unhurried-web/commit/c247aa7eba511224895bfb00ab56a31493815e31) | 1m 11s | [Run #42239228746 ↗](https://github.com/Unhurried-Careers/unhurried-web/actions/runs/42239228746) |
 | 🟢 **Passing** | [**Chrome Extension**](https://github.com/Unhurried-Careers/unhurried-extension)<br/>`unhurried-extension` | Chrome MV3 job application assistant | `Cloud Storage · Artifacts` | `main` | [`5da805b`](https://github.com/Unhurried-Careers/unhurried-extension/commit/5da805bb9cadb6b6b93707f0328f8ae43a4e610f) | 0m 21s | [Run #42233649823 ↗](https://github.com/Unhurried-Careers/unhurried-extension/actions/runs/42233649823) |
 | 🟢 **Passing** | [**Infrastructure & Specs**](https://github.com/Unhurried-Careers/unhurried-infra)<br/>`unhurried-infra` | Terraform GCP infrastructure, API Gateway specs, and security rules | `Terraform · GCP Prod & Staging` | `main` | [`06ec0fc`](https://github.com/Unhurried-Careers/unhurried-infra/commit/06ec0fc21aa2997e0353969fe23d2fb97a0ad7df) | 1m 13s | [Run #42238491233 ↗](https://github.com/Unhurried-Careers/unhurried-infra/actions/runs/42238491233) |
-| 🟡 **Running** | [**Product & Architecture**](https://github.com/Unhurried-Careers/unhurried-product)<br/>`unhurried-product` | System specifications, architecture guides, and CI/CD dashboard | `Documentation & Meta` | `main` | [`e97fe16`](https://github.com/Unhurried-Careers/unhurried-product/commit/e97fe16e224f6a71a5f5cb86d9d9cc17974d9ffc) | 0m 4s | [Run #42274700710 ↗](https://github.com/Unhurried-Careers/unhurried-product/actions/runs/42274700710) |
+| 🟡 **Running** | [**Product & Architecture**](https://github.com/Unhurried-Careers/unhurried-product)<br/>`unhurried-product` | System specifications, architecture guides, and CI/CD dashboard | `Documentation & Meta` | `main` | [`c0bf4c3`](https://github.com/Unhurried-Careers/unhurried-product/commit/c0bf4c31d7f2f4808a2755d081878a268ce69669) | 0m 3s | [Run #42315200792 ↗](https://github.com/Unhurried-Careers/unhurried-product/actions/runs/42315200792) |
 
 ### 🔍 Deep Step-by-Step CI Verifications
 
@@ -454,7 +454,7 @@ Full documentation is in [docs/](docs/README.md): [architecture](docs/architectu
 </details>
 
 <details>
-<summary><b>Product & Architecture (unhurried-product)</b> — Latest Run #42274700710 (<code>e97fe16</code>) — <i>feat: add native GitHub Actions workflow dashboard and README matrix</i></summary>
+<summary><b>Product & Architecture (unhurried-product)</b> — Latest Run #42315200792 (<code>c0bf4c3</code>) — <i>CI/CD Pipeline Dashboard</i></summary>
 
 **Job:** `Refresh Status & Generate Dashboard` (running)
 

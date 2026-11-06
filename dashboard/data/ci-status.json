@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-06T18:53:15.708Z",
+  "generatedAt": "2026-11-06T23:57:34.156Z",
   "org": "Unhurried-Careers",
   "summary": {
     "totalRepositories": 10,
@@ -8,7 +8,7 @@
     "failed": 0,
     "inProgress": 1,
     "successRate": 90,
-    "avgDurationSeconds": 106,
+    "avgDurationSeconds": 105,
     "overallStatus": "running"
   },
   "repositories": [
@@ -2214,18 +2214,18 @@
       "repoUrl": "https://github.com/Unhurried-Careers/unhurried-product",
       "hasActiveRuns": true,
       "latestRun": {
-        "id": 42274700710,
+        "id": 42315200792,
         "workflow": "CI/CD Pipeline Dashboard",
         "status": "in_progress",
         "conclusion": "running",
         "branch": "main",
-        "commitSha": "e97fe16",
-        "fullSha": "e97fe16e224f6a71a5f5cb86d9d9cc17974d9ffc",
-        "commitTitle": "feat: add native GitHub Actions workflow dashboard and README matrix",
-        "createdAt": "2026-11-06T18:53:03Z",
-        "updatedAt": "2026-11-06T18:53:07Z",
-        "durationSeconds": 4,
-        "url": "https://github.com/Unhurried-Careers/unhurried-product/actions/runs/42274700710"
+        "commitSha": "c0bf4c3",
+        "fullSha": "c0bf4c31d7f2f4808a2755d081878a268ce69669",
+        "commitTitle": "CI/CD Pipeline Dashboard",
+        "createdAt": "2026-11-06T23:57:22Z",
+        "updatedAt": "2026-11-06T23:57:25Z",
+        "durationSeconds": 3,
+        "url": "https://github.com/Unhurried-Careers/unhurried-product/actions/runs/42315200792"
       },
       "runDetails": {
         "jobs": [
@@ -2305,13 +2305,24 @@
       },
       "history": [
         {
+          "id": 42315200792,
+          "branch": "main",
+          "commitSha": "c0bf4c3",
+          "commitTitle": "CI/CD Pipeline Dashboard",
+          "status": "in_progress",
+          "conclusion": "running",
+          "durationSeconds": 3,
+          "createdAt": "2026-11-06T23:57:22Z",
+          "url": "https://github.com/Unhurried-Careers/unhurried-product/actions/runs/42315200792"
+        },
+        {
           "id": 42274700710,
           "branch": "main",
           "commitSha": "e97fe16",
           "commitTitle": "feat: add native GitHub Actions workflow dashboard and README matrix",
-          "status": "in_progress",
-          "conclusion": "running",
-          "durationSeconds": 4,
+          "status": "completed",
+          "conclusion": "success",
+          "durationSeconds": 40,
           "createdAt": "2026-11-06T18:53:03Z",
           "url": "https://github.com/Unhurried-Careers/unhurried-product/actions/runs/42274700710"
         }
