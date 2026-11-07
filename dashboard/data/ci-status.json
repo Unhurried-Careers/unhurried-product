@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-06T23:57:34.156Z",
+  "generatedAt": "2026-11-07T05:28:12.395Z",
   "org": "Unhurried-Careers",
   "summary": {
     "totalRepositories": 10,
@@ -8,7 +8,7 @@
     "failed": 0,
     "inProgress": 1,
     "successRate": 90,
-    "avgDurationSeconds": 105,
+    "avgDurationSeconds": 106,
     "overallStatus": "running"
   },
   "repositories": [
@@ -2214,18 +2214,18 @@
       "repoUrl": "https://github.com/Unhurried-Careers/unhurried-product",
       "hasActiveRuns": true,
       "latestRun": {
-        "id": 42315200792,
+        "id": 42342840846,
         "workflow": "CI/CD Pipeline Dashboard",
         "status": "in_progress",
         "conclusion": "running",
         "branch": "main",
-        "commitSha": "c0bf4c3",
-        "fullSha": "c0bf4c31d7f2f4808a2755d081878a268ce69669",
+        "commitSha": "972270b",
+        "fullSha": "972270b0ee6fa5e6c95899f14681ad6db41641b0",
         "commitTitle": "CI/CD Pipeline Dashboard",
-        "createdAt": "2026-11-06T23:57:22Z",
-        "updatedAt": "2026-11-06T23:57:25Z",
-        "durationSeconds": 3,
-        "url": "https://github.com/Unhurried-Careers/unhurried-product/actions/runs/42315200792"
+        "createdAt": "2026-11-07T05:28:00Z",
+        "updatedAt": "2026-11-07T05:28:04Z",
+        "durationSeconds": 4,
+        "url": "https://github.com/Unhurried-Careers/unhurried-product/actions/runs/42342840846"
       },
       "runDetails": {
         "jobs": [
@@ -2305,13 +2305,24 @@
       },
       "history": [
         {
+          "id": 42342840846,
+          "branch": "main",
+          "commitSha": "972270b",
+          "commitTitle": "CI/CD Pipeline Dashboard",
+          "status": "in_progress",
+          "conclusion": "running",
+          "durationSeconds": 4,
+          "createdAt": "2026-11-07T05:28:00Z",
+          "url": "https://github.com/Unhurried-Careers/unhurried-product/actions/runs/42342840846"
+        },
+        {
           "id": 42315200792,
           "branch": "main",
           "commitSha": "c0bf4c3",
           "commitTitle": "CI/CD Pipeline Dashboard",
-          "status": "in_progress",
-          "conclusion": "running",
-          "durationSeconds": 3,
+          "status": "completed",
+          "conclusion": "success",
+          "durationSeconds": 39,
           "createdAt": "2026-11-06T23:57:22Z",
           "url": "https://github.com/Unhurried-Careers/unhurried-product/actions/runs/42315200792"
         },
