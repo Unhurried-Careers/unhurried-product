@@ -1,6 +1,6 @@
 # Architecture
 
-Unhurried is a deliberate, privacy-first job pursuit system built on Google Cloud managed services. Nothing runs on servers the project maintains: the frontend is a single-page application served from Firebase Hosting's global CDN, each backend microservice is a container on Cloud Run that scales to zero, and all persistent state lives in Cloud Firestore with envelope encryption via Cloud KMS.
+Unhurried is a deliberate, privacy-first job search process built on Google Cloud managed services: the user sets a direction (target companies, roles, and requirements, each with a reason), researches it, discovers matching postings, and takes each opportunity through stages that each need a written reason before it can move on. Nothing runs on servers the project maintains: the frontend is a single-page application served from Firebase Hosting's global CDN, each backend microservice is a container on Cloud Run that scales to zero, and all persistent state lives in Cloud Firestore with envelope encryption via Cloud KMS.
 
 ---
 
@@ -30,9 +30,9 @@ flowchart TD
   end
 
   subgraph Compute["Compute Tier (Cloud Run Services, us-central1)"]
-    S1["unhurried-job-search<br/>(Criteria, Board Scrapers, Watched Companies)"]
+    S1["unhurried-job-search<br/>(Direction, Research & AI Summaries, Discovery)"]
     S2["unhurried-resume<br/>(Google Docs Workspace, AI Tailoring)"]
-    S3["unhurried-applications<br/>(Shortlist, Outreach, Conversations, Tracker)"]
+    S3["unhurried-applications<br/>(Opportunity Pipeline & Gates, Outreach, Conversations, Rounds)"]
     S4["unhurried-notifications<br/>(Alert Preferences, Resend SMTP Relay)"]
     S5["unhurried-inbox<br/>(Calendar Sync, Interview Heuristics, Free Slots)"]
   end
@@ -68,15 +68,16 @@ flowchart TD
   SCH -->|"POST /internal/scan (OIDC)"| S1
   S1 -->|"POST /internal/job-digest (OIDC)"| S4
 
-  S1 -->|"read criteria, jobs, watchlist"| FS
-  S1 -->|"scrape public job feeds"| BOARDS
+  S1 -->|"read/write directions, research, postings"| FS
+  S1 -->|"read public job feeds"| BOARDS
+  S1 -->|"grounded research summaries"| VERTEX
 
   S2 -->|"read/write resumes"| FS
   S2 -->|"decrypt OAuth tokens"| KMS
   S2 -->|"read/write docs"| GDOCS
   S2 -->|"tailor resume copy"| VERTEX
 
-  S3 -->|"read/write pursuits, applications, conversations, rounds"| FS
+  S3 -->|"read/write opportunities, conversations, rounds"| FS
 
   S4 -->|"read preferences"| FS
   S4 -->|"read smtp password"| SM
@@ -90,12 +91,12 @@ flowchart TD
 
 | Tier | Components | Responsibilities |
 | --- | --- | --- |
-| **Frontend** | `unhurried-web` | React 18 single-page application built with TypeScript and Vite. Deployed to Firebase Hosting (`unhurried-careers.com`). Manages authenticated state, Google Picker, Resume Studio, Application Tracker, and Settings. |
-| **Extension** | `unhurried-extension` | Chrome Manifest V3 apply assistant. Communicates exclusively through the active signed-in tab of `unhurried-web` via `window.postMessage`. Detects ATS platforms (Greenhouse, Lever, Ashby, Workday), pre-fills applicant data, and records submissions without storing user credentials or auto-submitting. |
+| **Frontend** | `unhurried-web` | React 18 single-page application built with TypeScript and Vite. Deployed to Firebase Hosting (`unhurried-careers.com`). Walks the user through the process: Direction, Research, Discover, the Pipeline, and one page per opportunity with a stage stepper; plus Conversations, Resume Studio (Google Picker), Interviews, and Settings. |
+| **Extension** | `unhurried-extension` | Chrome Manifest V3 apply assistant. Communicates exclusively through the active signed-in tab of `unhurried-web` via `window.postMessage`. Lists the opportunities whose resume is ready, detects ATS platforms (Greenhouse, Lever, Ashby, Workday), pre-fills applicant data, and records submissions (moving the opportunity to applied) without storing user credentials or auto-submitting. |
 | **API Gateways** | 5 managed Google API Gateways | Validates caller API keys, rate limits client traffic (300 req/min per service), validates Firebase ID tokens (signature, issuer, audience), and invokes Cloud Run backend services via dedicated gateway service accounts. |
 | **Compute** | 5 Go Cloud Run services | Containerized Go 1.27 applications (`golang:1.27-alpine` build, `gcr.io/distroless/static-debian13:nonroot` runtime). Each enforces ownership scoping, App Check attestation, user email allowlisting, and specific domain rules. |
 | **Data & Secrets** | Firestore, KMS, Secret Manager | Cloud Firestore (Native mode, `us-central1`) for document persistence. Cloud KMS key ring `unhurried` for envelope encryption of external OAuth tokens. Secret Manager for sensitive third-party credentials. |
-| **AI & External APIs** | Vertex AI, Google Workspace, Resend | Vertex AI Gemini 2.0 Flash for structured resume tailoring. Google Drive & Docs APIs for document management. Google Calendar API for interview discovery. Resend SMTP for outbound alert delivery. |
+| **AI & External APIs** | Vertex AI, Google Workspace, Resend | Vertex AI Gemini 2.0 Flash for structured resume tailoring (resume service) and for research summaries with Google Search grounding and sources (job-search service). Google Drive & Docs APIs for document management. Google Calendar API for interview discovery. Resend SMTP for outbound alert delivery. |
 
 ---
 
@@ -152,7 +153,7 @@ Request ──► httpx.CORS ──► httpx.Recover ──► httpx.Harden ─�
 
 ## 3. Daily Outbound Job Alerts & Scanning Pipeline
 
-Every morning, Cloud Scheduler triggers an automated scan for newly posted jobs across public ATS feeds and user-watched companies. New matching jobs are recorded and emailed in a digest via Resend SMTP.
+Every morning, Cloud Scheduler triggers discovery for every user's direction: the careers boards of their target companies (filtered to their target role titles) and the job boards for each target role. New postings are recorded with why they surfaced and emailed in a digest via Resend SMTP. Users run the same discovery on demand with `POST /v1/discover`.
 
 ```mermaid
 sequenceDiagram
@@ -168,18 +169,19 @@ sequenceDiagram
   SCH->>JS: POST /internal/scan (Google OIDC token, SA: unhurried-scheduler)
   Note over JS: Verify OIDC token: issuer, audience, and SA email
 
-  JS->>FS: Query active saved criteria (job_criteria) & watched companies (watched_companies)
-  FS-->>JS: Return criteria and company watchlists
+  JS->>FS: Read every user's direction (directions)
+  FS-->>JS: Target companies, target roles
 
-  par Scan Public Boards
-    JS->>BOARDS: Fetch Greenhouse, Lever, Ashby, Adzuna, USAJobs public listings
+  par Discover postings
+    JS->>BOARDS: Target companies' own Greenhouse, Lever, Ashby boards (target role titles as terms)
+    JS->>BOARDS: Each target role on Adzuna, USAJobs, and the configured boards
     BOARDS-->>JS: Return current open roles
   end
 
-  JS->>JS: Deduplicate jobs via SHA-256 (userID, source, externalID)<br/>Match jobs against user keywords & title criteria
-  JS->>FS: Upsert newly discovered jobs into 'jobs' collection
+  JS->>JS: Note why each matched (target company, target role, or both)
+  JS->>FS: Create postings not seen before (doc ID: SHA-256 of userID, source, externalID)<br/>Record each company board's last check or error
 
-  loop For each user with net-new matching jobs
+  loop For each user with new postings
     JS->>NOTIF: POST /internal/job-digest (Google OIDC token, SA: unhurried-job-search-run)
     Note over NOTIF: Verify OIDC token: SA in INTERNAL_CALLERS
 
@@ -196,14 +198,14 @@ sequenceDiagram
     end
   end
 
-  JS-->>SCH: 200 OK {status: "ok", scansRun: N, digestsSent: M}
+  JS-->>SCH: 202 Accepted {newPostings: N}
 ```
 
 ---
 
 ## 4. AI Resume Tailoring Architecture
 
-The Resume Studio allows users to maintain a master resume as a native Google Doc in their personal Google Drive. For each shortlisted pursuit, the user can create an AI-tailored copy optimized for the target job description using Google Cloud Vertex AI (Gemini 2.0 Flash) while strictly enforcing honesty rules.
+The Resume Studio allows users to maintain a master resume as a native Google Doc in their personal Google Drive. Once the user decides to apply for an opportunity, its Resume step copies the master for that role and tailors it for the job description using Google Cloud Vertex AI (Gemini 2.0 Flash), with the user's own reasons (why this role, why this company, and the evidence for each must-have) sent along as focus. Honesty rules are unchanged: the reasons only steer emphasis, and every fact must come from the resume.
 
 ```mermaid
 sequenceDiagram
@@ -216,8 +218,8 @@ sequenceDiagram
   participant VERTEX as Vertex AI (Gemini 2.0 Flash)
   participant FS as Cloud Firestore
 
-  U->>WEB: Open Resume Studio, select resume copy, paste job description
-  WEB->>RES: POST /v1/resumes/{id}/tailor {jobTitle, company, jobDescription}
+  U->>WEB: Opportunity → Resume step: copy the master, preview tailoring
+  WEB->>RES: POST /v1/resumes/{id}/tailor {jobTitle, company, jobDescription, reasons}
 
   RES->>FS: Read resume metadata (resumes) & user connection (docs_connections)
   FS-->>RES: Return doc ID and KMS-sealed refresh token
@@ -252,23 +254,32 @@ sequenceDiagram
 
 ---
 
-## 5. Applications, Shortlist, and Conversations Subsystem
+## 5. The Process: Direction, Research, Discovery, and the Opportunity Pipeline
 
-Unhurried enforces a deliberate, low-volume job search workflow. Users select at most five active roles to pursue at any time, write substantive reasons for pursuing each, reach out to team members for informational conversations, and track interview rounds with preparation checklists.
+Unhurried enforces a deliberate, low-volume job search process. Before any posting, the user writes down which companies they want to work for and why, which roles they want and why, and the must-haves and dealbreakers every role is checked against (`job-search`, `directions`). They research each target in their own words, with an AI summary kept apart and labeled (`research`). Discovery then finds postings at those companies and similar roles elsewhere (`postings`), each saying why it surfaced.
+
+Each posting the user takes forward becomes an **opportunity** (`applications`, `opportunities`) that moves one stage at a time. Every arrow is a gate the server checks (`internal/pipeline`); a refused move answers 422 with what is still missing and keeps what the user wrote. At most five opportunities can be decided or tailored at once.
 
 ```mermaid
 stateDiagram-v2
-  [*] --> Shortlist: Add pursuit (max 5 active, whyRole >= 30 chars, whyCompany >= 30 chars)
-  
-  state Shortlist {
-    [*] --> Researching
-    Researching --> ReachingOut: Review team & draft outreach kit
-    ReachingOut --> ReadyToApply: Completed conversations & tailored resume
-    ReadyToApply --> Applied: Promote to tracked application
-    Researching --> Dropped: Not aligned
-    ReachingOut --> Dropped: Not aligned
-  }
+  [*] --> Considering: Consider a posting (why this posting, linked to a target)
+  Considering --> Researching: Gate: why this posting (30+ chars)
+  Researching --> Decided: Gate: company and role notes, every requirement checked with evidence,<br/>no dealbreaker, why this role, why this company, under the limit of 5
+  Decided --> Tailored: Gate: linked resume, what it emphasizes and why
+  Tailored --> Applied: Gate: submit recorded by the extension, or manual apply confirmed twice
+  Applied --> [*]: Outcome: waiting, interviewing, offer, rejected, no response
 
+  Considering --> Dropped: Why you're passing (30+ chars)
+  Researching --> Dropped: Why you're passing
+  Decided --> Dropped: Why you're passing
+  Tailored --> Dropped: Why you're passing
+  Dropped --> [*]: Reason kept; consider the posting again to restart
+```
+
+Conversations and interview rounds link to an opportunity. Rounds can only be added once it is applied.
+
+```mermaid
+stateDiagram-v2
   state ConversationsTracker {
     [*] --> ToAsk: Identify contact
     ToAsk --> Asked: Send outreach ask message
@@ -279,25 +290,13 @@ stateDiagram-v2
     Asked --> Declined
     Asked --> NoResponse
   }
-
-  state ApplicationTracker {
-    [*] --> Draft: Created from shortlist
-    Draft --> Submitted: Applied via extension or direct
-    Submitted --> Viewed: Employer reviewed application
-    Viewed --> Interview: Recruiter screening scheduled
-    Interview --> Offer: All rounds passed
-    Interview --> Rejected
-    Submitted --> NoResponse
-  }
-
-  Applied --> Draft: Creates application record & timeline event
 ```
 
 ```mermaid
 flowchart LR
   subgraph ExtensionBridge["Chrome Extension Apply Flow"]
     PAGE["Target Job Board<br/>(Greenhouse, Lever, Ashby, Workday)"]
-    EXT_POPUP["Extension Popup<br/>(Select Application)"]
+    EXT_POPUP["Extension Popup<br/>(Ready to apply: opportunities with a tailored resume)"]
     EXT_BG["Extension Background Worker"]
     BRIDGE["bridge.js<br/>(Content Script on web app)"]
     WEB_BRIDGE["extensionBridge.ts<br/>(Unhurried Web App)"]
@@ -334,12 +333,12 @@ flowchart TD
   end
 
   subgraph EventDiscovery["Privacy-First Interview Detection"]
-    U2["User views Tracker page"] --> GET_EVENTS["GET /v1/calendar/events?from=&to="]
+    U2["User views Interviews page"] --> GET_EVENTS["GET /v1/calendar/events?from=&to="]
     GET_EVENTS --> DECRYPT["Cloud KMS Decrypt Refresh Token"]
     DECRYPT --> GCAL_API["Google Calendar API: list events (past 60 to next 60 days)"]
     GCAL_API --> HEURISTICS["Heuristic Classification Engine<br/>- Match recruiter emails & domains<br/>- Video links (Meet, Zoom, Teams)<br/>- Keywords: Interview, Screen, Debrief, Chat"]
     HEURISTICS --> FLAGGED["Return timed events with likelyInterview: true/false<br/>(Events are NEVER stored in Firestore)"]
-    FLAGGED --> CONFIRM["User confirms interview link to Application Round<br/>(POST /v1/applications/{id}/rounds/{roundId}/interviews)"]
+    FLAGGED --> CONFIRM["User files the interview into an applied opportunity's round<br/>(POST /v1/opportunities/{id}/rounds/{roundId}/interviews)"]
   end
 
   subgraph SlotProposals["Free Slot Proposal Engine"]
@@ -398,19 +397,16 @@ All five backend services utilize Cloud Firestore (Native mode in `us-central1`)
 
 | Service | Firestore Collection | Document ID Scheme | Scoped By | Purpose |
 | --- | --- | --- | --- | --- |
-| **`job-search`** | `job_criteria` | Random UUID (`ids.New()`) | `userId` | User saved job search criteria (titles, locations, keywords, salary) |
-| **`job-search`** | `jobs` | SHA-256 of `(userId, source, externalId)` | `userId` | Deduplicated discovered job listings from scrapers |
-| **`job-search`** | `watched_companies` | Random UUID (`ids.New()`) | `userId` | Followed companies with ATS platform and board token (max 50) |
-| **`resume`** | `resumes` | Random UUID (`ids.New()`) | `userId` | Resumes metadata (title, role, Google Doc ID, match scores) |
+| **`job-search`** | `directions` | User ID (`userID`) | `userId` | Target companies (with why, careers board, last check), target roles (with why), requirements |
+| **`job-search`** | `research` | `userId_kind_subjectId` | `userId` | The user's notes and links on one target, plus its labeled AI summary and sources |
+| **`job-search`** | `postings` | SHA-256 of `(userId, source, externalId)` | `userId` | Deduplicated postings found by discovery, with the target matched and why |
+| **`resume`** | `resumes` | Random UUID (`ids.New()`) | `userId` | Resume metadata (title, role, Google Doc ID, linked `opportunityId`) |
 | **`resume`** | `docs_connections` | User ID (`userID`) | `userId` | Sealed Google Drive refresh token, folder ID, and master resume ID |
 | **`resume`** | `docs_oauth_states` | SHA-256 of state token | — | Pending Google Drive OAuth 2.0 PKCE state verifiers |
-| **`applications`**| `pursuits` | Random UUID (`ids.New()`) | `userId` | Shortlisted roles (max 5 active), `whyRole`, `whyCompany`, status |
-| **`applications`**| `contacts` | Random UUID (`ids.New()`) | `userId` | Outreach networking contacts per pursuit (max 20 per role) |
-| **`applications`**| `conversations` | Random UUID (`ids.New()`) | `userId` | Coffee chats and informational interview records |
+| **`applications`**| `opportunities` | Random UUID (`ids.New()`) | `userId` | One posting in the pipeline: snapshot, stage, the reason for every stage, requirement checks, notes, AI summary, resume link, apply details, outcome, timeline |
+| **`applications`**| `conversations` | Random UUID (`ids.New()`) | `userId` | Coffee chats and informational interview records, optionally linked to an opportunity |
 | **`applications`**| `conversation_settings` | User ID (`userID`) | `userId` | User Google Calendar booking page link and availability notes |
-| **`applications`**| `applications` | Random UUID (`ids.New()`) | `userId` | Tracked job applications (draft, submitted, interview, offer) |
-| **`applications`**| `application_events` | Random UUID (`ids.New()`) | `userId` | Audit event timeline for application status changes |
-| **`applications`**| `interview_rounds` | Random UUID (`ids.New()`) | `userId` | Interview stages, skills to show/shown, learnings, prep checklist |
+| **`applications`**| `opportunity_rounds` | Random UUID (`ids.New()`) | `userId` | Interview rounds of an applied opportunity: skills to show/shown, learnings, prep checklist |
 | **`notifications`**| `notification_preferences` | User ID (`userID`) | `userId` | Alert preferences, destination email, enabled toggle |
 | **`inbox`** | `calendar_connections` | User ID (`userID`) | `userId` | Sealed Google Calendar refresh token, Google email, sync status |
 | **`inbox`** | `calendar_oauth_states`| SHA-256 of state token | — | Pending Google Calendar OAuth 2.0 PKCE state verifiers |

@@ -6,7 +6,7 @@ This document lists every security control in Unhurried, where it is implemented
 
 | Asset | Why it matters |
 | --- | --- |
-| The user's job search data | Shortlist reasons, contacts, applications, and resume content are personal and career-sensitive |
+| The user's job search data | Their direction and reasons, research notes, opportunities, conversations, and resume content are personal and career-sensitive |
 | Google Calendar access | A refresh token with `calendar.events.readonly` can read every event on the user's calendars |
 | Google Drive access | A refresh token with `drive.file` can read and change the resumes Unhurried created |
 | The Google Cloud projects | Owner-level access means control of all data and billing |
@@ -69,7 +69,7 @@ Each service's `openapi.yaml` (linted in CI by `tools/check-specs.mjs`) requires
 ### 4. Handlers
 
 - **Ownership.** Every read and write is scoped to the caller's user ID; another user's record answers 404. Interview rounds are reached only through their own application, and a Google Calendar event can be linked to only one round per user. Tests cover cross-user access for each service.
-- **Validation.** Every field has a length limit, enumerations are checked with `OneOf`, URLs must be https (`HTTPSURL`) or on an expected host (LinkedIn contacts must be on linkedin.com), email addresses are validated, list sizes are capped.
+- **Validation.** Every field has a length limit, enumerations are checked with `OneOf`, URLs must be https (`HTTPSURL`) or on an expected host (LinkedIn links on conversations must be on linkedin.com), email addresses are validated, list sizes are capped.
 - **Outbound requests (SSRF).** Job board clients call only fixed hosts; the board token a user supplies must match `^[A-Za-z0-9._-]{1,100}$`, so it cannot change the host or path. Responses are capped at 10 MiB with a 15-second timeout.
 - **No automated submission.** Recording a submit requires `confirmed: true`, sent only after the user confirms in the extension.
 

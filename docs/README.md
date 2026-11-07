@@ -1,6 +1,6 @@
 # Unhurried documentation
 
-Unhurried helps a job seeker pursue a small number of roles deliberately: watch the companies they care about, shortlist at most five roles with written reasons, reach out to people on the team, tailor a resume, apply with an assistant that never submits for them, and track every application in one place.
+Unhurried runs a job search as a deliberate process: the user decides which companies they want to work for and what kind of role they want, each with a written reason; researches them; discovers matching postings; and takes each opportunity through stages (consider, research, decide, tailor the resume, apply, interview), each of which needs the user's reason before it can move on. Applying uses an assistant that never submits for them.
 
 This folder is the reference for how the system is built, delivered, and secured. Start with the document that matches your question:
 
@@ -31,10 +31,13 @@ The product reasoning behind the features is in [MOTIVATION.md](../MOTIVATION.md
 
 | Term | Meaning |
 | --- | --- |
-| Watchlist | Companies the user follows, each with a written reason; their public job boards are checked for new roles |
-| Shortlist / pursuit | A role the user decided to pursue, with "why this role" and "why this company"; at most five are active |
-| Outreach kit | LinkedIn search links, a connection note, follow-up text, and questions for one shortlisted role |
-| Application | A submitted (or about to be submitted) application, created from the shortlist or browser extension, with timeline events, interview rounds, and notes |
+| Direction | What the user decided before looking at postings: target companies and roles, each with a written reason, and requirements |
+| Requirement | A must-have every role needs, or a dealbreaker that rules one out; checked with evidence before deciding to apply |
+| Research | The user's own notes and links on a target, kept apart from a labeled AI summary with sources |
+| Posting | A job discovery found for one of the user's targets, with why it surfaced |
+| Opportunity | One posting the user is working through the process, with its stage, the reason for every stage, checks, notes, resume, apply details, outcome, and timeline |
+| Stage / gate | Considering, researching, decided, tailored, applied (or dropped). Each move is a gate the server checks; at most five opportunities are decided or tailored at once |
+| Outreach kit | LinkedIn search links, a connection note, follow-up text, and questions for one opportunity |
 | ATS | Applicant tracking system: Greenhouse, Lever, Ashby, Workday, SmartRecruiters, iCIMS, Jobvite, Workable |
 | Internal route | An endpoint under `/internal/*` that only Google-signed service identities can call; never published on API Gateway |
 | Cloud Deploy | Google Cloud's managed continuous delivery service; rolls out verified SHA images to Cloud Run and supports approval gates and one-click rollbacks |

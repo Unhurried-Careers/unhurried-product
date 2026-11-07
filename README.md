@@ -1,18 +1,37 @@
 # Unhurried
 
-Job search, resume tailoring, application tracking, and interview scheduling — split into independent git repositories and deployed on Google Cloud managed services.
+A job search run as a deliberate process: decide where you want to work and why, research it, find the postings that fit, and take each one through stages that each need your written reason, from considering it to tailoring your resume, applying, and interviewing. Split into independent git repositories and deployed on Google Cloud managed services.
 
 **Why:** AI auto-apply tools have flooded every role with applicants and left both job seekers and recruiters worse off. Unhurried uses AI the other way round: as a personal researcher that finds a small, curated set of roles worth pursuing deliberately, so candidates can apply to fewer places with real intent and fit. Read the full [motivation](MOTIVATION.md).
 
-## How the app puts that into practice
+## The process
+
+```mermaid
+flowchart LR
+  direction["1 Direction: companies, roles, requirements, each with a why"] --> research["2 Research: your notes plus a labeled AI summary"]
+  research --> discover["3 Discover postings at your companies and similar roles elsewhere"]
+  discover --> consider["4 Consider: why this posting"]
+  consider --> deep["5 Research this company and role"]
+  deep --> decide["6 Decide: requirements checked, why this role, why this company"]
+  decide --> tailor["7 Tailor your resume: what it emphasizes and why"]
+  tailor --> apply["8 Apply with the extension"]
+  apply --> track["9 Interviews and outcome"]
+  consider -.-> drop["Drop: why you're passing"]
+  deep -.-> drop
+  decide -.-> drop
+```
+
+Every arrow out of a stage is a **gate**: the server refuses the move until that stage's reason is written (at least 30 characters). Dropping an opportunity needs a reason too, which becomes a record of what you learned. At most five opportunities can be decided on at once.
 
 | Motivation | Feature |
 | --- | --- |
-| Know which companies you want, and why, before roles are posted widely | **Watchlist**: each company needs a written reason; Unhurried reads its own Greenhouse, Lever, or Ashby board so new roles surface as soon as they are published |
-| Select a small handful of roles and think critically about each | **Shortlist**: at most 5 active roles, each with a written "why this role" and "why this company"; applying is only possible from the shortlist |
-| Find team members and learn about the role, culture, and day-to-day | **Outreach kit**: LinkedIn searches you open yourself, a 300-character note that asks to learn rather than for a referral, questions for the conversation, and a contact tracker |
-| Keep track of the people you talk to and what you learn | **Conversations**: drafted messages asking people for a few minutes of their time; once they agree, your Google Calendar booking link or a request for them to send an invite. Grouped by company, with what you learned from each person and a queue of who to reach out to again |
-| Customize materials intentionally | **Resume studio**: tailor a Google Doc to one shortlisted role with a chosen skill focus |
+| Know which companies you want, and why, before roles are posted widely | **Direction**: target companies and roles, each with your reason, plus the must-haves and dealbreakers every role is checked against. Unhurried reads each company's own Greenhouse, Lever, or Ashby board |
+| Learn about the company and the role first | **Research**: your own notes and sources on each target, next to an AI summary from Gemini with Google Search, always labeled and never writing your reasons for you |
+| Find the roles worth your time | **Discover**: postings at your target companies and similar roles elsewhere, each saying why it surfaced; a daily email digest of what's new |
+| Think critically about each role | **Opportunity stepper**: Consider, Research, Decide, Resume, Apply, Interviews. Deciding needs every requirement checked with evidence and your why for the role and the company |
+| Find team members and learn about the role, culture, and day-to-day | **Outreach kit and Conversations**: LinkedIn searches you open yourself, questions worth asking, drafted messages asking people for a few minutes of their time, your booking link, and what you learned from each person |
+| Customize materials intentionally | **Resume step**: copy your master Google Doc for the role and tailor it with Gemini, led by your own reasons; it never adds experience you don't have |
+| Apply on purpose | **Chrome extension**: lists only the opportunities whose resume is ready, fills the form, and records the submit after you press Submit yourself |
 
 ## Documentation
 
@@ -491,10 +510,10 @@ Monitor real-time pipeline status, test runs, and deployment health across all 1
 | --- | --- |
 | [unhurried-infra](https://github.com/Unhurried-Careers/unhurried-infra) | Terraform for GCP (API Gateway, Cloud Run, Firestore, Pub/Sub, Scheduler, Firebase Auth + Hosting) |
 | [unhurried-common](https://github.com/Unhurried-Careers/unhurried-common) | Shared Go library (auth, HTTP hardening, validation, models) |
-| [unhurried-job-search](https://github.com/Unhurried-Careers/unhurried-job-search) | Saved searches, job boards, and the company watchlist |
+| [unhurried-job-search](https://github.com/Unhurried-Careers/unhurried-job-search) | Direction, research notes and AI summaries (Vertex AI with Google Search), discovery of postings |
 | [unhurried-resume](https://github.com/Unhurried-Careers/unhurried-resume) | Resume records, Google Docs/Drive connection, and AI resume tailoring (Vertex AI) |
-| [unhurried-applications](https://github.com/Unhurried-Careers/unhurried-applications) | Shortlist, outreach kit, conversations, application tracker, interview rounds, extension API |
-| [unhurried-notifications](https://github.com/Unhurried-Careers/unhurried-notifications) | Email alerts for new jobs that match saved search criteria |
+| [unhurried-applications](https://github.com/Unhurried-Careers/unhurried-applications) | The opportunity pipeline and its gates, outreach kit, conversations, interview rounds, extension API |
+| [unhurried-notifications](https://github.com/Unhurried-Careers/unhurried-notifications) | Email digests of new postings for your target companies and roles |
 | [unhurried-inbox](https://github.com/Unhurried-Careers/unhurried-inbox) | Google Calendar interview discovery, interview slot proposals |
 | [unhurried-web](https://github.com/Unhurried-Careers/unhurried-web) | TypeScript React frontend (static, on Firebase Hosting) |
 | [unhurried-extension](https://github.com/Unhurried-Careers/unhurried-extension) | Chrome MV3 apply assistant |

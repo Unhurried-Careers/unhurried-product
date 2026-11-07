@@ -10,9 +10,9 @@ const __dirname = path.dirname(__filename);
 export const REPOSITORIES = [
   {
     name: "unhurried-job-search",
-    displayName: "Job Search & Watchlist",
+    displayName: "Job Search & Discovery",
     tier: "backend",
-    role: "Saved searches, job boards, and company research & watchlist",
+    role: "Direction, research with AI summaries, and discovery of postings",
     target: "Cloud Run · Go 1.23",
     deployPipeline: "job-search-delivery",
     ciWorkflow: "CI",
@@ -28,9 +28,9 @@ export const REPOSITORIES = [
   },
   {
     name: "unhurried-applications",
-    displayName: "Applications & Tracker",
+    displayName: "Opportunity Pipeline",
     tier: "backend",
-    role: "Shortlist, outreach kit, conversations, application tracker & interview rounds",
+    role: "Opportunity stages and gates, outreach kit, conversations & interview rounds",
     target: "Cloud Run · Go 1.23",
     deployPipeline: "applications-delivery",
     ciWorkflow: "CI",
@@ -39,7 +39,7 @@ export const REPOSITORIES = [
     name: "unhurried-notifications",
     displayName: "Notifications & Alerts",
     tier: "backend",
-    role: "Email job alerts for saved criteria matches via SMTP",
+    role: "Email digests of new postings for your targets via SMTP",
     target: "Cloud Run · Go 1.23",
     deployPipeline: "notifications-delivery",
     ciWorkflow: "CI",

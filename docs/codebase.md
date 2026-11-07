@@ -5,10 +5,10 @@ The system is split into 10 repositories in the [Unhurried-Careers](https://gith
 | Repository | Language | Purpose |
 | --- | --- | --- |
 | [unhurried-common](#unhurried-common) | Go | Shared library: auth, HTTP hardening, validation, models, IDs |
-| [unhurried-job-search](#unhurried-job-search) | Go | Saved searches, job boards, company watchlist |
-| [unhurried-resume](#unhurried-resume) | Go | Resumes as Google Docs in the user's Drive: master resume, tailored copies, edits |
-| [unhurried-applications](#unhurried-applications) | Go | Shortlist, outreach kit, conversations, application tracker, interview rounds, extension API |
-| [unhurried-notifications](#unhurried-notifications) | Go | Email alerts for new jobs that match the user's search criteria |
+| [unhurried-job-search](#unhurried-job-search) | Go | Direction (target companies, roles, requirements), research notes and AI summaries, discovery of postings |
+| [unhurried-resume](#unhurried-resume) | Go | Resumes as Google Docs in the user's Drive: master resume, tailored copies per opportunity, edits |
+| [unhurried-applications](#unhurried-applications) | Go | The opportunity pipeline and its gates, outreach kit, conversations, interview rounds, extension API |
+| [unhurried-notifications](#unhurried-notifications) | Go | Email digests of new postings for the user's targets |
 | [unhurried-inbox](#unhurried-inbox) | Go | Google Calendar interview discovery, interview slot proposals |
 | [unhurried-web](#unhurried-web) | TypeScript | React single-page app |
 | [unhurried-extension](#unhurried-extension) | JavaScript | Chrome apply assistant |
@@ -23,14 +23,14 @@ Every service has the same shape:
 cmd/server/main.go        wiring: store selection, config, httpx.Serve
 internal/api/             routes and handlers (one Server struct)
 internal/store/           persistence (memory and, where implemented, Firestore)
-internal/<domain>/        domain logic (boards, outreach, classify, mailsync, ...)
+internal/<domain>/        domain logic (boards, research, pipeline, outreach, rounds, ...)
 openapi.yaml              Swagger 2.0 spec for the service's API Gateway
 Dockerfile                multi-stage build; context is the parent folder
 .github/workflows/ci.yml  GitHub Actions CI (PRs, pushes, daily 06:00 UTC; zero GCP access)
 cloudbuild.yaml           GCP CD: SLSA VERIFIED image push + Google Cloud Deploy release
 ```
 
-- **Routing** uses Go 1.22+ `http.ServeMux` method patterns (`"POST /v1/pursuits/{id}/apply"`).
+- **Routing** uses Go 1.22+ `http.ServeMux` method patterns (`"POST /v1/opportunities/{id}/advance"`).
 - **Middleware** is applied in `Routes()`: `httpx.CORS(httpx.Recover(httpx.Harden(httpx.AccessLog(auth.Middleware(mux)))))`.
 - **Handlers** decode with `httpx.DecodeOrReject` (400 on bad JSON, 413 over 1 MiB), validate with `validate.Errors`, read the caller with `auth.FromContext`, and answer with `httpx.JSON`, `httpx.Error`, or `httpx.ServerError` (logs the cause, returns a generic message).
 - **Ownership**: every user-facing lookup takes the caller's user ID; another user's record answers 404, not 403, so IDs cannot be probed.
@@ -66,7 +66,9 @@ auth/allowlist.go   Wraps a verifier and admits only listed, verified emails
 auth/jwt.go         RS256 verification, Google key fetching and caching
 httpx/httpx.go      JSON helpers, CORS, Harden, Recover, AccessLog, Serve with timeouts
 validate/           Field validation (Required, MaxLen, MinLen, OneOf, HTTPSURL, URLHost, Email, Range, List, Pattern)
-models/models.go    Shared types: User, JobCriteria, Job, WatchedCompany, Pursuit, Contact, ResumeDoc, Application, ApplicationEvent, MailFinding, Interview, NotifyMessage, JobDigest
+models/models.go    Shared types: Direction, TargetCompany, TargetRole, Requirement, Research, Source, Posting,
+                    Opportunity (with its stages, outcomes, RequirementCheck, StageEvent), ResumeDoc,
+                    Interview, NotifyMessage, JobDigest; MinReason (30 characters)
 ids/ids.go          Random UUIDs
 topics/topics.go    Pub/Sub topic names
 ```
@@ -82,23 +84,29 @@ topics/topics.go    Pub/Sub topic names
 ## unhurried-job-search
 
 ```
-internal/api/       criteria, jobs, scans, watchlist handlers
+internal/api/       direction, research, discovery and postings handlers, the scheduled scan
 internal/boards/    board clients: Adzuna, USAJobs, Greenhouse, Lever, Ashby
-internal/store/     Store interface; Memory and Firestore implementations (job_criteria, jobs, watched_companies)
+internal/research/  plain-text summaries of a company, role, or posting, with sources
+internal/vertex/    Gemini on Vertex AI with Google Search grounding
+internal/store/     Store interface; Memory and Firestore implementations (directions, research, postings)
 ```
 
 | Endpoint | Purpose |
 | --- | --- |
-| `GET/POST /v1/criteria` | List or save search criteria (titles, locations, keywords, remote, minimum salary, boards) |
-| `GET /v1/jobs` | Jobs found for the user, newest first |
-| `POST /v1/scan` | Run the user's saved searches now |
-| `GET/POST /v1/watchlist`, `DELETE /v1/watchlist/{id}` | Followed companies: name, written reason, ATS (`greenhouse`, `lever`, `ashby`), board token, title keywords; at most 50 per user |
-| `POST /v1/scan/watchlist` | Check every watched company's public board now |
-| `POST /internal/scan` | Scheduler entry point (daily at 07:00 Central); afterwards sends each user's new criteria matches to notifications to email |
+| `GET/PUT /v1/direction` | The user's target companies (name, why, careers URL, detected ATS and board token), target roles (title, why, keywords, locations, remote), and requirements (must-haves and dealbreakers). Every why needs at least 30 characters; at most 30 companies, 20 roles, 30 requirements. Items keep their IDs when sent back; new items get IDs here |
+| `GET /v1/research` | The user's research notes on their targets |
+| `PUT /v1/research/{kind}/{id}` | Save the user's own notes and source links on a target company (`kind=company`) or role (`kind=role`); the target must be in the user's direction |
+| `POST /v1/research/{kind}/{id}/summary` | Draft and store an AI summary of the target, with sources |
+| `POST /v1/research/posting-summary` | Draft an AI summary of one posting for an opportunity's research stage (not stored here; the web app saves it on the opportunity) |
+| `POST /v1/discover` | Look for postings now: each target company's own board (filtered to the target role titles), and each target role on the job boards. Answers how many were new, which boards failed, and any warning |
+| `GET /v1/postings` | Postings found for the user, newest first; each says which target it matched and why (`matchedBecause`) |
+| `POST /internal/scan` | Scheduler entry point (daily at 07:00 Central): discovery for every user with targets, then each user's new postings to notifications to email |
+
+Postings are deduplicated per user by source and external ID. **AI summaries** describe and never recommend: the system prompt forbids writing the user's reasons, the answer is plain text, sources come from Google Search grounding (at most 10 unique https links), and a blocked or truncated answer is an error rather than a partial summary. Summaries time out after 50 seconds (the gateway allows 60) and answer 502 "AI summaries are unavailable; try again shortly". Without Vertex AI configured, the summary routes answer 503.
 
 Board clients only call fixed hosts (`boards-api.greenhouse.io`, `api.lever.co`, `api.ashbyhq.com`, Adzuna, USAJobs) with a 15-second timeout and a 10 MiB response cap. Board tokens must match `^[A-Za-z0-9._-]{1,100}$`, so user input cannot redirect requests elsewhere.
 
-Configuration: `ADZUNA_APP_ID`, `ADZUNA_APP_KEY`, `USAJOBS_API_KEY`, `USAJOBS_EMAIL` (each board is skipped when unset), `GREENHOUSE_BOARD`, `LEVER_COMPANY` (single-company searches), `NOTIFICATIONS_INTERNAL_URL` (notifications Cloud Run URL; unset sends no alert emails).
+Configuration: `ADZUNA_APP_ID`, `ADZUNA_APP_KEY`, `USAJOBS_API_KEY`, `USAJOBS_EMAIL` (each board is skipped when unset), `GREENHOUSE_BOARD`, `LEVER_COMPANY` (extra single-company searches), `NOTIFICATIONS_INTERNAL_URL` (notifications Cloud Run URL; unset sends no alert emails), `VERTEX_PROJECT`, `VERTEX_LOCATION` (`us-central1`), `VERTEX_MODEL` (`gemini-2.0-flash`), `VERTEX_ENABLED=false` (turns AI summaries off). Google Search grounding is billed per request after a free daily allowance.
 
 ## unhurried-resume
 
@@ -123,8 +131,8 @@ Resumes are Google Docs in an **"Unhurried resumes" folder in the user's own Goo
 | `PUT /v1/docs/master` | Record the Doc picked as the master resume (must be a Google Doc, not trashed) |
 | `GET /v1/resumes` | The user's resumes, most recently updated first |
 | `POST /v1/resumes/from-scratch` | Create a Doc from the template (name and email filled in); `asMaster` makes it the master |
-| `POST /v1/resumes/from-master` | Copy the master for a role; named "Resume – Company – Role" |
-| `POST /v1/resumes/{id}/tailor` | Tailor a resume copy for a job description using Vertex AI (Gemini 2.0 Flash); analyzes gaps, enforces honesty rules, and proposes find-and-replace edits |
+| `POST /v1/resumes/from-master` | Copy the master for a role; named "Resume – Company – Role"; `opportunityId` links the copy to an opportunity |
+| `POST /v1/resumes/{id}/tailor` | Tailor a resume copy for a job description using Vertex AI (Gemini 2.0 Flash); optional `reasons` (the user's own why and requirement evidence, up to 4,000 characters) steer what it emphasizes; analyzes gaps, enforces honesty rules, and proposes find-and-replace edits |
 | `POST /v1/resumes/{id}/edit` | Apply up to 20 find-and-replace edits to the Doc, keeping its formatting; returns how many places changed |
 | `DELETE /v1/resumes/{id}` | Move the Doc to the user's Drive trash (recoverable for 30 days) and forget it |
 
@@ -132,46 +140,54 @@ Resumes are Google Docs in an **"Unhurried resumes" folder in the user's own Goo
 
 Configuration: `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET` (the same OAuth client and Secret Manager secret unhurried-google-oauth-client-secret as Google sign-in and Calendar), `DOCS_REDIRECT_URL` (`/app/docs/callback`), `KMS_KEY_NAME` (required with Firestore), `FIREBASE_PROJECT_NUMBER` (Picker app ID), `VERTEX_PROJECT`, `VERTEX_LOCATION` (`us-central1`), `VERTEX_MODEL` (`gemini-2.0-flash`). Without a client ID the Docs routes answer 503.
 
-AI resume tailoring uses Google Cloud Vertex AI (Gemini 2.0 Flash) via `POST /v1/resumes/{id}/tailor`. It compares the existing Google Doc resume with the target job description under strict honesty rules (never inventing facts, skills, or employment history). It returns a match score, gaps analysis, and exact find-and-replace text diffs that the user reviews and applies directly to their Google Doc via `POST /v1/resumes/{id}/edit`.
+AI resume tailoring uses Google Cloud Vertex AI (Gemini 2.0 Flash) via `POST /v1/resumes/{id}/tailor`. It compares the existing Google Doc resume with the target job description under strict honesty rules (never inventing facts, skills, or employment history). The user's reasons are passed in their own delimited block as data, used only to choose what to bring forward; every fact must still come from the resume. It returns a match score, gaps analysis, and exact find-and-replace text diffs that the user reviews and applies directly to their Google Doc via `POST /v1/resumes/{id}/edit`.
 ## unhurried-applications
 
 ```
-internal/api/api.go              applications, rounds, tracking, extension endpoints
+internal/api/opportunities.go    the opportunity pipeline, drop, outreach kit, extension fill/submit/tracking
 internal/api/conversations.go    conversations and booking link settings
-internal/api/outreach.go         outreach kit and contacts
-internal/api/rounds.go           interview rounds and interviews
-internal/api/tracking.go         extension fill and tracking
+internal/api/rounds.go           interview rounds and interviews (only after applying)
+internal/pipeline/               the stage gates, as pure functions
 internal/conversations/          conversation logic and validation
 internal/outreach/               outreach kit text and LinkedIn search links
 internal/rounds/                 round management, interviews, skills, and prep
 internal/store/                  Store interface; Memory and Firestore implementations
+                                 (opportunities, conversations, conversation_settings, opportunity_rounds)
 ```
+
+An **opportunity** is one posting the user is working through the process. It keeps a snapshot of the posting, its stage, the reason written at every stage, requirement checks with evidence, research notes, a labeled AI summary, the linked resume, apply details, the outcome, and a timeline (at most 100 entries).
 
 | Endpoint | Purpose |
 | --- | --- |
-| `GET/POST /v1/pursuits` | List (with active count and limit) or add a shortlisted role |
-| `GET/PATCH /v1/pursuits/{id}` | Read with contacts, or edit reasons and status |
-| `GET /v1/pursuits/{id}/outreach?name=` | Outreach kit |
-| `POST /v1/pursuits/{id}/contacts`, `PATCH .../contacts/{contactId}` | Track people contacted (at most 20 per role; LinkedIn URLs must be on linkedin.com) |
-| `POST /v1/pursuits/{id}/apply` | Create the application; the only way a user creates one |
-| `GET/POST /v1/conversations` | Conversations, newest first / add one |
+| `GET /v1/opportunities` | All of them, most recently updated first, each with `nextStage` and what it still needs (`nextNeeds`); plus `committed` and `maxCommitted` |
+| `POST /v1/opportunities` | Start considering a posting: needs `whyThisPosting` and a target company or role; one open opportunity per posting |
+| `GET/PATCH /v1/opportunities/{id}` | Read, or save notes and reasons; reasons lock once applied or dropped; `outcome` only after applying |
+| `POST /v1/opportunities/{id}/advance` | `{to, confirmed, ...stage fields}`: saves the fields, then moves one stage forward if the gate is met. A refused move still keeps the fields and answers 422 with `{error, missing[]}` |
+| `POST /v1/opportunities/{id}/drop` | `{reason}` (at least 30 characters); not after applying |
+| `GET /v1/opportunities/{id}/outreach?name=` | Outreach kit: LinkedIn searches, a note asking to learn, a follow-up, questions |
+| `GET /v1/opportunities/{id}/fill-payload` | Data the extension fills into a form; only once the resume is ready (stage `tailored`) |
+| `POST /v1/opportunities/{id}/submit` | Record a submit from the extension; requires `confirmed: true` and an https page URL; moves it to applied |
+| `POST /v1/opportunities/{id}/tracking` | Save the employer portal URL, username, notes |
+| `GET/POST /v1/conversations` | Conversations, newest first / add one, optionally linked to an opportunity (`opportunityId`) |
 | `PATCH/DELETE /v1/conversations/{id}` | Update status, message, meeting time, learnings, or reach-out date / delete |
 | `GET/PUT /v1/conversation-settings` | Booking page link and availability |
-| `GET /v1/applications`, `GET /v1/applications/{id}` | Tracker list (most recent first) and detail with timeline and rounds |
-| `PATCH /v1/applications/{id}` | Set the status, with an optional note |
-| `GET /v1/applications/{id}/fill-payload` | Data the extension fills into a form |
-| `POST /v1/applications/{id}/submit` | Record a submit; requires `confirmed: true` and an https page URL |
-| `POST /v1/applications/{id}/tracking` | Save the employer portal URL, username, notes |
 | `GET /v1/rounds` | All of the user's rounds |
-| `POST /v1/applications/{id}/rounds` | Add a round |
-| `PATCH/DELETE /v1/applications/{id}/rounds/{roundId}` | Update status, skills, learnings, notes, or prep / delete |
-| `POST /v1/applications/{id}/rounds/{roundId}/interviews` | Add an interview, by hand or from Google Calendar |
-| `DELETE /v1/applications/{id}/rounds/{roundId}/interviews/{interviewId}` | Remove an interview |
+| `POST /v1/opportunities/{id}/rounds` | Add a round; the opportunity must be applied |
+| `PATCH/DELETE /v1/opportunities/{id}/rounds/{roundId}` | Update status, skills, learnings, notes, or prep / delete |
+| `POST /v1/opportunities/{id}/rounds/{roundId}/interviews` | Add an interview, by hand or from Google Calendar |
+| `DELETE /v1/opportunities/{id}/rounds/{roundId}/interviews/{interviewId}` | Remove an interview |
 
-Rules the service enforces:
+**Gates** (`internal/pipeline`), each checked by the server when moving to the stage:
 
-- **Shortlist**: at most `MAX_ACTIVE_PURSUITS` (default 5) active roles; `whyRole` and `whyCompany` at least 30 characters; one pursuit per job; applied roles cannot be edited.
-- **Tracker**: status changes create an `ApplicationEvent` with source `you`. Rounds hold interview meetings, pre-round skills to show, post-round skills shown, company learnings, notes, and a prep checklist.
+| Moving to | Needs |
+| --- | --- |
+| `considering` (on create) | `whyThisPosting` (at least 30 characters) and a target company or role |
+| `researching` | `whyThisPosting` |
+| `decided` | Company notes and role notes (at least 30 characters each); a check for the user's requirements, every must-have met and every dealbreaker absent, each with evidence (at least 10 characters); `whyRole` and `whyCompany` (at least 30 characters each); fewer than `MAX_ACTIVE_OPPORTUNITIES` (default 5) already decided or tailored |
+| `tailored` | A linked resume and `resumeEmphasis`: what it emphasizes for this role and why (at least 30 characters) |
+| `applied` | A submit recorded by the extension, or `confirmed: true` for a manual apply (the web app asks twice) |
+
+Moves go one stage forward at a time; moving back is allowed until applied. Dropping keeps the reason and the stage it was dropped from; to restart, the user considers the posting again.
 
 ## unhurried-notifications
 
@@ -184,7 +200,7 @@ internal/store/  Store interface; Memory and Firestore implementations (notifica
 | Endpoint | Purpose |
 | --- | --- |
 | `GET/PUT /v1/preferences` | Alert email address and the email alerts switch (address required when on) |
-| `POST /internal/job-digest` | Email one user the new jobs their criteria matched (job-search only; 1 to 100 jobs, up to 25 listed) |
+| `POST /internal/job-digest` | Email one user the new postings for their target companies and roles, each with why it surfaced (job-search only; 1 to 100 postings, up to 25 listed) |
 | `POST /internal/notify` | Plain-text email to one user |
 
 Emails go only to users who turned alerts on; responses report `sent`, `skipped`, or `logged`. Job fields are escaped in the HTML email and only https links are accepted. Configuration: `SMTP_HOST` (default `smtp.resend.com`; unset logs emails instead of sending), `SMTP_PORT` (default 587), `SMTP_USERNAME` (`resend`), `SMTP_PASSWORD` (from Secret Manager `unhurried-smtp-password`), `MAIL_FROM` (`Unhurried <alerts@unhurried-careers.com>`), `APP_URL` (links in emails).
@@ -224,9 +240,12 @@ src/api.ts                typed API clients; adds ID token, App Check token, API
 src/extensionBridge.ts    answers the extension's relayed requests
 src/paths.ts              route constants
 src/lib/boards.ts         detects ATS and board token from a careers URL
+src/lib/pipeline.ts       stage labels, which steps are open and done, requirement checks, tailoring reasons
+src/lib/interviews.ts     calendar interview suggestions and round progress
 src/lib/picker.ts         loads Google Picker and lets the user choose the master resume
-src/pages/                Home, SignIn, Jobs, Watchlist, Shortlist (with outreach), Criteria,
-                          ResumeStudio, DocsCallback, Tracker, CalendarCallback, Interviews, Settings
+src/pages/                Home, SignIn, Pipeline, Direction, Research, Discover, Opportunity (the stepper),
+                          Conversations, ResumeStudio, Interviews, Rounds, Settings, OAuth callbacks;
+                          parts.tsx holds the reason field, AI summary panel, and "still needed" list
 firebase.json             Hosting: SPA rewrite, caching, security headers
 .firebaserc               staging/production aliases and Hosting targets
 ```
@@ -234,11 +253,15 @@ firebase.json             Hosting: SPA rewrite, caching, security headers
 | Route | Page |
 | --- | --- |
 | `/` | Public homepage; no API calls; Sign in / Open app at top right |
-| `/app` | Opportunities (jobs found) |
-| `/app/watchlist`, `/app/shortlist`, `/app/criteria`, `/app/resume` | Watchlist, shortlist and outreach, search criteria, resume studio |
-| `/app/applications` | Tracker: calendar integration, interview rounds, notes, in-progress and closed applications |
-| `/app/calendar/callback`, `/app/docs/callback` | Google returns here after Google Calendar or Drive consent; posts the code once (`OAuthCallback`), then returns to the tracker or resume studio |
-| `/app/interviews`, `/app/alerts` | Interview slots, email alert settings |
+| `/app` | Pipeline: opportunities grouped by stage, each with what it needs next; a three-step start for new users |
+| `/app/direction` | Target companies, roles, and requirements, each with a reason |
+| `/app/research` | The user's notes and links per target, next to a labeled AI summary with sources |
+| `/app/discover` | Look for postings; each says why it surfaced; considering one needs a reason |
+| `/app/opportunities/:id` | The stepper: Consider, Research, Decide, Resume, Apply, Interviews (`?step=` opens one); drop with a reason; timeline |
+| `/app/conversations`, `/app/resume` | Conversations (`?opportunity=` links a new one), resume studio (master resume and all copies) |
+| `/app/interviews` | Calendar integration, interviews on the calendar to file into rounds, progress per applied opportunity |
+| `/app/calendar/callback`, `/app/docs/callback` | Google returns here after Google Calendar or Drive consent; posts the code once (`OAuthCallback`), then returns to Interviews or the resume studio |
+| `/app/settings` | Google Drive, Google Calendar, booking link, email alerts |
 
 Signed-out visitors to `/app/*` see the sign-in screen (popup with `prompt=select_account`). Build-time configuration is `VITE_*` variables (`.env.example`); deployed builds read them from the `unhurried-web-build-config` secret. `VITE_AUTH_MODE=dev` with `VITE_TOKEN=user:<id>` works against services running with `AUTH_DEV_BYPASS=true`.
 
@@ -249,7 +272,9 @@ manifest.json   MV3: storage, activeTab, scripting; host access to the Unhurried
 content.js      form filler for Greenhouse, Lever, Workday, Ashby
 bridge.js       content script on the Unhurried web app; relays requests to extensionBridge.ts
 background.js   service worker: finds or opens an Unhurried tab, relays five operations
-popup.html/js   choose the application, fill the page, record the submit, save portal details, settings
+                (status, listReady, fillPayload, recordSubmit, saveTracking)
+popup.html/js   choose an opportunity that is ready to apply, open its tailored resume, fill the page,
+                record the submit, save portal details, settings
 build.mjs       copies the files into dist/
 ```
 
@@ -291,7 +316,7 @@ Google Calendar works locally when `GOOGLE_OAUTH_CLIENT_ID`/`SECRET` and `CALEND
 
 | Repo | Command | What is covered |
 | --- | --- | --- |
-| Go services, common | `go test ./...` (CI adds `-race` and coverage) | Handlers through `httptest`, ownership scoping, validation, auth verifiers with test keys, board clients against local servers, Google Calendar OAuth and event sync against a fake Google, store contract (memory; Firestore when `FIRESTORE_EMULATOR_HOST` is set) |
-| unhurried-web | `npm test`, `npm run test:coverage` | Pages, API client headers and paths, auth, Firebase config, Hosting config, extension bridge; thresholds 85% lines, 75% branches |
+| Go services, common | `go test ./...` (CI adds `-race` and coverage) | Handlers through `httptest`, ownership scoping, validation, every pipeline gate as table tests, the decided-opportunity limit, discovery and AI summaries with fake boards and a fake Gemini, auth verifiers with test keys, board clients against local servers, Google Calendar OAuth and event sync against a fake Google, store contract (memory; Firestore when `FIRESTORE_EMULATOR_HOST` is set) |
+| unhurried-web | `npm test`, `npm run test:coverage` | Each stage form, the gate messages and the stepper, pages, API client headers and paths, auth, Firebase config, Hosting config, extension bridge; thresholds 85% lines, 75% branches |
 | unhurried-extension | `npm test`, `npm run test:coverage` | Filler, bridge, popup, background relay, manifest permissions; 90% line threshold |
-| unhurried-infra | `terraform -chdir=<dir> test` | Every module and both environments with mocked providers: IAM bindings, deploy restrictions, key restrictions, internal audiences, custom domain wiring, Calendar wiring |
+| unhurried-infra | `terraform -chdir=<dir> test` | Every module and both environments with mocked providers: IAM bindings, deploy restrictions, key restrictions, internal audiences, custom domain wiring, Calendar wiring, Vertex AI grants for resume and job-search |
