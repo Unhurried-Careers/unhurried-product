@@ -1,22 +1,22 @@
 {
-  "generatedAt": "2026-11-07T18:28:43.141Z",
+  "generatedAt": "2026-11-07T22:27:42.837Z",
   "org": "Unhurried-Careers",
   "summary": {
     "totalRepositories": 10,
     "trackedPipelines": 10,
-    "successful": 9,
+    "successful": 1,
     "failed": 0,
-    "inProgress": 1,
-    "successRate": 90,
-    "avgDurationSeconds": 105,
+    "inProgress": 9,
+    "successRate": 10,
+    "avgDurationSeconds": 7,
     "overallStatus": "running"
   },
   "repositories": [
     {
       "name": "unhurried-job-search",
-      "displayName": "Job Search & Watchlist",
+      "displayName": "Job Search & Discovery",
       "tier": "backend",
-      "role": "Saved searches, job boards, and company research & watchlist",
+      "role": "Direction, research with AI summaries, and discovery of postings",
       "target": "Cloud Run · Go 1.23",
       "deployPipeline": "job-search-delivery",
       "ciWorkflow": "CI",
@@ -24,25 +24,25 @@
       "repoUrl": "https://github.com/Unhurried-Careers/unhurried-job-search",
       "hasActiveRuns": true,
       "latestRun": {
-        "id": 42371023093,
+        "id": 42420681334,
         "workflow": "CI",
-        "status": "completed",
-        "conclusion": "success",
+        "status": "in_progress",
+        "conclusion": "running",
         "branch": "main",
-        "commitSha": "190cfc6",
-        "fullSha": "190cfc6268b63d9924696ef903b7adcadf1536ed",
-        "commitTitle": "CI",
-        "createdAt": "2026-11-07T12:06:43Z",
-        "updatedAt": "2026-11-07T12:09:32Z",
-        "durationSeconds": 169,
-        "url": "https://github.com/Unhurried-Careers/unhurried-job-search/actions/runs/42371023093"
+        "commitSha": "02e2653",
+        "fullSha": "02e2653aade5b854fb3037736435050b0ac3c33f",
+        "commitTitle": "feat: direction, research with grounded AI summaries, and discovery",
+        "createdAt": "2026-11-07T22:27:18Z",
+        "updatedAt": "2026-11-07T22:27:21Z",
+        "durationSeconds": 3,
+        "url": "https://github.com/Unhurried-Careers/unhurried-job-search/actions/runs/42420681334"
       },
       "runDetails": {
         "jobs": [
           {
             "name": "Lint and test",
-            "conclusion": "success",
-            "status": "completed",
+            "conclusion": "running",
+            "status": "in_progress",
             "steps": [
               {
                 "name": "Set up job",
@@ -81,131 +81,60 @@
               },
               {
                 "name": "go test",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "in_progress",
+                "conclusion": ""
               },
               {
                 "name": "Coverage summary",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "Run actions/upload-artifact@v4",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "govulncheck",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "Post Run actions/setup-go@v5",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "Post Check out unhurried-common",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "Post Mint read-only token for unhurried-common",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "Post Check out unhurried-job-search",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Complete job",
-                "status": "completed",
-                "conclusion": "success"
-              }
-            ]
-          },
-          {
-            "name": "Build and smoke-test container image",
-            "conclusion": "success",
-            "status": "completed",
-            "steps": [
-              {
-                "name": "Set up job",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Mint read-only token for unhurried-common",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Run actions/setup-go@v5",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "docker build",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Smoke test the image",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Image refuses to start without auth config",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "govulncheck the shipped binary",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Post Run actions/setup-go@v5",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Post Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Post Mint read-only token for unhurried-common",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Post Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Complete job",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               }
             ]
           }
         ]
       },
       "history": [
+        {
+          "id": 42420681334,
+          "branch": "main",
+          "commitSha": "02e2653",
+          "commitTitle": "feat: direction, research with grounded AI summaries, and discovery",
+          "status": "in_progress",
+          "conclusion": "running",
+          "durationSeconds": 3,
+          "createdAt": "2026-11-07T22:27:18Z",
+          "url": "https://github.com/Unhurried-Careers/unhurried-job-search/actions/runs/42420681334"
+        },
         {
           "id": 42371023093,
           "branch": "main",
@@ -249,17 +178,6 @@
           "durationSeconds": 177,
           "createdAt": "2026-11-06T14:25:22Z",
           "url": "https://github.com/Unhurried-Careers/unhurried-job-search/actions/runs/42233770649"
-        },
-        {
-          "id": 42225636034,
-          "branch": "main",
-          "commitSha": "da53f95",
-          "commitTitle": "CI",
-          "status": "completed",
-          "conclusion": "success",
-          "durationSeconds": 163,
-          "createdAt": "2026-11-06T13:27:26Z",
-          "url": "https://github.com/Unhurried-Careers/unhurried-job-search/actions/runs/42225636034"
         }
       ]
     },
@@ -275,25 +193,25 @@
       "repoUrl": "https://github.com/Unhurried-Careers/unhurried-resume",
       "hasActiveRuns": true,
       "latestRun": {
-        "id": 42371986559,
+        "id": 42420685428,
         "workflow": "CI",
-        "status": "completed",
-        "conclusion": "success",
+        "status": "in_progress",
+        "conclusion": "running",
         "branch": "main",
-        "commitSha": "7b595ea",
-        "fullSha": "7b595eacd9367c865ddec34c78b5268b8705c1cc",
-        "commitTitle": "CI",
-        "createdAt": "2026-11-07T12:19:49Z",
-        "updatedAt": "2026-11-07T12:22:25Z",
-        "durationSeconds": 156,
-        "url": "https://github.com/Unhurried-Careers/unhurried-resume/actions/runs/42371986559"
+        "commitSha": "7789377",
+        "fullSha": "77893774c7cb3959e587e62543d2405232f1c9b1",
+        "commitTitle": "feat: link resumes to opportunities and tailor with the user's reasons",
+        "createdAt": "2026-11-07T22:27:21Z",
+        "updatedAt": "2026-11-07T22:27:25Z",
+        "durationSeconds": 4,
+        "url": "https://github.com/Unhurried-Careers/unhurried-resume/actions/runs/42420685428"
       },
       "runDetails": {
         "jobs": [
           {
             "name": "Lint and test",
-            "conclusion": "success",
-            "status": "completed",
+            "conclusion": "running",
+            "status": "in_progress",
             "steps": [
               {
                 "name": "Set up job",
@@ -317,146 +235,75 @@
               },
               {
                 "name": "Run actions/setup-go@v5",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "in_progress",
+                "conclusion": ""
               },
               {
                 "name": "gofmt",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "go vet",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "go test",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "Coverage summary",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "Run actions/upload-artifact@v4",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "govulncheck",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "Post Run actions/setup-go@v5",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "Post Check out unhurried-common",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "Post Mint read-only token for unhurried-common",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "Post Check out unhurried-resume",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Complete job",
-                "status": "completed",
-                "conclusion": "success"
-              }
-            ]
-          },
-          {
-            "name": "Build and smoke-test container image",
-            "conclusion": "success",
-            "status": "completed",
-            "steps": [
-              {
-                "name": "Set up job",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Mint read-only token for unhurried-common",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Run actions/setup-go@v5",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "docker build",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Smoke test the image",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Image refuses to start without auth config",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "govulncheck the shipped binary",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Post Run actions/setup-go@v5",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Post Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Post Mint read-only token for unhurried-common",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Post Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Complete job",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               }
             ]
           }
         ]
       },
       "history": [
+        {
+          "id": 42420685428,
+          "branch": "main",
+          "commitSha": "7789377",
+          "commitTitle": "feat: link resumes to opportunities and tailor with the user's reasons",
+          "status": "in_progress",
+          "conclusion": "running",
+          "durationSeconds": 4,
+          "createdAt": "2026-11-07T22:27:21Z",
+          "url": "https://github.com/Unhurried-Careers/unhurried-resume/actions/runs/42420685428"
+        },
         {
           "id": 42371986559,
           "branch": "main",
@@ -500,25 +347,14 @@
           "durationSeconds": 181,
           "createdAt": "2026-11-05T13:53:15Z",
           "url": "https://github.com/Unhurried-Careers/unhurried-resume/actions/runs/42039762428"
-        },
-        {
-          "id": 41840351661,
-          "branch": "main",
-          "commitSha": "9d10b1f",
-          "commitTitle": "CI",
-          "status": "completed",
-          "conclusion": "success",
-          "durationSeconds": 187,
-          "createdAt": "2026-11-04T13:41:07Z",
-          "url": "https://github.com/Unhurried-Careers/unhurried-resume/actions/runs/41840351661"
         }
       ]
     },
     {
       "name": "unhurried-applications",
-      "displayName": "Applications & Tracker",
+      "displayName": "Opportunity Pipeline",
       "tier": "backend",
-      "role": "Shortlist, outreach kit, conversations, application tracker & interview rounds",
+      "role": "Opportunity stages and gates, outreach kit, conversations & interview rounds",
       "target": "Cloud Run · Go 1.23",
       "deployPipeline": "applications-delivery",
       "ciWorkflow": "CI",
@@ -526,25 +362,25 @@
       "repoUrl": "https://github.com/Unhurried-Careers/unhurried-applications",
       "hasActiveRuns": true,
       "latestRun": {
-        "id": 42373726800,
+        "id": 42420683553,
         "workflow": "CI",
-        "status": "completed",
-        "conclusion": "success",
+        "status": "in_progress",
+        "conclusion": "running",
         "branch": "main",
-        "commitSha": "cedb85d",
-        "fullSha": "cedb85dd6b806a34d234efb2d756e2a38d11a13b",
-        "commitTitle": "CI",
-        "createdAt": "2026-11-07T12:43:16Z",
-        "updatedAt": "2026-11-07T12:46:04Z",
-        "durationSeconds": 168,
-        "url": "https://github.com/Unhurried-Careers/unhurried-applications/actions/runs/42373726800"
+        "commitSha": "30767e8",
+        "fullSha": "30767e8282cef0bcbcc6ac3a9fc0564a612e945c",
+        "commitTitle": "feat: opportunity pipeline with server-checked gates",
+        "createdAt": "2026-11-07T22:27:19Z",
+        "updatedAt": "2026-11-07T22:27:22Z",
+        "durationSeconds": 3,
+        "url": "https://github.com/Unhurried-Careers/unhurried-applications/actions/runs/42420683553"
       },
       "runDetails": {
         "jobs": [
           {
             "name": "Lint and test",
-            "conclusion": "success",
-            "status": "completed",
+            "conclusion": "running",
+            "status": "in_progress",
             "steps": [
               {
                 "name": "Set up job",
@@ -568,146 +404,75 @@
               },
               {
                 "name": "Run actions/setup-go@v5",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "in_progress",
+                "conclusion": ""
               },
               {
                 "name": "gofmt",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "go vet",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "go test",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "Coverage summary",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "Run actions/upload-artifact@v4",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "govulncheck",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "Post Run actions/setup-go@v5",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "Post Check out unhurried-common",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "Post Mint read-only token for unhurried-common",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "Post Check out unhurried-applications",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Complete job",
-                "status": "completed",
-                "conclusion": "success"
-              }
-            ]
-          },
-          {
-            "name": "Build and smoke-test container image",
-            "conclusion": "success",
-            "status": "completed",
-            "steps": [
-              {
-                "name": "Set up job",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Mint read-only token for unhurried-common",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Run actions/setup-go@v5",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "docker build",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Smoke test the image",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Image refuses to start without auth config",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "govulncheck the shipped binary",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Post Run actions/setup-go@v5",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Post Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Post Mint read-only token for unhurried-common",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Post Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Complete job",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               }
             ]
           }
         ]
       },
       "history": [
+        {
+          "id": 42420683553,
+          "branch": "main",
+          "commitSha": "30767e8",
+          "commitTitle": "feat: opportunity pipeline with server-checked gates",
+          "status": "in_progress",
+          "conclusion": "running",
+          "durationSeconds": 3,
+          "createdAt": "2026-11-07T22:27:19Z",
+          "url": "https://github.com/Unhurried-Careers/unhurried-applications/actions/runs/42420683553"
+        },
         {
           "id": 42373726800,
           "branch": "main",
@@ -751,17 +516,6 @@
           "durationSeconds": 141,
           "createdAt": "2026-11-06T05:05:50Z",
           "url": "https://github.com/Unhurried-Careers/unhurried-applications/actions/runs/42166351344"
-        },
-        {
-          "id": 42153331380,
-          "branch": "main",
-          "commitSha": "de46e88",
-          "commitTitle": "Remove legacy invites migration",
-          "status": "completed",
-          "conclusion": "success",
-          "durationSeconds": 163,
-          "createdAt": "2026-11-06T02:55:14Z",
-          "url": "https://github.com/Unhurried-Careers/unhurried-applications/actions/runs/42153331380"
         }
       ]
     },
@@ -769,7 +523,7 @@
       "name": "unhurried-notifications",
       "displayName": "Notifications & Alerts",
       "tier": "backend",
-      "role": "Email job alerts for saved criteria matches via SMTP",
+      "role": "Email digests of new postings for your targets via SMTP",
       "target": "Cloud Run · Go 1.23",
       "deployPipeline": "notifications-delivery",
       "ciWorkflow": "CI",
@@ -777,25 +531,25 @@
       "repoUrl": "https://github.com/Unhurried-Careers/unhurried-notifications",
       "hasActiveRuns": true,
       "latestRun": {
-        "id": 42373954234,
+        "id": 42420687448,
         "workflow": "CI",
-        "status": "completed",
-        "conclusion": "success",
+        "status": "in_progress",
+        "conclusion": "running",
         "branch": "main",
-        "commitSha": "87b9abe",
-        "fullSha": "87b9abef7da73abfc761911f71939c17f97a1951",
-        "commitTitle": "CI",
-        "createdAt": "2026-11-07T12:46:25Z",
-        "updatedAt": "2026-11-07T12:49:20Z",
-        "durationSeconds": 175,
-        "url": "https://github.com/Unhurried-Careers/unhurried-notifications/actions/runs/42373954234"
+        "commitSha": "35972d4",
+        "fullSha": "35972d40469eb80687baa8762d2256f1bda39c2c",
+        "commitTitle": "chore(mail): digest copy for postings found for the user's targets",
+        "createdAt": "2026-11-07T22:27:23Z",
+        "updatedAt": "2026-11-07T22:27:26Z",
+        "durationSeconds": 3,
+        "url": "https://github.com/Unhurried-Careers/unhurried-notifications/actions/runs/42420687448"
       },
       "runDetails": {
         "jobs": [
           {
             "name": "Lint and test",
-            "conclusion": "success",
-            "status": "completed",
+            "conclusion": "running",
+            "status": "in_progress",
             "steps": [
               {
                 "name": "Set up job",
@@ -819,146 +573,75 @@
               },
               {
                 "name": "Run actions/setup-go@v5",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "in_progress",
+                "conclusion": ""
               },
               {
                 "name": "gofmt",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "go vet",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "go test",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "Coverage summary",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "Run actions/upload-artifact@v4",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "govulncheck",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "Post Run actions/setup-go@v5",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "Post Check out unhurried-common",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "Post Mint read-only token for unhurried-common",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "Post Check out unhurried-notifications",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Complete job",
-                "status": "completed",
-                "conclusion": "success"
-              }
-            ]
-          },
-          {
-            "name": "Build and smoke-test container image",
-            "conclusion": "success",
-            "status": "completed",
-            "steps": [
-              {
-                "name": "Set up job",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Mint read-only token for unhurried-common",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Run actions/setup-go@v5",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "docker build",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Smoke test the image",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Image refuses to start without auth config",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "govulncheck the shipped binary",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Post Run actions/setup-go@v5",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Post Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Post Mint read-only token for unhurried-common",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Post Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Complete job",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               }
             ]
           }
         ]
       },
       "history": [
+        {
+          "id": 42420687448,
+          "branch": "main",
+          "commitSha": "35972d4",
+          "commitTitle": "chore(mail): digest copy for postings found for the user's targets",
+          "status": "in_progress",
+          "conclusion": "running",
+          "durationSeconds": 3,
+          "createdAt": "2026-11-07T22:27:23Z",
+          "url": "https://github.com/Unhurried-Careers/unhurried-notifications/actions/runs/42420687448"
+        },
         {
           "id": 42373954234,
           "branch": "main",
@@ -1002,17 +685,6 @@
           "durationSeconds": 175,
           "createdAt": "2026-11-06T02:07:43Z",
           "url": "https://github.com/Unhurried-Careers/unhurried-notifications/actions/runs/42148313076"
-        },
-        {
-          "id": 42045038328,
-          "branch": "main",
-          "commitSha": "b2abae0",
-          "commitTitle": "CI",
-          "status": "completed",
-          "conclusion": "success",
-          "durationSeconds": 189,
-          "createdAt": "2026-11-05T14:26:31Z",
-          "url": "https://github.com/Unhurried-Careers/unhurried-notifications/actions/runs/42045038328"
         }
       ]
     },
@@ -1028,25 +700,25 @@
       "repoUrl": "https://github.com/Unhurried-Careers/unhurried-inbox",
       "hasActiveRuns": true,
       "latestRun": {
-        "id": 42372748357,
+        "id": 42420690010,
         "workflow": "CI",
-        "status": "completed",
-        "conclusion": "success",
+        "status": "in_progress",
+        "conclusion": "running",
         "branch": "main",
-        "commitSha": "5e71aa0",
-        "fullSha": "5e71aa0819afd351ad62fc1692f587198fa47807",
-        "commitTitle": "CI",
-        "createdAt": "2026-11-07T12:30:02Z",
-        "updatedAt": "2026-11-07T12:33:03Z",
-        "durationSeconds": 181,
-        "url": "https://github.com/Unhurried-Careers/unhurried-inbox/actions/runs/42372748357"
+        "commitSha": "d674fa6",
+        "fullSha": "d674fa682acd07f4916c208876addc8cd0295a75",
+        "commitTitle": "docs: interviews are filed into applied opportunities",
+        "createdAt": "2026-11-07T22:27:25Z",
+        "updatedAt": "2026-11-07T22:27:28Z",
+        "durationSeconds": 3,
+        "url": "https://github.com/Unhurried-Careers/unhurried-inbox/actions/runs/42420690010"
       },
       "runDetails": {
         "jobs": [
           {
             "name": "Lint and test",
-            "conclusion": "success",
-            "status": "completed",
+            "conclusion": "running",
+            "status": "in_progress",
             "steps": [
               {
                 "name": "Set up job",
@@ -1070,146 +742,75 @@
               },
               {
                 "name": "Run actions/setup-go@v5",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "in_progress",
+                "conclusion": ""
               },
               {
                 "name": "gofmt",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "go vet",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "go test",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "Coverage summary",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "Run actions/upload-artifact@v4",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "govulncheck",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "Post Run actions/setup-go@v5",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "Post Check out unhurried-common",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "Post Mint read-only token for unhurried-common",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "Post Check out unhurried-inbox",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Complete job",
-                "status": "completed",
-                "conclusion": "success"
-              }
-            ]
-          },
-          {
-            "name": "Build and smoke-test container image",
-            "conclusion": "success",
-            "status": "completed",
-            "steps": [
-              {
-                "name": "Set up job",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Mint read-only token for unhurried-common",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Run actions/setup-go@v5",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "docker build",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Smoke test the image",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Image refuses to start without auth config",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "govulncheck the shipped binary",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Post Run actions/setup-go@v5",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Post Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Post Mint read-only token for unhurried-common",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Post Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Complete job",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               }
             ]
           }
         ]
       },
       "history": [
+        {
+          "id": 42420690010,
+          "branch": "main",
+          "commitSha": "d674fa6",
+          "commitTitle": "docs: interviews are filed into applied opportunities",
+          "status": "in_progress",
+          "conclusion": "running",
+          "durationSeconds": 3,
+          "createdAt": "2026-11-07T22:27:25Z",
+          "url": "https://github.com/Unhurried-Careers/unhurried-inbox/actions/runs/42420690010"
+        },
         {
           "id": 42372748357,
           "branch": "main",
@@ -1253,17 +854,6 @@
           "durationSeconds": 171,
           "createdAt": "2026-11-06T13:45:53Z",
           "url": "https://github.com/Unhurried-Careers/unhurried-inbox/actions/runs/42228129502"
-        },
-        {
-          "id": 42040854958,
-          "branch": "main",
-          "commitSha": "e047bf2",
-          "commitTitle": "CI",
-          "status": "completed",
-          "conclusion": "success",
-          "durationSeconds": 193,
-          "createdAt": "2026-11-05T14:00:30Z",
-          "url": "https://github.com/Unhurried-Careers/unhurried-inbox/actions/runs/42040854958"
         }
       ]
     },
@@ -1279,18 +869,18 @@
       "repoUrl": "https://github.com/Unhurried-Careers/unhurried-common",
       "hasActiveRuns": true,
       "latestRun": {
-        "id": 42148236340,
+        "id": 42420679402,
         "workflow": "CI",
         "status": "completed",
         "conclusion": "success",
         "branch": "main",
-        "commitSha": "ea02c5e",
-        "fullSha": "ea02c5e591fde10cc1f630ae2b91793986761c46",
-        "commitTitle": "Add UserEmail field to JobCriteria and JobDigest",
-        "createdAt": "2026-11-06T02:07:02Z",
-        "updatedAt": "2026-11-06T02:07:33Z",
-        "durationSeconds": 31,
-        "url": "https://github.com/Unhurried-Careers/unhurried-common/actions/runs/42148236340"
+        "commitSha": "5d85a65",
+        "fullSha": "5d85a651d6f4d87f7e9d13b3f35e456187d0905d",
+        "commitTitle": "feat(models): Direction, Research, Posting and the Opportunity pipeline",
+        "createdAt": "2026-11-07T22:27:16Z",
+        "updatedAt": "2026-11-07T22:27:46Z",
+        "durationSeconds": 30,
+        "url": "https://github.com/Unhurried-Careers/unhurried-common/actions/runs/42420679402"
       },
       "runDetails": {
         "jobs": [
@@ -1365,6 +955,17 @@
       },
       "history": [
         {
+          "id": 42420679402,
+          "branch": "main",
+          "commitSha": "5d85a65",
+          "commitTitle": "feat(models): Direction, Research, Posting and the Opportunity pipeline",
+          "status": "completed",
+          "conclusion": "success",
+          "durationSeconds": 30,
+          "createdAt": "2026-11-07T22:27:16Z",
+          "url": "https://github.com/Unhurried-Careers/unhurried-common/actions/runs/42420679402"
+        },
+        {
           "id": 42148236340,
           "branch": "main",
           "commitSha": "ea02c5e",
@@ -1407,17 +1008,6 @@
           "durationSeconds": 103,
           "createdAt": "2026-11-03T06:16:57Z",
           "url": "https://github.com/Unhurried-Careers/unhurried-common/actions/runs/41588900831"
-        },
-        {
-          "id": 41406850803,
-          "branch": "staging",
-          "commitSha": "84689bb",
-          "commitTitle": "Drop MailFinding now that the Gmail import is retired; keep OriginGma…",
-          "status": "completed",
-          "conclusion": "success",
-          "durationSeconds": 29,
-          "createdAt": "2026-11-02T07:31:30Z",
-          "url": "https://github.com/Unhurried-Careers/unhurried-common/actions/runs/41406850803"
         }
       ]
     },
@@ -1433,25 +1023,25 @@
       "repoUrl": "https://github.com/Unhurried-Careers/unhurried-web",
       "hasActiveRuns": true,
       "latestRun": {
-        "id": 42239228746,
+        "id": 42420693644,
         "workflow": "CI",
-        "status": "completed",
-        "conclusion": "success",
+        "status": "in_progress",
+        "conclusion": "running",
         "branch": "main",
-        "commitSha": "c247aa7",
-        "fullSha": "c247aa7eba511224895bfb00ab56a31493815e31",
-        "commitTitle": "fix(web): typecheck alignment and status field in pursuit shortlist mock",
-        "createdAt": "2026-11-06T15:01:53Z",
-        "updatedAt": "2026-11-06T15:03:04Z",
-        "durationSeconds": 71,
-        "url": "https://github.com/Unhurried-Careers/unhurried-web/actions/runs/42239228746"
+        "commitSha": "e0a09b6",
+        "fullSha": "e0a09b634cf2618caa2a366c84edf54c14b641a7",
+        "commitTitle": "feat: the app as a process",
+        "createdAt": "2026-11-07T22:27:28Z",
+        "updatedAt": "2026-11-07T22:27:31Z",
+        "durationSeconds": 3,
+        "url": "https://github.com/Unhurried-Careers/unhurried-web/actions/runs/42420693644"
       },
       "runDetails": {
         "jobs": [
           {
             "name": "Typecheck, test, build",
-            "conclusion": "success",
-            "status": "completed",
+            "conclusion": "running",
+            "status": "in_progress",
             "steps": [
               {
                 "name": "Set up job",
@@ -1475,54 +1065,60 @@
               },
               {
                 "name": "Typecheck",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "in_progress",
+                "conclusion": ""
               },
               {
                 "name": "Unit tests with coverage thresholds",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "Coverage summary",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "Run actions/upload-artifact@v4",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "Production build check",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "Audit runtime dependencies",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "Post Run actions/setup-node@v4",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "Post Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Complete job",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               }
             ]
           }
         ]
       },
       "history": [
+        {
+          "id": 42420693644,
+          "branch": "main",
+          "commitSha": "e0a09b6",
+          "commitTitle": "feat: the app as a process",
+          "status": "in_progress",
+          "conclusion": "running",
+          "durationSeconds": 3,
+          "createdAt": "2026-11-07T22:27:28Z",
+          "url": "https://github.com/Unhurried-Careers/unhurried-web/actions/runs/42420693644"
+        },
         {
           "id": 42239228746,
           "branch": "main",
@@ -1566,17 +1162,6 @@
           "durationSeconds": 83,
           "createdAt": "2026-11-06T14:01:35Z",
           "url": "https://github.com/Unhurried-Careers/unhurried-web/actions/runs/42230273031"
-        },
-        {
-          "id": 42160475603,
-          "branch": "main",
-          "commitSha": "e68396a",
-          "commitTitle": "Add centralized Settings section",
-          "status": "completed",
-          "conclusion": "success",
-          "durationSeconds": 87,
-          "createdAt": "2026-11-06T04:06:15Z",
-          "url": "https://github.com/Unhurried-Careers/unhurried-web/actions/runs/42160475603"
         }
       ]
     },
@@ -1592,25 +1177,25 @@
       "repoUrl": "https://github.com/Unhurried-Careers/unhurried-extension",
       "hasActiveRuns": true,
       "latestRun": {
-        "id": 42233649823,
+        "id": 42420696736,
         "workflow": "CI",
-        "status": "completed",
-        "conclusion": "success",
+        "status": "in_progress",
+        "conclusion": "running",
         "branch": "main",
-        "commitSha": "5da805b",
-        "fullSha": "5da805bb9cadb6b6b93707f0328f8ae43a4e610f",
-        "commitTitle": "chore: update extension version to v0.1",
-        "createdAt": "2026-11-06T14:24:35Z",
-        "updatedAt": "2026-11-06T14:24:56Z",
-        "durationSeconds": 21,
-        "url": "https://github.com/Unhurried-Careers/unhurried-extension/actions/runs/42233649823"
+        "commitSha": "8ae5a84",
+        "fullSha": "8ae5a84dd8dd64f0a206cf6e48068daded31a751",
+        "commitTitle": "feat: list opportunities ready to apply",
+        "createdAt": "2026-11-07T22:27:30Z",
+        "updatedAt": "2026-11-07T22:27:33Z",
+        "durationSeconds": 3,
+        "url": "https://github.com/Unhurried-Careers/unhurried-extension/actions/runs/42420696736"
       },
       "runDetails": {
         "jobs": [
           {
             "name": "Test and package",
-            "conclusion": "success",
-            "status": "completed",
+            "conclusion": "running",
+            "status": "in_progress",
             "steps": [
               {
                 "name": "Set up job",
@@ -1634,39 +1219,45 @@
               },
               {
                 "name": "Unit tests with coverage thresholds",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "in_progress",
+                "conclusion": ""
               },
               {
                 "name": "Package extension",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "Run actions/upload-artifact@v4",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "Post Run actions/setup-node@v4",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "Post Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Complete job",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               }
             ]
           }
         ]
       },
       "history": [
+        {
+          "id": 42420696736,
+          "branch": "main",
+          "commitSha": "8ae5a84",
+          "commitTitle": "feat: list opportunities ready to apply",
+          "status": "in_progress",
+          "conclusion": "running",
+          "durationSeconds": 3,
+          "createdAt": "2026-11-07T22:27:30Z",
+          "url": "https://github.com/Unhurried-Careers/unhurried-extension/actions/runs/42420696736"
+        },
         {
           "id": 42233649823,
           "branch": "main",
@@ -1710,17 +1301,6 @@
           "durationSeconds": 27,
           "createdAt": "2026-11-01T18:19:59Z",
           "url": "https://github.com/Unhurried-Careers/unhurried-extension/actions/runs/41336068930"
-        },
-        {
-          "id": 41335999769,
-          "branch": "staging",
-          "commitSha": "a290bfb",
-          "commitTitle": "Use unhurried-careers.com for production, with a staging option",
-          "status": "completed",
-          "conclusion": "success",
-          "durationSeconds": 26,
-          "createdAt": "2026-11-01T18:19:10Z",
-          "url": "https://github.com/Unhurried-Careers/unhurried-extension/actions/runs/41335999769"
         }
       ]
     },
@@ -1736,23 +1316,23 @@
       "repoUrl": "https://github.com/Unhurried-Careers/unhurried-infra",
       "hasActiveRuns": true,
       "latestRun": {
-        "id": 42373332682,
+        "id": 42420691830,
         "workflow": "CI",
-        "status": "completed",
-        "conclusion": "success",
+        "status": "in_progress",
+        "conclusion": "running",
         "branch": "main",
-        "commitSha": "06ec0fc",
-        "fullSha": "06ec0fc21aa2997e0353969fe23d2fb97a0ad7df",
-        "commitTitle": "CI",
-        "createdAt": "2026-11-07T12:37:45Z",
-        "updatedAt": "2026-11-07T12:38:58Z",
-        "durationSeconds": 73,
-        "url": "https://github.com/Unhurried-Careers/unhurried-infra/actions/runs/42373332682"
+        "commitSha": "b63fd22",
+        "fullSha": "b63fd2275dc146ab23c1fef6c59e0db27a1d7b8a",
+        "commitTitle": "feat: Vertex AI for job-search research summaries; gateway specs for …",
+        "createdAt": "2026-11-07T22:27:26Z",
+        "updatedAt": "2026-11-07T22:27:36Z",
+        "durationSeconds": 10,
+        "url": "https://github.com/Unhurried-Careers/unhurried-infra/actions/runs/42420691830"
       },
       "runDetails": {
         "jobs": [
           {
-            "name": "Gateway specs match service repos (unhurried-job-search, job-search.yaml)",
+            "name": "Lint gateway specs",
             "conclusion": "success",
             "status": "completed",
             "steps": [
@@ -1767,7 +1347,96 @@
                 "conclusion": "success"
               },
               {
-                "name": "Mint read-only token for unhurried-job-search",
+                "name": "Run actions/setup-node@v4",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Run npm ci",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Run npm run check-specs",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Post Run actions/setup-node@v4",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Post Run actions/checkout@v4",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Complete job",
+                "status": "completed",
+                "conclusion": "success"
+              }
+            ]
+          },
+          {
+            "name": "Terraform fmt, validate, test",
+            "conclusion": "running",
+            "status": "in_progress",
+            "steps": [
+              {
+                "name": "Set up job",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Run actions/checkout@v4",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Run hashicorp/setup-terraform@v3",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Run mkdir -p \"$TF_PLUGIN_CACHE_DIR\"",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "terraform fmt",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "validate and test each module",
+                "status": "in_progress",
+                "conclusion": ""
+              },
+              {
+                "name": "Post Run actions/checkout@v4",
+                "status": "pending",
+                "conclusion": ""
+              }
+            ]
+          },
+          {
+            "name": "Gateway specs match service repos (unhurried-inbox, inbox.yaml)",
+            "conclusion": "success",
+            "status": "completed",
+            "steps": [
+              {
+                "name": "Set up job",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Run actions/checkout@v4",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Mint read-only token for unhurried-inbox",
                 "status": "completed",
                 "conclusion": "success"
               },
@@ -1787,7 +1456,7 @@
                 "conclusion": "success"
               },
               {
-                "name": "Post Mint read-only token for unhurried-job-search",
+                "name": "Post Mint read-only token for unhurried-inbox",
                 "status": "completed",
                 "conclusion": "success"
               },
@@ -1856,207 +1525,9 @@
             ]
           },
           {
-            "name": "Gateway specs match service repos (unhurried-inbox, inbox.yaml)",
-            "conclusion": "success",
-            "status": "completed",
-            "steps": [
-              {
-                "name": "Set up job",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Mint read-only token for unhurried-inbox",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Compare specs",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Post Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Post Mint read-only token for unhurried-inbox",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Post Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Complete job",
-                "status": "completed",
-                "conclusion": "success"
-              }
-            ]
-          },
-          {
-            "name": "Lint gateway specs",
-            "conclusion": "success",
-            "status": "completed",
-            "steps": [
-              {
-                "name": "Set up job",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Run actions/setup-node@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Run npm ci",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Run npm run check-specs",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Post Run actions/setup-node@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Post Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Complete job",
-                "status": "completed",
-                "conclusion": "success"
-              }
-            ]
-          },
-          {
-            "name": "Gateway specs match service repos (unhurried-resume, resume.yaml)",
-            "conclusion": "success",
-            "status": "completed",
-            "steps": [
-              {
-                "name": "Set up job",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Mint read-only token for unhurried-resume",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Compare specs",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Post Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Post Mint read-only token for unhurried-resume",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Post Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Complete job",
-                "status": "completed",
-                "conclusion": "success"
-              }
-            ]
-          },
-          {
-            "name": "Terraform fmt, validate, test",
-            "conclusion": "success",
-            "status": "completed",
-            "steps": [
-              {
-                "name": "Set up job",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Run hashicorp/setup-terraform@v3",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Run mkdir -p \"$TF_PLUGIN_CACHE_DIR\"",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "terraform fmt",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "validate and test each module",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Post Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Complete job",
-                "status": "completed",
-                "conclusion": "success"
-              }
-            ]
-          },
-          {
             "name": "Checkov (informational)",
-            "conclusion": "success",
-            "status": "completed",
+            "conclusion": "running",
+            "status": "in_progress",
             "steps": [
               {
                 "name": "Set up job",
@@ -2141,10 +1612,125 @@
                 "conclusion": "success"
               }
             ]
+          },
+          {
+            "name": "Gateway specs match service repos (unhurried-job-search, job-search.yaml)",
+            "conclusion": "success",
+            "status": "completed",
+            "steps": [
+              {
+                "name": "Set up job",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Run actions/checkout@v4",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Mint read-only token for unhurried-job-search",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Run actions/checkout@v4",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Compare specs",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Post Run actions/checkout@v4",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Post Mint read-only token for unhurried-job-search",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Post Run actions/checkout@v4",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Complete job",
+                "status": "completed",
+                "conclusion": "success"
+              }
+            ]
+          },
+          {
+            "name": "Gateway specs match service repos (unhurried-resume, resume.yaml)",
+            "conclusion": "success",
+            "status": "completed",
+            "steps": [
+              {
+                "name": "Set up job",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Run actions/checkout@v4",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Mint read-only token for unhurried-resume",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Run actions/checkout@v4",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Compare specs",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Post Run actions/checkout@v4",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Post Mint read-only token for unhurried-resume",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Post Run actions/checkout@v4",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Complete job",
+                "status": "completed",
+                "conclusion": "success"
+              }
+            ]
           }
         ]
       },
       "history": [
+        {
+          "id": 42420691830,
+          "branch": "main",
+          "commitSha": "b63fd22",
+          "commitTitle": "feat: Vertex AI for job-search research summaries; gateway specs for …",
+          "status": "in_progress",
+          "conclusion": "running",
+          "durationSeconds": 10,
+          "createdAt": "2026-11-07T22:27:26Z",
+          "url": "https://github.com/Unhurried-Careers/unhurried-infra/actions/runs/42420691830"
+        },
         {
           "id": 42373332682,
           "branch": "main",
@@ -2188,17 +1774,6 @@
           "durationSeconds": 72,
           "createdAt": "2026-11-06T13:52:54Z",
           "url": "https://github.com/Unhurried-Careers/unhurried-infra/actions/runs/42229078579"
-        },
-        {
-          "id": 42042739006,
-          "branch": "main",
-          "commitSha": "9112fe0",
-          "commitTitle": "CI",
-          "status": "completed",
-          "conclusion": "success",
-          "durationSeconds": 65,
-          "createdAt": "2026-11-05T14:12:22Z",
-          "url": "https://github.com/Unhurried-Careers/unhurried-infra/actions/runs/42042739006"
         }
       ]
     },
@@ -2214,18 +1789,18 @@
       "repoUrl": "https://github.com/Unhurried-Careers/unhurried-product",
       "hasActiveRuns": true,
       "latestRun": {
-        "id": 42401464200,
+        "id": 42420697651,
         "workflow": "CI/CD Pipeline Dashboard",
         "status": "in_progress",
         "conclusion": "running",
         "branch": "main",
-        "commitSha": "96001bd",
-        "fullSha": "96001bdda4c0cee98ddba1c7c65c6966ec6b9567",
-        "commitTitle": "CI/CD Pipeline Dashboard",
-        "createdAt": "2026-11-07T18:28:31Z",
-        "updatedAt": "2026-11-07T18:28:35Z",
-        "durationSeconds": 4,
-        "url": "https://github.com/Unhurried-Careers/unhurried-product/actions/runs/42401464200"
+        "commitSha": "080b944",
+        "fullSha": "080b94481573606534c179aaa7452c2bb49a41ac",
+        "commitTitle": "docs: rewrite the product docs around the process",
+        "createdAt": "2026-11-07T22:27:31Z",
+        "updatedAt": "2026-11-07T22:27:34Z",
+        "durationSeconds": 3,
+        "url": "https://github.com/Unhurried-Careers/unhurried-product/actions/runs/42420697651"
       },
       "runDetails": {
         "jobs": [
@@ -2305,13 +1880,24 @@
       },
       "history": [
         {
+          "id": 42420697651,
+          "branch": "main",
+          "commitSha": "080b944",
+          "commitTitle": "docs: rewrite the product docs around the process",
+          "status": "in_progress",
+          "conclusion": "running",
+          "durationSeconds": 3,
+          "createdAt": "2026-11-07T22:27:31Z",
+          "url": "https://github.com/Unhurried-Careers/unhurried-product/actions/runs/42420697651"
+        },
+        {
           "id": 42401464200,
           "branch": "main",
           "commitSha": "96001bd",
           "commitTitle": "CI/CD Pipeline Dashboard",
-          "status": "in_progress",
-          "conclusion": "running",
-          "durationSeconds": 4,
+          "status": "completed",
+          "conclusion": "success",
+          "durationSeconds": 38,
           "createdAt": "2026-11-07T18:28:31Z",
           "url": "https://github.com/Unhurried-Careers/unhurried-product/actions/runs/42401464200"
         },
@@ -2347,17 +1933,6 @@
           "durationSeconds": 39,
           "createdAt": "2026-11-06T23:57:22Z",
           "url": "https://github.com/Unhurried-Careers/unhurried-product/actions/runs/42315200792"
-        },
-        {
-          "id": 42274700710,
-          "branch": "main",
-          "commitSha": "e97fe16",
-          "commitTitle": "feat: add native GitHub Actions workflow dashboard and README matrix",
-          "status": "completed",
-          "conclusion": "success",
-          "durationSeconds": 40,
-          "createdAt": "2026-11-06T18:53:03Z",
-          "url": "https://github.com/Unhurried-Careers/unhurried-product/actions/runs/42274700710"
         }
       ]
     }
