@@ -1,14 +1,14 @@
 {
-  "generatedAt": "2026-11-07T05:28:12.395Z",
+  "generatedAt": "2026-11-07T12:30:06.950Z",
   "org": "Unhurried-Careers",
   "summary": {
     "totalRepositories": 10,
     "trackedPipelines": 10,
-    "successful": 9,
+    "successful": 8,
     "failed": 0,
-    "inProgress": 1,
-    "successRate": 90,
-    "avgDurationSeconds": 106,
+    "inProgress": 2,
+    "successRate": 80,
+    "avgDurationSeconds": 85,
     "overallStatus": "running"
   },
   "repositories": [
@@ -24,18 +24,18 @@
       "repoUrl": "https://github.com/Unhurried-Careers/unhurried-job-search",
       "hasActiveRuns": true,
       "latestRun": {
-        "id": 42238803220,
+        "id": 42371023093,
         "workflow": "CI",
         "status": "completed",
         "conclusion": "success",
         "branch": "main",
         "commitSha": "190cfc6",
         "fullSha": "190cfc6268b63d9924696ef903b7adcadf1536ed",
-        "commitTitle": "style: format research.go with gofmt",
-        "createdAt": "2026-11-06T14:59:08Z",
-        "updatedAt": "2026-11-06T15:01:44Z",
-        "durationSeconds": 156,
-        "url": "https://github.com/Unhurried-Careers/unhurried-job-search/actions/runs/42238803220"
+        "commitTitle": "CI",
+        "createdAt": "2026-11-07T12:06:43Z",
+        "updatedAt": "2026-11-07T12:09:32Z",
+        "durationSeconds": 169,
+        "url": "https://github.com/Unhurried-Careers/unhurried-job-search/actions/runs/42371023093"
       },
       "runDetails": {
         "jobs": [
@@ -207,6 +207,17 @@
       },
       "history": [
         {
+          "id": 42371023093,
+          "branch": "main",
+          "commitSha": "190cfc6",
+          "commitTitle": "CI",
+          "status": "completed",
+          "conclusion": "success",
+          "durationSeconds": 169,
+          "createdAt": "2026-11-07T12:06:43Z",
+          "url": "https://github.com/Unhurried-Careers/unhurried-job-search/actions/runs/42371023093"
+        },
+        {
           "id": 42238803220,
           "branch": "main",
           "commitSha": "190cfc6",
@@ -249,17 +260,6 @@
           "durationSeconds": 163,
           "createdAt": "2026-11-06T13:27:26Z",
           "url": "https://github.com/Unhurried-Careers/unhurried-job-search/actions/runs/42225636034"
-        },
-        {
-          "id": 42166313911,
-          "branch": "main",
-          "commitSha": "da53f95",
-          "commitTitle": "Refactor job board searches and scheduled scan to execute concurrentl…",
-          "status": "completed",
-          "conclusion": "success",
-          "durationSeconds": 176,
-          "createdAt": "2026-11-06T05:05:28Z",
-          "url": "https://github.com/Unhurried-Careers/unhurried-job-search/actions/runs/42166313911"
         }
       ]
     },
@@ -275,18 +275,18 @@
       "repoUrl": "https://github.com/Unhurried-Careers/unhurried-resume",
       "hasActiveRuns": true,
       "latestRun": {
-        "id": 42233936504,
+        "id": 42371986559,
         "workflow": "CI",
         "status": "completed",
         "conclusion": "success",
         "branch": "main",
         "commitSha": "7b595ea",
         "fullSha": "7b595eacd9367c865ddec34c78b5268b8705c1cc",
-        "commitTitle": "chore: update API version to v0.1",
-        "createdAt": "2026-11-06T14:26:29Z",
-        "updatedAt": "2026-11-06T14:29:31Z",
-        "durationSeconds": 182,
-        "url": "https://github.com/Unhurried-Careers/unhurried-resume/actions/runs/42233936504"
+        "commitTitle": "CI",
+        "createdAt": "2026-11-07T12:19:49Z",
+        "updatedAt": "2026-11-07T12:22:25Z",
+        "durationSeconds": 156,
+        "url": "https://github.com/Unhurried-Careers/unhurried-resume/actions/runs/42371986559"
       },
       "runDetails": {
         "jobs": [
@@ -458,6 +458,17 @@
       },
       "history": [
         {
+          "id": 42371986559,
+          "branch": "main",
+          "commitSha": "7b595ea",
+          "commitTitle": "CI",
+          "status": "completed",
+          "conclusion": "success",
+          "durationSeconds": 156,
+          "createdAt": "2026-11-07T12:19:49Z",
+          "url": "https://github.com/Unhurried-Careers/unhurried-resume/actions/runs/42371986559"
+        },
+        {
           "id": 42233936504,
           "branch": "main",
           "commitSha": "7b595ea",
@@ -500,17 +511,6 @@
           "durationSeconds": 187,
           "createdAt": "2026-11-04T13:41:07Z",
           "url": "https://github.com/Unhurried-Careers/unhurried-resume/actions/runs/41840351661"
-        },
-        {
-          "id": 41781010925,
-          "branch": "main",
-          "commitSha": "9d10b1f",
-          "commitTitle": "Use gemini-2.0-flash as default Vertex AI model",
-          "status": "completed",
-          "conclusion": "success",
-          "durationSeconds": 162,
-          "createdAt": "2026-11-04T05:43:43Z",
-          "url": "https://github.com/Unhurried-Careers/unhurried-resume/actions/runs/41781010925"
         }
       ]
     },
@@ -1028,25 +1028,25 @@
       "repoUrl": "https://github.com/Unhurried-Careers/unhurried-inbox",
       "hasActiveRuns": true,
       "latestRun": {
-        "id": 42233707878,
+        "id": 42372748357,
         "workflow": "CI",
-        "status": "completed",
-        "conclusion": "success",
+        "status": "in_progress",
+        "conclusion": "running",
         "branch": "main",
         "commitSha": "5e71aa0",
         "fullSha": "5e71aa0819afd351ad62fc1692f587198fa47807",
-        "commitTitle": "chore: update API version to v0.1",
-        "createdAt": "2026-11-06T14:24:59Z",
-        "updatedAt": "2026-11-06T14:28:09Z",
-        "durationSeconds": 190,
-        "url": "https://github.com/Unhurried-Careers/unhurried-inbox/actions/runs/42233707878"
+        "commitTitle": "CI",
+        "createdAt": "2026-11-07T12:30:02Z",
+        "updatedAt": "2026-11-07T12:30:05Z",
+        "durationSeconds": 3,
+        "url": "https://github.com/Unhurried-Careers/unhurried-inbox/actions/runs/42372748357"
       },
       "runDetails": {
         "jobs": [
           {
             "name": "Lint and test",
-            "conclusion": "success",
-            "status": "completed",
+            "conclusion": "running",
+            "status": "in_progress",
             "steps": [
               {
                 "name": "Set up job",
@@ -1070,146 +1070,75 @@
               },
               {
                 "name": "Run actions/setup-go@v5",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "in_progress",
+                "conclusion": ""
               },
               {
                 "name": "gofmt",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "go vet",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "go test",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "Coverage summary",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "Run actions/upload-artifact@v4",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "govulncheck",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "Post Run actions/setup-go@v5",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "Post Check out unhurried-common",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "Post Mint read-only token for unhurried-common",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               },
               {
                 "name": "Post Check out unhurried-inbox",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Complete job",
-                "status": "completed",
-                "conclusion": "success"
-              }
-            ]
-          },
-          {
-            "name": "Build and smoke-test container image",
-            "conclusion": "success",
-            "status": "completed",
-            "steps": [
-              {
-                "name": "Set up job",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Mint read-only token for unhurried-common",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Run actions/setup-go@v5",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "docker build",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Smoke test the image",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Image refuses to start without auth config",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "govulncheck the shipped binary",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Post Run actions/setup-go@v5",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Post Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Post Mint read-only token for unhurried-common",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Post Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Complete job",
-                "status": "completed",
-                "conclusion": "success"
+                "status": "pending",
+                "conclusion": ""
               }
             ]
           }
         ]
       },
       "history": [
+        {
+          "id": 42372748357,
+          "branch": "main",
+          "commitSha": "5e71aa0",
+          "commitTitle": "CI",
+          "status": "in_progress",
+          "conclusion": "running",
+          "durationSeconds": 3,
+          "createdAt": "2026-11-07T12:30:02Z",
+          "url": "https://github.com/Unhurried-Careers/unhurried-inbox/actions/runs/42372748357"
+        },
         {
           "id": 42233707878,
           "branch": "main",
@@ -1253,17 +1182,6 @@
           "durationSeconds": 193,
           "createdAt": "2026-11-05T14:00:30Z",
           "url": "https://github.com/Unhurried-Careers/unhurried-inbox/actions/runs/42040854958"
-        },
-        {
-          "id": 41841512607,
-          "branch": "main",
-          "commitSha": "e047bf2",
-          "commitTitle": "CI",
-          "status": "completed",
-          "conclusion": "success",
-          "durationSeconds": 188,
-          "createdAt": "2026-11-04T13:48:43Z",
-          "url": "https://github.com/Unhurried-Careers/unhurried-inbox/actions/runs/41841512607"
         }
       ]
     },
@@ -2214,18 +2132,18 @@
       "repoUrl": "https://github.com/Unhurried-Careers/unhurried-product",
       "hasActiveRuns": true,
       "latestRun": {
-        "id": 42342840846,
+        "id": 42372739924,
         "workflow": "CI/CD Pipeline Dashboard",
         "status": "in_progress",
         "conclusion": "running",
         "branch": "main",
-        "commitSha": "972270b",
-        "fullSha": "972270b0ee6fa5e6c95899f14681ad6db41641b0",
+        "commitSha": "838d263",
+        "fullSha": "838d263c9d75329ef456ed82e1735fd020815b4d",
         "commitTitle": "CI/CD Pipeline Dashboard",
-        "createdAt": "2026-11-07T05:28:00Z",
-        "updatedAt": "2026-11-07T05:28:04Z",
-        "durationSeconds": 4,
-        "url": "https://github.com/Unhurried-Careers/unhurried-product/actions/runs/42342840846"
+        "createdAt": "2026-11-07T12:29:55Z",
+        "updatedAt": "2026-11-07T12:29:58Z",
+        "durationSeconds": 3,
+        "url": "https://github.com/Unhurried-Careers/unhurried-product/actions/runs/42372739924"
       },
       "runDetails": {
         "jobs": [
@@ -2305,13 +2223,24 @@
       },
       "history": [
         {
+          "id": 42372739924,
+          "branch": "main",
+          "commitSha": "838d263",
+          "commitTitle": "CI/CD Pipeline Dashboard",
+          "status": "in_progress",
+          "conclusion": "running",
+          "durationSeconds": 3,
+          "createdAt": "2026-11-07T12:29:55Z",
+          "url": "https://github.com/Unhurried-Careers/unhurried-product/actions/runs/42372739924"
+        },
+        {
           "id": 42342840846,
           "branch": "main",
           "commitSha": "972270b",
           "commitTitle": "CI/CD Pipeline Dashboard",
-          "status": "in_progress",
-          "conclusion": "running",
-          "durationSeconds": 4,
+          "status": "completed",
+          "conclusion": "success",
+          "durationSeconds": 34,
           "createdAt": "2026-11-07T05:28:00Z",
           "url": "https://github.com/Unhurried-Careers/unhurried-product/actions/runs/42342840846"
         },
