@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     # Enables one-click manual refresh directly in GitHub Actions
   push:
-    branches: [main]
+    branches: [dev]
     paths:
       - "dashboard/**"
       - ".github/workflows/dashboard.yml"
@@ -57,7 +57,7 @@ jobs:
           git add dashboard/data/ci-status.json README.md
           if ! git diff --cached --quiet; then
             git commit -m "chore(dashboard): update CI/CD status matrix [skip ci]"
-            git push origin main
+            git push origin HEAD
           else
             echo "No changes to status matrix."
           fi

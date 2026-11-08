@@ -496,7 +496,7 @@ Monitor real-time pipeline status, test runs, and deployment health across all 1
 | [unhurried-web](https://github.com/Unhurried-Careers/unhurried-web) | TypeScript React frontend (static, on Firebase Hosting) |
 | [unhurried-extension](https://github.com/Unhurried-Careers/unhurried-extension) | Chrome MV3 apply assistant |
 
-Each folder is its **own git repository** with `main` (production) and `staging` branches.
+Each folder is its **own git repository** with `dev` (the default branch, where work happens), `staging`, and `main` (production) branches.
 
 ## Three tiers
 
@@ -527,4 +527,4 @@ Copy `unhurried-web/.env.example` to `.env.local` and set `VITE_AUTH_MODE=dev` f
 
 ## Deploy
 
-See `unhurried-infra/README.md` and `docs/ci-cd.md`. GitHub Actions (`.github/workflows/ci.yml`) runs pure CI on every pull request and commit with zero Google Cloud credentials. Pushes to `main` (production, https://unhurried-careers.com) and `staging` run Continuous Delivery natively inside Google Cloud via **Cloud Build** and **Google Cloud Deploy**: service images go to Artifact Registry with verified SLSA provenance and roll out to Cloud Run with post-deploy health verification, the frontend is published to Firebase Hosting, and Terraform applies the infrastructure using Secret Manager. Promote by merging `staging` into `main`.
+See `unhurried-infra/README.md` and `docs/ci-cd.md`. GitHub Actions (`.github/workflows/ci.yml`) runs pure CI on every pull request and commit with zero Google Cloud credentials. Pushes to `main` (production, https://unhurried-careers.com) and `staging` run Continuous Delivery natively inside Google Cloud via **Cloud Build** and **Google Cloud Deploy**: service images go to Artifact Registry with verified SLSA provenance and roll out to Cloud Run with post-deploy health verification, the frontend is published to Firebase Hosting, and Terraform applies the infrastructure using Secret Manager. Work lands on `dev` (CI only), then is promoted by merging `dev` into `staging` and `staging` into `main`.

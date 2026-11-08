@@ -2,19 +2,20 @@
 
 Unhurried splits **Continuous Integration (CI)** and **Continuous Delivery (CD)** cleanly across GitHub and Google Cloud:
 
-- **Continuous Integration (GitHub Actions — `.github/workflows/ci.yml`)**: Runs tests, static analysis, coverage gates, vulnerability scans (`govulncheck`, `npm audit`, Checkov), OpenAPI spec sync checks, and container smoke tests on every pull request, push to `staging`/`main`, and daily `06:00 UTC` schedule. Workflows run with `permissions: contents: read` only and hold **zero Google Cloud credentials or deployment secrets**.
+- **Continuous Integration (GitHub Actions — `.github/workflows/ci.yml`)**: Runs tests, static analysis, coverage gates, vulnerability scans (`govulncheck`, `npm audit`, Checkov), OpenAPI spec sync checks, and container smoke tests on every pull request, push to `dev`/`staging`/`main`, and daily `06:00 UTC` schedule. Workflows run with `permissions: contents: read` only and hold **zero Google Cloud credentials or deployment secrets**.
 - **Continuous Delivery (Google Cloud — `cloudbuild.yaml` + Google Cloud Deploy)**: Triggered on pushes to each environment's branch (`^main$` in production, `^staging$` in staging) via Cloud Build's 2nd-generation GitHub App connection. Builds SLSA-provenance-verified images into **Artifact Registry**, rolls out **Cloud Run** revisions with post-deploy health verification and one-click rollbacks via **Google Cloud Deploy**, publishes the frontend to **Firebase Hosting**, archives the Chrome extension to **Cloud Storage**, and applies **Terraform** using secrets stored exclusively in **Google Secret Manager**.
 
 ## Branches and environments
 
 | Branch | GitHub Actions CI | Google Cloud CD | Status |
 | --- | --- | --- | --- |
+| `dev` | `.github/workflows/ci.yml` | None: CI only, the default branch where work happens | Active |
 | `main` | `.github/workflows/ci.yml` | Production (`project-191091d4-b2e5-4294-9e7`), https://unhurried-careers.com (`production` Cloud Deploy target) | Active |
 | `staging` | `.github/workflows/ci.yml` | Staging (`STAGING_PROJECT_ID`), https://unhurried-careers-staging-web.web.app (`staging` Cloud Deploy target) | Branches and `envs/staging` ready; turns on as soon as the staging GCP project is created and applied |
 | pull requests | `.github/workflows/ci.yml` | None (never touches GCP) | Active |
 | `06:00 UTC` daily cron | `.github/workflows/ci.yml` (Go services + `unhurried-infra`) | None | Active |
 
-Work flows `feature branch → staging → main`. Promote to production by merging `staging` into `main` in each repository that changed.
+Work flows `dev → staging → main`. `dev` is the default branch in every repository; promote by merging `dev` into `staging`, then `staging` into `main`, in each repository that changed.
 
 Because each GCP project runs its own Terraform-provisioned Cloud Build triggers locked to `^<deploy_branch>$` (`^main$` in production, `^staging$` in staging), environment isolation is enforced inside Google Cloud IAM and trigger bindings rather than GitHub plan features. Optional manual promotion gates are available directly in Google Cloud Deploy via `require_deploy_approval = true`.
 
@@ -47,14 +48,14 @@ flowchart LR
 
 ## Pipeline files per repository
 
-- **`.github/workflows/ci.yml`** (all 9 code repositories): pure CI checks on pull requests, pushes to `main` and `staging`, `workflow_dispatch`, and daily `06:00 UTC` cron (Go services and `unhurried-infra`). Never authenticates to Google Cloud.
+- **`.github/workflows/ci.yml`** (all 9 code repositories): pure CI checks on pull requests, pushes to `dev`, `staging`, and `main`, `workflow_dispatch`, and daily `06:00 UTC` cron (Go services and `unhurried-infra`). Never authenticates to Google Cloud.
 - **`cloudbuild.yaml`** (the 8 deployable repositories: 5 Go services, `unhurried-web`, `unhurried-extension`, `unhurried-infra`): pure CD pipeline invoked by Cloud Build 2nd-gen push triggers on `^<deploy_branch>$`. Every `cloudbuild.yaml` sets `options.logging: CLOUD_LOGGING_ONLY` (required for custom least-privilege trigger service accounts) and `options.substitutionOption: ALLOW_LOOSE`.
 
 ### Go services (`job-search`, `resume`, `applications`, `notifications`, `inbox`)
 
 | Plane | File | Steps |
 | --- | --- | --- |
-| **CI (GitHub Actions)** | `.github/workflows/ci.yml` | Checks out service + sibling `unhurried-common` (`main` for `main` pushes/PRs, `staging` otherwise) · `gofmt -l` · `go vet ./...` · `go test -race -covermode=atomic -coverpkg=./... -coverprofile=coverage.out ./...` · publishes coverage summary + artifact · `govulncheck` on source · `docker build` · verifies `nonroot:nonroot` user, auth-config startup refusal, and `/health` smoke check · extracts `/server` and runs `govulncheck -mode=binary` |
+| **CI (GitHub Actions)** | `.github/workflows/ci.yml` | Checks out service + sibling `unhurried-common` (the same branch for `main` and `staging` pushes and PRs, `dev` otherwise) · `gofmt -l` · `go vet ./...` · `go test -race -covermode=atomic -coverpkg=./... -coverprofile=coverage.out ./...` · publishes coverage summary + artifact · `govulncheck` on source · `docker build` · verifies `nonroot:nonroot` user, auth-config startup refusal, and `/health` smoke check · extracts `/server` and runs `govulncheck -mode=binary` |
 | **CD (Cloud Build + Cloud Deploy)** | `cloudbuild.yaml` | Clones `unhurried-common` via a short-lived token minted from the Cloud Build v2 connection · builds `us-central1-docker.pkg.dev/<project>/unhurried/<service>:<COMMIT_SHA>` · verifies `nonroot:nonroot` user and auth-config startup refusal · pushes image with `requestedVerifyOption: VERIFIED` (SLSA provenance) · creates immutable Cloud Deploy release `rel-<SHORT_SHA>-<BUILD_ID_PREFIX>` · Cloud Deploy custom target `cloud-run-image` updates `--image` as `unhurried-deployer` and runs a `VERIFY` job checking both the Cloud Run ready revision and `https://<gateway_hostname>/health` |
 
 Why a Cloud Deploy **Custom Target Type** (`cloud-run-image`) instead of the built-in Cloud Run target? Standard Cloud Deploy Cloud Run targets execute `gcloud run services replace` from a rendered YAML manifest, which would overwrite or revert Terraform-owned environment variables (`ALLOWED_EMAILS`, `APPCHECK_REQUIRED`, `KMS_KEY_NAME`), Secret Manager bindings, and `custom_audiences`. Our `cloud-run-image` custom target updates **only** `--image`, matching `modules/service`'s `lifecycle.ignore_changes` while retaining Cloud Deploy's release history, approval gates, verification phase, and one-click rollbacks.
@@ -120,7 +121,7 @@ Google Cloud Build's 2nd-generation GitHub connection requires a one-time OAuth 
 
 ### Release to production
 
-1. Open pull requests against `staging` (GitHub Actions runs `.github/workflows/ci.yml`), merge into `staging`, and verify staging Cloud Build / Cloud Deploy rollouts.
+1. Commit to `dev` or open pull requests against it (GitHub Actions runs `.github/workflows/ci.yml`). Merge `dev` into `staging` and verify staging Cloud Build / Cloud Deploy rollouts.
 2. Merge `staging` into `main`. When changes span repositories, merge in order: `unhurried-common` → Go service repos → `unhurried-infra` → `unhurried-web` (so `unhurried-infra`'s `verify-gateway-spec-sync` guard sees the updated `openapi.yaml` on `main`).
 3. Watch CD builds and rollouts in Google Cloud Console (**Cloud Build → History** and **Cloud Deploy → Delivery pipelines**) or via CLI:
    ```bash
