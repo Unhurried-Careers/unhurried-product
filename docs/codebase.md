@@ -137,7 +137,7 @@ Resumes are Google Docs in an **"Unhurried resumes" folder in the user's own Goo
 | `POST /v1/docs/callback` | Finish OAuth with `code` and `state`; creates the folder |
 | `POST /v1/docs/disconnect` | Forget the connection; resumes stay in Drive |
 | `POST /v1/docs/picker-token` | Short-lived `drive.file` access token and app ID for Google Picker |
-| `PUT /v1/docs/master` | Record the Doc picked as the master resume (must be a Google Doc, not trashed) |
+| `PUT /v1/docs/master` | Make the Doc picked in Google Picker the master resume (must be a Google Doc, not trashed): it is copied into the "Unhurried resumes" folder as "Master resume", leaving the original as it was; a Doc already in the folder is used as is, and a previous master copy is renamed "Master resume (replaced <date>)" |
 | `GET /v1/resumes` | The user's resumes, most recently updated first |
 | `POST /v1/resumes/from-scratch` | Create a Doc from the template (name and email filled in); `asMaster` makes it the master |
 | `POST /v1/resumes/from-master` | Copy the master for a role; named "Resume – Company – Role"; `opportunityId` links the copy to an opportunity |
