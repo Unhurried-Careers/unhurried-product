@@ -89,12 +89,15 @@ internal/boards/    board clients: Adzuna, USAJobs, Greenhouse, Lever, Ashby
 internal/research/  plain-text summaries of a company, role, or posting, with sources
 internal/companies/ company search (Clearbit autocomplete + Wikidata) and company lookup (board probes + AI profile)
 internal/roles/     job title search (built-in list + ESCO + Wikidata) and role lookup (AI profile)
+internal/jobs/      starting from a job: an SSRF-safe fetcher, reading a posting from its link, and searching company boards for open postings
 internal/vertex/    Gemini on Vertex AI with Google Search grounding
 internal/store/     Store interface; Memory and Firestore implementations (directions, research, postings)
 ```
 
 | Endpoint | Purpose |
 | --- | --- |
+| `POST /v1/jobs/search` | `{query, location}`: open postings for a role, every one read from a company's Greenhouse, Lever, or Ashby board: the user's target companies first, then companies Gemini with Google Search finds hiring for the role (trusted only to name companies), plus Adzuna and USAJobs when configured. Title words and location must match; at most 3 per company, 20 in all |
+| `POST /v1/jobs/read` | `{url}`: a posting's title, company, location, and description, from the Greenhouse API, the page's schema.org `JobPosting` data, its title and site name, or Gemini for pages that only render in a browser. 400 for links that can't be fetched safely, 422 when no posting is found |
 | `GET/PUT /v1/direction` | The user's target companies (name, why, careers URL, detected ATS and board token), target roles (title, why, keywords, locations, remote), and requirements (must-haves and dealbreakers). Every why needs at least 30 characters; at most 30 companies, 20 roles, 30 requirements. Items keep their IDs when sent back; new items get IDs here |
 | `GET /v1/companies/search?q=` | Company suggestions as the user types (2 to 80 characters): Clearbit's free autocomplete and Wikidata entity search filtered to employers, asked at once with a 4-second limit, merged, cached 10 minutes; either directory may fail. Only the typed text is sent to them |
 | `POST /v1/companies/profile` | `{name, domain}`: probes likely Greenhouse, Lever and Ashby board names, and asks Gemini with Google Search grounding for the website, careers page, industry, headquarters, size, a summary, and neutral angles to look into (never the user's reason). Answers `{website, careersUrl, ats, boardToken, openRoles, profile, aiError}`; the web app saves the profile on the company |
@@ -259,7 +262,8 @@ firebase.json             Hosting: SPA rewrite, caching, security headers
 | Route | Page |
 | --- | --- |
 | `/` | Public homepage; no API calls; Sign in / Open app at top right |
-| `/app` | Pipeline: opportunities grouped by stage, each with what it needs next; a three-step start for new users |
+| `/app` | Start from a job (search for open postings, or paste a link to one), then the pipeline: opportunities grouped by stage, each with what it needs next |
+| `/app/start` | From a found job: match its company and role to the direction or add them with the user's reasons, say why this posting, and open the opportunity |
 | `/app/direction` | Target companies and roles (each found with a search box and filled in by a lookup) and requirements, each company and role with the user's own reason |
 | `/app/research` | The user's notes and links per target, next to a labeled AI summary with sources |
 | `/app/discover` | Look for postings; each says why it surfaced; considering one needs a reason |
