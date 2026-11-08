@@ -56,7 +56,7 @@ npm test
 | `unhurried-resume` | Resume studio, Google Drive & Vertex AI | Backend | Cloud Run · Go 1.23 |
 | `unhurried-applications` | Opportunity pipeline, outreach, conversations & rounds | Backend | Cloud Run · Go 1.23 |
 | `unhurried-notifications` | Email posting digests via SMTP relay | Backend | Cloud Run · Go 1.23 |
-| `unhurried-inbox` | Calendar interview detection & slot proposals | Backend | Cloud Run · Go 1.23 |
+| `unhurried-inbox` | Calendar interview detection & booking page | Backend | Cloud Run · Go 1.23 |
 | `unhurried-common` | Shared Go library: auth, hardening, models | Library | Go Module · v0.1 |
 | `unhurried-web` | TypeScript React frontend SPA | Frontend | Firebase Hosting · CDN |
 | `unhurried-extension` | Chrome MV3 job application assistant | Frontend | Cloud Storage · Artifacts |

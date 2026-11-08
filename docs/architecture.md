@@ -46,7 +46,7 @@ flowchart TD
   end
 
   subgraph External["External Integrations & Services"]
-    BOARDS["Public ATS Boards<br/>(Greenhouse, Lever, Ashby, Adzuna, USAJobs)"]
+    BOARDS["Public ATS Boards<br/>(Greenhouse, Lever, Ashby, Adzuna)"]
     GDOCS["Google Drive & Docs API<br/>(drive.file scope)"]
     GCAL["Google Calendar API<br/>(calendar.events.readonly scope)"]
     RESEND["Resend SMTP Relay<br/>(smtp.resend.com:587)"]
@@ -174,7 +174,7 @@ sequenceDiagram
 
   par Discover postings
     JS->>BOARDS: Target companies' own Greenhouse, Lever, Ashby boards (target role titles as terms)
-    JS->>BOARDS: Each target role on Adzuna, USAJobs, and the configured boards
+    JS->>BOARDS: Each target role on Adzuna
     BOARDS-->>JS: Return current open roles
   end
 
@@ -280,7 +280,7 @@ Conversations and interview rounds link to an opportunity. Rounds can only be ad
 
 ```mermaid
 stateDiagram-v2
-  state ConversationsTracker {
+  state Conversations {
     [*] --> ToAsk: Identify contact
     ToAsk --> Asked: Send outreach ask message
     Asked --> Agreed: Contact agrees to meet
@@ -316,9 +316,9 @@ flowchart LR
 
 ---
 
-## 6. Google Calendar Interview Detection & Free Slot Proposal
+## 6. Google Calendar Interview Detection
 
-Unhurried connects to Google Calendar with read-only permissions (`calendar.events.readonly`) to help candidates track interviews and generate free meeting slots for recruiters without ever storing raw calendar events.
+Unhurried connects to Google Calendar with read-only permissions (`calendar.events.readonly`) to help candidates file their interviews into each opportunity's rounds, and to find their appointment booking page for outreach, without ever storing raw calendar events.
 
 ```mermaid
 flowchart TD
@@ -341,12 +341,10 @@ flowchart TD
     FLAGGED --> CONFIRM["User files the interview into an applied opportunity's round<br/>(POST /v1/opportunities/{id}/rounds/{roundId}/interviews)"]
   end
 
-  subgraph SlotProposals["Free Slot Proposal Engine"]
-    U3["User requests interview proposal"] --> PROPOSE["POST /v1/interviews/propose"]
-    PROPOSE --> BUSY_TIMES["Compute busy periods from user calendar"]
-    BUSY_TIMES --> GEN_SLOTS["Generate 5 one-hour non-overlapping candidate slots<br/>within business hours across upcoming days"]
-    GEN_SLOTS --> SAVE_SLOTS["Persist proposed slots in 'interviews' collection"]
-    SAVE_SLOTS --> SHARE["Copy formatted availability text with booking link"]
+  subgraph Booking["Booking Page for Outreach"]
+    U3["User drafts a message to a contact who agreed to meet"] --> RETRIEVE["POST /v1/calendar/retrieve-appointment"]
+    RETRIEVE --> FIND["Look for an appointment schedule booking page in the calendar"]
+    FIND --> SHARE["Booking link placed in the drafted message; the user sends it"]
   end
 ```
 
@@ -410,7 +408,6 @@ All five backend services utilize Cloud Firestore (Native mode in `us-central1`)
 | **`notifications`**| `notification_preferences` | User ID (`userID`) | `userId` | Alert preferences, destination email, enabled toggle |
 | **`inbox`** | `calendar_connections` | User ID (`userID`) | `userId` | Sealed Google Calendar refresh token, Google email, sync status |
 | **`inbox`** | `calendar_oauth_states`| SHA-256 of state token | — | Pending Google Calendar OAuth 2.0 PKCE state verifiers |
-| **`inbox`** | `interviews` | Random UUID (`ids.New()`) | `userId` | Proposed and confirmed interview slots |
 
 > [!NOTE]
 > Queries against Firestore use equality filters (`Where("userId", "==", userID)`) and sort in Go memory, eliminating the need for composite index maintenance. Every document contains a `userId` field, and foreign lookups return `404 Not Found` rather than `403 Forbidden` to prevent object identifier enumeration.

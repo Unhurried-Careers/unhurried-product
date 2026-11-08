@@ -51,7 +51,7 @@ Each service's `openapi.yaml` (linted in CI by `tools/check-specs.mjs`) requires
 ### 2. Cloud Run
 
 - **Invocation is IAM-only.** Each service's only `roles/run.invoker` grants are its gateway's service account and, for internal routes, the specific Scheduler or job-search accounts. Unauthenticated direct calls get 403 from Google before reaching the code.
-- **Each service runs as its own service account** with only what it needs (Firestore user, Pub/Sub publisher; the inbox additionally gets the KMS key and the OAuth secret).
+- **Each service runs as its own service account** with only what it needs (Firestore user; the inbox additionally gets the KMS key and the OAuth secret).
 
 ### 3. Service middleware (`unhurried-common`)
 
@@ -68,10 +68,10 @@ Each service's `openapi.yaml` (linted in CI by `tools/check-specs.mjs`) requires
 
 ### 4. Handlers
 
-- **Ownership.** Every read and write is scoped to the caller's user ID; another user's record answers 404. Interview rounds are reached only through their own application, and a Google Calendar event can be linked to only one round per user. Tests cover cross-user access for each service.
+- **Ownership.** Every read and write is scoped to the caller's user ID; another user's record answers 404. Interview rounds are reached only through their own opportunity, and a Google Calendar event can be linked to only one round per user. Tests cover cross-user access for each service.
 - **Validation.** Every field has a length limit, enumerations are checked with `OneOf`, URLs must be https (`HTTPSURL`) or on an expected host (LinkedIn links on conversations must be on linkedin.com), email addresses are validated, list sizes are capped.
 - **Fetching users' links (SSRF).** `POST /v1/jobs/read` fetches a job link the user pastes, so job-search's fetcher (`internal/jobs/fetch.go`) only allows `https` on port 443 with no credentials in the URL, refuses `localhost`, `.internal`, and `.local` names, and checks the address of every connection after DNS resolution and after each of at most 4 redirects. Loopback, private, link-local (including `169.254.169.254`, the metadata server), shared (`100.64.0.0/10`), and reserved ranges are refused when connecting, so a name that resolves to an internal address, or DNS rebinding, can't reach the server's network. No proxy is used, keep-alives are off, and responses are capped at 3 MiB and 10 seconds and must be HTML. Job search (`POST /v1/jobs/search`) reads only the fixed Greenhouse, Lever, and Ashby API hosts through the board clients, with board names checked against `^[A-Za-z0-9][A-Za-z0-9._-]{0,99}$`, so links Gemini suggests can't point it elsewhere.
-- **Outbound requests (SSRF).** Job board clients call only fixed hosts; the board token a user supplies must match `^[A-Za-z0-9._-]{1,100}$`, so it cannot change the host or path. Responses are capped at 10 MiB with a 15-second timeout.
+- **Outbound requests (SSRF).** Job board clients call only fixed hosts (Greenhouse, Lever, Ashby, Adzuna); the board token a user supplies must match `^[A-Za-z0-9._-]{1,100}$`, so it cannot change the host or path. Responses are capped at 10 MiB with a 15-second timeout.
 - **No automated submission.** Recording a submit requires `confirmed: true`, sent only after the user confirms in the extension.
 
 ## Service-to-service trust
@@ -90,7 +90,7 @@ Cloud Run's IAM binding enforces the same caller list a second time. Cloud Run i
 
 - **Firestore** has delete protection enabled. The web app never talks to Firestore; all access goes through the services' service accounts, which bypass security rules. Terraform (`modules/auth`) deploys rules that deny every read and write from client SDKs, so even someone holding the public Firebase config cannot reach the database directly.
 - **Google Calendar refresh tokens** are encrypted with Cloud KMS before storage, with the user ID as additional authenticated data, so a sealed token copied onto another user's record fails to decrypt. The key (`calendar-refresh-tokens`) rotates every 90 days (old versions stay enabled to decrypt existing tokens), is protected from Terraform destroy, and only the inbox service account can encrypt or decrypt with it. Without a KMS key name the inbox refuses to start in Firestore mode, so tokens are never stored unsealed.
-- **Minimal calendar data.** Events are read live when the tracker opens and never stored. Only each event's ID, title, link, times, and guest addresses are requested (never descriptions or attachments), and guests leave the inbox only as email domains. What is stored is what the user chooses to add to a round: the interview's title, times, and calendar event ID.
+- **Minimal calendar data.** Events are read live when the Interviews page opens and never stored. Only each event's ID, title, link, times, and guest addresses are requested (never descriptions or attachments), and guests leave the inbox only as email domains. What is stored is what the user chooses to add to a round: the interview's title, times, and calendar event ID.
 - **Extension data.** The user's contact details for form filling stay in `chrome.storage.local` in their browser. Portal passwords are never collected.
 - **Terraform state** is in a versioned Cloud Storage bucket in the same project.
 
@@ -104,7 +104,7 @@ Cloud Run's IAM binding enforces the same caller list a second time. Cloud Run i
 | Scope check | If the user unticked the calendar on Google's consent screen, nothing is stored. The partial grant is not revoked, because that would also end Drive access granted to the same OAuth client |
 | Server-side exchange | The browser only relays the code; tokens are never sent to or stored in the browser |
 | Expired or revoked access | Detected (`invalid_grant`, 401/403) and shown as "Reconnect Google Calendar"; Google is not called again until the user reconnects |
-| User confirms every link | Events that look like interviews are only suggestions; nothing is added to a round until the user picks the application and round |
+| User confirms every link | Events that look like interviews are only suggestions; nothing is added to a round until the user picks the opportunity and round |
 | Disconnect | Deletes the connection and its sealed token, without revoking at Google for the same reason as Drive; myaccount.google.com/permissions removes all access |
 | Client secret | In Secret Manager, readable only by the inbox and resume service accounts, injected by reference |
 
@@ -127,7 +127,7 @@ While the OAuth consent screen is in Testing mode, Google limits access to liste
 
 - **Hosting headers** (`firebase.json`): `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy: camera=(), microphone=(), geolocation=()`. HTTPS is enforced by Firebase Hosting, with automatic certificates for the custom domain.
 - **Content-Security-Policy**: scripts only from the site itself, `apis.google.com` (Google sign-in and Picker), and `www.google.com` / `www.gstatic.com` (reCAPTCHA Enterprise), with no inline or `eval` script; network calls only to the site, `*.googleapis.com`, the API gateways (`*.gateway.dev`), and reCAPTCHA; frames only from the Firebase sign-in domain (`*.firebaseapp.com`), reCAPTCHA, Google Picker (`docs.google.com`, `drive.google.com`), and `accounts.google.com`; `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`, `frame-ancestors 'none'`, `upgrade-insecure-requests`. Styles allow `'unsafe-inline'` because reCAPTCHA and Picker inject inline styles. `src/hosting.test.ts` checks every directive.
-- **One address**: production builds set `VITE_CANONICAL_ORIGIN=https://unhurried-careers.com`, and the app moves any other host (Firebase's built-in `unhurried-careers.web.app` and `.firebaseapp.com` addresses) to the same path on the custom domain before it starts. Firebase's own sign-in handler on `firebaseapp.com` is served by Firebase, not the app, so sign-in is unaffected.
+- **One address**: production builds set `VITE_CANONICAL_ORIGIN=https://unhurried-careers.com`, and the app moves any other host (Firebase's built-in `unhurried-careers.web.app` and `.firebaseapp.com` addresses) to the same path on the custom domain before it starts. Sign-in uses the custom domain as its auth domain, so Google's consent screen names unhurried-careers.com; Firebase Hosting serves the sign-in handler at `/__/auth/handler` on that domain.
 - **Caching**: `index.html` and routes are `no-cache` so security fixes reach users on the next load; hashed assets are immutable.
 - **Public configuration only**: the Firebase web config, browser API key, and reCAPTCHA site key are in the bundle by design. Their protection is restriction (domains, APIs, App Check), not secrecy. The deploy pipeline verifies the bundle contains no `localhost` URLs.
 - **Extension bridge** (`src/extensionBridge.ts`): answers only messages from the same window and origin, on its own channel, for five named operations; anything else is rejected. It requires the user to be signed in.
@@ -151,7 +151,7 @@ While the OAuth consent screen is in Testing mode, Google limits access to liste
 | Cross-repo GitHub clone tokens (CD) | Ephemeral tokens minted on demand via Cloud Build v2 `repositories:accessReadToken` (never stored) | `unhurried-builder` and `unhurried-terraform` service accounts |
 | Cross-repo GitHub App credentials (CI) | GitHub Actions repository secrets `CI_APP_CLIENT_ID` and `CI_APP_PRIVATE_KEY` for internal `Unhurried-Careers CI Reader` App (`Contents: Read-only` only; mints downscoped, auto-revoked tokens via `actions/create-github-app-token@v3`) | `.github/workflows/ci.yml` in the 5 Go services (downscoped to `unhurried-common`) and `unhurried-infra` (downscoped per matrix service repo) |
 | SMTP relay password (alert emails) | Secret Manager `unhurried-smtp-password` (only once `smtp_password` is set); Terraform state | Notifications service account; project owners; the `unhurried-terraform` Cloud Build account |
-| Third-party keys (Adzuna, USAJobs) | Placeholder secrets with no value; not wired | — |
+| Adzuna API credentials | Secret Manager `unhurried-adzuna-app-id` and `unhurried-adzuna-app-key`, injected by reference | Job-search service account |
 
 Everything else needs no stored secret: services reach Google APIs as their service accounts through the metadata server, internal calls use Google-signed identity tokens, user tokens are verified with Google's public keys, and CD runs natively inside Google Cloud Build and Google Cloud Deploy under dedicated GCP service accounts. Zero Google Cloud credentials, Workload Identity bindings, or deployment secrets exist in GitHub.
 
@@ -181,4 +181,3 @@ Everything else needs no stored secret: services reach Google APIs as their serv
 | `unhurried-terraform` has project owner | Replace with a custom role or a list of admin roles once the resource set is stable |
 | The OAuth client secret is also in Terraform state | Treat state-bucket access as secret access; consider creating the secret version out of band and reading it with a data source |
 | Consent screen in Testing mode | Keep it while usage is personal (limits access to test users); publishing requires Google's verification for the sensitive Calendar scope |
-| Unused placeholder secrets and Pub/Sub topics | Remove them, or wire them with the features that need them |

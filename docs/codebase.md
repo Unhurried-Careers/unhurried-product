@@ -9,7 +9,7 @@ The system is split into 10 repositories in the [Unhurried-Careers](https://gith
 | [unhurried-resume](#unhurried-resume) | Go | Resumes as Google Docs in the user's Drive: master resume, tailored copies per opportunity, edits |
 | [unhurried-applications](#unhurried-applications) | Go | The opportunity pipeline and its gates, outreach kit, conversations, interview rounds, extension API |
 | [unhurried-notifications](#unhurried-notifications) | Go | Email digests of new postings for the user's targets |
-| [unhurried-inbox](#unhurried-inbox) | Go | Google Calendar interview discovery, interview slot proposals |
+| [unhurried-inbox](#unhurried-inbox) | Go | Google Calendar interview discovery and the user's booking page |
 | [unhurried-web](#unhurried-web) | TypeScript | React single-page app |
 | [unhurried-extension](#unhurried-extension) | JavaScript | Chrome apply assistant |
 | [unhurried-infra](#unhurried-infra) | Terraform | All cloud resources, gateway specs, CI/CD identities |
@@ -68,9 +68,8 @@ httpx/httpx.go      JSON helpers, CORS, Harden, Recover, AccessLog, Serve with t
 validate/           Field validation (Required, MaxLen, MinLen, OneOf, HTTPSURL, URLHost, Email, Range, List, Pattern)
 models/models.go    Shared types: Direction, TargetCompany, TargetRole, Requirement, Research, Source, Posting,
                     Opportunity (with its stages, outcomes, RequirementCheck, StageEvent), ResumeDoc,
-                    Interview, NotifyMessage, JobDigest; MinReason (30 characters)
+                    JobDigest; MinReason (30 characters)
 ids/ids.go          Random UUIDs
-topics/topics.go    Pub/Sub topic names
 ```
 
 **How auth decides** (`auth.Wrap`):
@@ -85,7 +84,7 @@ topics/topics.go    Pub/Sub topic names
 
 ```
 internal/api/       direction, research, discovery and postings handlers, the scheduled scan
-internal/boards/    board clients: Adzuna, USAJobs, Greenhouse, Lever, Ashby
+internal/boards/    board clients: Greenhouse, Lever, Ashby (per company) and Adzuna (per role)
 internal/research/  plain-text summaries of a company, role, or posting, with sources
 internal/companies/ company search (Clearbit autocomplete + Wikidata) and company lookup (board probes + AI profile)
 internal/roles/     job title search (built-in list + ESCO + Wikidata) and role lookup (AI profile)
@@ -96,7 +95,7 @@ internal/store/     Store interface; Memory and Firestore implementations (direc
 
 | Endpoint | Purpose |
 | --- | --- |
-| `POST /v1/jobs/search` | `{query, location}`: open postings for a role, every one read from a company's Greenhouse, Lever, or Ashby board: the user's target companies first, then companies Gemini with Google Search finds hiring for the role (trusted only to name companies), plus Adzuna and USAJobs when configured. Title words and location must match; at most 3 per company, 20 in all |
+| `POST /v1/jobs/search` | `{query, location}`: open postings for a role, every one read from a company's Greenhouse, Lever, or Ashby board: the user's target companies first, then companies Gemini with Google Search finds hiring for the role (trusted only to name companies), plus Adzuna when configured. Title words and location must match; at most 3 per company, 20 in all |
 | `POST /v1/jobs/read` | `{url}`: a posting's title, company, location, and description, from the Greenhouse API, the page's schema.org `JobPosting` data, its title and site name, or Gemini for pages that only render in a browser. 400 for links that can't be fetched safely, 422 when no posting is found |
 | `GET/PUT /v1/direction` | The user's target companies (name, why, careers URL, detected ATS and board token), target roles (title, why, keywords, locations, remote), and requirements (must-haves and dealbreakers). Every why needs at least 30 characters; at most 30 companies, 20 roles, 30 requirements. Items keep their IDs when sent back; new items get IDs here |
 | `GET /v1/companies/search?q=` | Company suggestions as the user types (2 to 80 characters): Clearbit's free autocomplete and Wikidata entity search filtered to employers, asked at once with a 4-second limit, merged, cached 10 minutes; either directory may fail. Only the typed text is sent to them |
@@ -113,9 +112,9 @@ internal/store/     Store interface; Memory and Firestore implementations (direc
 
 Postings are deduplicated per user by source and external ID. **AI summaries** describe and never recommend: the system prompt forbids writing the user's reasons, the answer is plain text, sources come from Google Search grounding (at most 10 unique https links), and a blocked or truncated answer is an error rather than a partial summary. Summaries time out after 50 seconds (the gateway allows 60) and answer 502 "AI summaries are unavailable; try again shortly". Without Vertex AI configured, the summary routes answer 503.
 
-Board clients only call fixed hosts (`boards-api.greenhouse.io`, `api.lever.co`, `api.ashbyhq.com`, Adzuna, USAJobs) with a 15-second timeout and a 10 MiB response cap. Board tokens must match `^[A-Za-z0-9._-]{1,100}$`, so user input cannot redirect requests elsewhere.
+Board clients only call fixed hosts (`boards-api.greenhouse.io`, `api.lever.co`, `api.ashbyhq.com`, `api.adzuna.com`) with a 15-second timeout and a 10 MiB response cap. Board tokens must match `^[A-Za-z0-9._-]{1,100}$`, so user input cannot redirect requests elsewhere.
 
-Configuration: `ADZUNA_APP_ID`, `ADZUNA_APP_KEY`, `USAJOBS_API_KEY`, `USAJOBS_EMAIL` (each board is skipped when unset), `GREENHOUSE_BOARD`, `LEVER_COMPANY` (extra single-company searches), `NOTIFICATIONS_INTERNAL_URL` (notifications Cloud Run URL; unset sends no alert emails), `VERTEX_PROJECT`, `VERTEX_LOCATION` (`global`), `VERTEX_MODEL` (`gemini-3.5-flash`), `VERTEX_ENABLED=false` (turns AI summaries off). Google Search grounding is billed per request after a free daily allowance.
+Configuration: `ADZUNA_APP_ID`, `ADZUNA_APP_KEY` (Adzuna is skipped when unset), `ADZUNA_COUNTRY` (optional; otherwise Canada for Canadian locations and the US for the rest), `NOTIFICATIONS_INTERNAL_URL` (notifications Cloud Run URL; unset sends no alert emails), `VERTEX_PROJECT`, `VERTEX_LOCATION` (`global`), `VERTEX_MODEL` (`gemini-3.5-flash`), `VERTEX_ENABLED=false` (turns AI summaries off). Google Search grounding is billed per request after a free daily allowance.
 
 ## unhurried-resume
 
@@ -210,20 +209,18 @@ internal/store/  Store interface; Memory and Firestore implementations (notifica
 | --- | --- |
 | `GET/PUT /v1/preferences` | Alert email address and the email alerts switch (address required when on) |
 | `POST /internal/job-digest` | Email one user the new postings for their target companies and roles, each with why it surfaced (job-search only; 1 to 100 postings, up to 25 listed) |
-| `POST /internal/notify` | Plain-text email to one user |
 
 Emails go only to users who turned alerts on; responses report `sent`, `skipped`, or `logged`. Job fields are escaped in the HTML email and only https links are accepted. Configuration: `SMTP_HOST` (default `smtp.resend.com`; unset logs emails instead of sending), `SMTP_PORT` (default 587), `SMTP_USERNAME` (`resend`), `SMTP_PASSWORD` (from Secret Manager `unhurried-smtp-password`), `MAIL_FROM` (`Unhurried <alerts@unhurried-careers.com>`), `APP_URL` (links in emails).
 
 ## unhurried-inbox
 
 ```
-internal/api/api.go         interview slot proposals and server setup
+internal/api/api.go         routes and server setup
 internal/api/calendar.go    read-only Google Calendar endpoints
-internal/cal/               interview slot proposal generation
 internal/calsync/           OAuth (PKCE), sealing, and calendar sync service
 internal/gcal/              Google Calendar REST client (events)
 internal/seal/              Cloud KMS sealer and dev AES-GCM sealer
-internal/store/             Store interface; Memory and Firestore implementations (calendar_connections, calendar_oauth_states, interviews)
+internal/store/             Store interface; Memory and Firestore implementations (calendar_connections, calendar_oauth_states)
 ```
 
 | Endpoint | Purpose |
@@ -231,9 +228,9 @@ internal/store/             Store interface; Memory and Firestore implementation
 | `GET /v1/calendar/status` | Read-only Google Calendar connection status and email |
 | `POST /v1/calendar/connect` | Start OAuth; returns Google's consent URL |
 | `POST /v1/calendar/callback` | Finish OAuth with `code` and `state` from the web callback page |
-| `POST /v1/calendar/disconnect` | Revoke Google access and delete the connection |
+| `POST /v1/calendar/disconnect` | Delete the connection and its sealed token (Google access is not revoked, so Drive keeps working) |
 | `GET /v1/calendar/events?from=&to=` | Timed events on primary calendar (default past and next 60 days), each flagged `likelyInterview` |
-| `GET /v1/interviews`, `POST /v1/interviews/propose`, `POST /v1/interviews/{id}/confirm` | Propose five one-hour slots avoiding busy periods; confirming records a placeholder ID |
+| `POST /v1/calendar/retrieve-appointment` | Look again for the user's appointment booking page, used in outreach messages |
 
 Configuration: `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET` (from Secret Manager `unhurried-google-oauth-client-secret`), `CALENDAR_REDIRECT_URL` (`https://<site>/app/calendar/callback`), `KMS_KEY_NAME` (required with Firestore). Without a client ID the calendar routes answer 503.
 
@@ -294,7 +291,7 @@ The extension holds no tokens: requests go popup → background → `bridge.js` 
 
 ```
 modules/service    Cloud Run service, its service account, API Gateway API/config/gateway, gateway invoker binding
-modules/data       Firestore, Pub/Sub topics, Scheduler jobs, placeholder secrets, Artifact Registry
+modules/data       Firestore, the discovery Scheduler job, Adzuna secrets, Artifact Registry
 modules/auth       Firebase project, Identity Platform config, Google provider, web app, App Check
 modules/hosting    Hosting site, custom domain and redirects, web deployer service account
 modules/google_oauth Calendar API, key ring, calendar token key, OAuth client secret, inbox access
