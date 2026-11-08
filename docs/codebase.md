@@ -9,7 +9,7 @@ The system is split into 10 repositories in the [Unhurried-Careers](https://gith
 | [unhurried-resume](#unhurried-resume) | Go | Resumes as Google Docs in the user's Drive: master resume, tailored copies per opportunity, edits |
 | [unhurried-applications](#unhurried-applications) | Go | The opportunity pipeline and its gates, outreach kit, conversations, interview rounds, extension API |
 | [unhurried-notifications](#unhurried-notifications) | Go | Email digests of new postings for the user's targets |
-| [unhurried-inbox](#unhurried-inbox) | Go | Google Calendar interview discovery and the user's booking page |
+| [unhurried-inbox](#unhurried-inbox) | Go | Google Calendar interview discovery |
 | [unhurried-web](#unhurried-web) | TypeScript | React single-page app |
 | [unhurried-extension](#unhurried-extension) | JavaScript | Chrome apply assistant |
 | [unhurried-infra](#unhurried-infra) | Terraform | All cloud resources, gateway specs, CI/CD identities |
@@ -230,7 +230,6 @@ internal/store/             Store interface; Memory and Firestore implementation
 | `POST /v1/calendar/callback` | Finish OAuth with `code` and `state` from the web callback page |
 | `POST /v1/calendar/disconnect` | Delete the connection and its sealed token (Google access is not revoked, so Drive keeps working) |
 | `GET /v1/calendar/events?from=&to=` | Timed events on primary calendar (default past and next 60 days), each flagged `likelyInterview` |
-| `POST /v1/calendar/retrieve-appointment` | Look again for the user's appointment booking page, used in outreach messages |
 
 Configuration: `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET` (from Secret Manager `unhurried-google-oauth-client-secret`), `CALENDAR_REDIRECT_URL` (`https://<site>/app/calendar/callback`), `KMS_KEY_NAME` (required with Firestore). Without a client ID the calendar routes answer 503.
 

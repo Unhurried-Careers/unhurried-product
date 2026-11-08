@@ -48,7 +48,7 @@ export const REPOSITORIES = [
     name: "unhurried-inbox",
     displayName: "Inbox & Calendar",
     tier: "backend",
-    role: "Google Calendar interview detection and booking page",
+    role: "Google Calendar interview detection",
     target: "Cloud Run · Go 1.23",
     deployPipeline: "inbox-delivery",
     ciWorkflow: "CI",

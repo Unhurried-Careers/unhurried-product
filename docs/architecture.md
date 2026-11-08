@@ -318,7 +318,7 @@ flowchart LR
 
 ## 6. Google Calendar Interview Detection
 
-Unhurried connects to Google Calendar with read-only permissions (`calendar.events.readonly`) to help candidates file their interviews into each opportunity's rounds, and to find their appointment booking page for outreach, without ever storing raw calendar events.
+Unhurried connects to Google Calendar with read-only permissions (`calendar.events.readonly`) to help candidates file their interviews into each opportunity's rounds, without ever storing raw calendar events. Google's API cannot read appointment schedules, so the booking page link comes from the user: Unhurried opens Google Calendar, the user copies the link, and the app picks it up from the clipboard.
 
 ```mermaid
 flowchart TD
@@ -338,12 +338,12 @@ flowchart TD
     DECRYPT --> GCAL_API["Google Calendar API: list events (past 60 to next 60 days)"]
     GCAL_API --> HEURISTICS["Heuristic Classification Engine<br/>- Match recruiter emails & domains<br/>- Video links (Meet, Zoom, Teams)<br/>- Keywords: Interview, Screen, Debrief, Chat"]
     HEURISTICS --> FLAGGED["Return timed events with likelyInterview: true/false<br/>(Events are NEVER stored in Firestore)"]
-    FLAGGED --> CONFIRM["User files the interview into an applied opportunity's round<br/>(POST /v1/opportunities/{id}/rounds/{roundId}/interviews)"]
-  end
-
-  subgraph Booking["Booking Page for Outreach"]
-    U3["User drafts a message to a contact who agreed to meet"] --> RETRIEVE["POST /v1/calendar/retrieve-appointment"]
-    RETRIEVE --> FIND["Look for an appointment schedule booking page in the calendar"]
+    FLAGGED --> C  subgraph Booking["Booking Page for Outreach"]
+    U3["User clicks 'Get my booking link'"] --> OPEN["Google Calendar opens in a new tab"]
+    OPEN --> COPY["User creates or opens a booking page and clicks Copy link"]
+    COPY --> PICK["Back in Unhurried: the copied link is read from the clipboard and checked"]
+    PICK --> SAVE["Saved in conversation_settings; used in drafted messages"]
+ an appointment schedule booking page in the calendar"]
     FIND --> SHARE["Booking link placed in the drafted message; the user sends it"]
   end
 ```
