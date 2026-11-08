@@ -44,34 +44,34 @@ Full documentation is in [docs/](docs/README.md): [architecture](docs/architectu
 ## 🚀 Unhurried CI/CD Pipeline Status Dashboard
 
 > **Global Status:** 🟡 **Workflows In Progress**  
-> **Last Synchronized:** `Sun, 08 Nov 2026 04:37:00 GMT`  
+> **Last Synchronized:** `Sun, 08 Nov 2026 12:48:07 GMT`  
 > **Security Boundary:** Pure Continuous Integration (GitHub Actions) with `permissions: contents: read` · Zero Google Cloud secrets in GitHub
 
 ### 📊 Health & Reliability Summary
 
 | Total Repositories | Tracked CI Pipelines | Passing on `main` | Success Rate | Average Runtime | Security Model |
 | :---: | :---: | :---: | :---: | :---: | :---: |
-| **10** | **10** | **9 / 10** | **90%** | **1m 46s** | **Zero GCP Keys** |
+| **10** | **10** | **8 / 10** | **80%** | **2m 3s** | **Zero GCP Keys** |
 
 ### 🛠 Pipeline Matrix
 
 | Status | Service | Role | Target | Branch | Commit | Duration | Workflow Run |
 | :---: | :--- | :--- | :--- | :---: | :---: | :---: | :---: |
-| 🟢 **Passing** | [**Job Search & Discovery**](https://github.com/Unhurried-Careers/unhurried-job-search)<br/>`unhurried-job-search` | Direction, research with AI summaries, and discovery of postings | `Cloud Run · Go 1.23` | `main` | [`fa457c8`](https://github.com/Unhurried-Careers/unhurried-job-search/commit/fa457c8b54419ee5996c509ff931a726dd5aa912) | 3m 4s | [Run #42438331343 ↗](https://github.com/Unhurried-Careers/unhurried-job-search/actions/runs/42438331343) |
-| 🟢 **Passing** | [**Resume Studio**](https://github.com/Unhurried-Careers/unhurried-resume)<br/>`unhurried-resume` | Google Docs/Drive resume copies and Vertex AI tailoring | `Cloud Run · Go 1.23` | `main` | [`da1eb36`](https://github.com/Unhurried-Careers/unhurried-resume/commit/da1eb3688c058a3dfcf9013d2584c037861a5d58) | 2m 35s | [Run #42436381291 ↗](https://github.com/Unhurried-Careers/unhurried-resume/actions/runs/42436381291) |
+| 🟢 **Passing** | [**Job Search & Discovery**](https://github.com/Unhurried-Careers/unhurried-job-search)<br/>`unhurried-job-search` | Direction, research with AI summaries, and discovery of postings | `Cloud Run · Go 1.23` | `main` | [`32192e8`](https://github.com/Unhurried-Careers/unhurried-job-search/commit/32192e8606166dbe2c01a63174133e46dd2c6fe8) | 2m 42s | [Run #42480388948 ↗](https://github.com/Unhurried-Careers/unhurried-job-search/actions/runs/42480388948) |
+| 🟢 **Passing** | [**Resume Studio**](https://github.com/Unhurried-Careers/unhurried-resume)<br/>`unhurried-resume` | Google Docs/Drive resume copies and Vertex AI tailoring | `Cloud Run · Go 1.23` | `main` | [`da1eb36`](https://github.com/Unhurried-Careers/unhurried-resume/commit/da1eb3688c058a3dfcf9013d2584c037861a5d58) | 3m 49s | [Run #42481231221 ↗](https://github.com/Unhurried-Careers/unhurried-resume/actions/runs/42481231221) |
 | 🟢 **Passing** | [**Opportunity Pipeline**](https://github.com/Unhurried-Careers/unhurried-applications)<br/>`unhurried-applications` | Opportunity stages and gates, outreach kit, conversations & interview rounds | `Cloud Run · Go 1.23` | `main` | [`30767e8`](https://github.com/Unhurried-Careers/unhurried-applications/commit/30767e8282cef0bcbcc6ac3a9fc0564a612e945c) | 2m 54s | [Run #42420683553 ↗](https://github.com/Unhurried-Careers/unhurried-applications/actions/runs/42420683553) |
 | 🟢 **Passing** | [**Notifications & Alerts**](https://github.com/Unhurried-Careers/unhurried-notifications)<br/>`unhurried-notifications` | Email digests of new postings for your targets via SMTP | `Cloud Run · Go 1.23` | `main` | [`35972d4`](https://github.com/Unhurried-Careers/unhurried-notifications/commit/35972d40469eb80687baa8762d2256f1bda39c2c) | 2m 47s | [Run #42420687448 ↗](https://github.com/Unhurried-Careers/unhurried-notifications/actions/runs/42420687448) |
-| 🟢 **Passing** | [**Inbox & Calendar**](https://github.com/Unhurried-Careers/unhurried-inbox)<br/>`unhurried-inbox` | Google Calendar interview detection and slot proposals | `Cloud Run · Go 1.23` | `main` | [`d674fa6`](https://github.com/Unhurried-Careers/unhurried-inbox/commit/d674fa682acd07f4916c208876addc8cd0295a75) | 3m 2s | [Run #42420690010 ↗](https://github.com/Unhurried-Careers/unhurried-inbox/actions/runs/42420690010) |
+| 🟡 **Running** | [**Inbox & Calendar**](https://github.com/Unhurried-Careers/unhurried-inbox)<br/>`unhurried-inbox` | Google Calendar interview detection and slot proposals | `Cloud Run · Go 1.23` | `main` | [`d674fa6`](https://github.com/Unhurried-Careers/unhurried-inbox/commit/d674fa682acd07f4916c208876addc8cd0295a75) | 0m 4s | [Run #42481912453 ↗](https://github.com/Unhurried-Careers/unhurried-inbox/actions/runs/42481912453) |
 | 🟢 **Passing** | [**Common Library**](https://github.com/Unhurried-Careers/unhurried-common)<br/>`unhurried-common` | Shared Go library: auth, HTTP hardening, validation, models | `Go Module · v0.1` | `main` | [`903f937`](https://github.com/Unhurried-Careers/unhurried-common/commit/903f937b557202a60de956350294f8c2143085ae) | 0m 32s | [Run #42437866689 ↗](https://github.com/Unhurried-Careers/unhurried-common/actions/runs/42437866689) |
-| 🟢 **Passing** | [**Web App (SPA)**](https://github.com/Unhurried-Careers/unhurried-web)<br/>`unhurried-web` | TypeScript React frontend deployed to Firebase Hosting CDN | `Firebase Hosting · Global CDN` | `main` | [`59eb0ee`](https://github.com/Unhurried-Careers/unhurried-web/commit/59eb0ee5c0bae2bc840539fd7cc0845c6fee68de) | 0m 54s | [Run #42437872886 ↗](https://github.com/Unhurried-Careers/unhurried-web/actions/runs/42437872886) |
+| 🟢 **Passing** | [**Web App (SPA)**](https://github.com/Unhurried-Careers/unhurried-web)<br/>`unhurried-web` | TypeScript React frontend deployed to Firebase Hosting CDN | `Firebase Hosting · Global CDN` | `cursor/critical-bug-remediation-e64f` | [`c2230b9`](https://github.com/Unhurried-Careers/unhurried-web/commit/c2230b91bd12ea52e98a26bf588c490b8db210c0) | 5m 57s | [Run #42474519223 ↗](https://github.com/Unhurried-Careers/unhurried-web/actions/runs/42474519223) |
 | 🟢 **Passing** | [**Chrome Extension**](https://github.com/Unhurried-Careers/unhurried-extension)<br/>`unhurried-extension` | Chrome MV3 job application assistant | `Cloud Storage · Artifacts` | `main` | [`8ae5a84`](https://github.com/Unhurried-Careers/unhurried-extension/commit/8ae5a84dd8dd64f0a206cf6e48068daded31a751) | 0m 29s | [Run #42420696736 ↗](https://github.com/Unhurried-Careers/unhurried-extension/actions/runs/42420696736) |
-| 🟢 **Passing** | [**Infrastructure & Specs**](https://github.com/Unhurried-Careers/unhurried-infra)<br/>`unhurried-infra` | Terraform GCP infrastructure, API Gateway specs, and security rules | `Terraform · GCP Prod & Staging` | `main` | [`7b9f695`](https://github.com/Unhurried-Careers/unhurried-infra/commit/7b9f6958906f337b6b43a07ddb04011a9dcdc377) | 1m 19s | [Run #42437870868 ↗](https://github.com/Unhurried-Careers/unhurried-infra/actions/runs/42437870868) |
-| 🟡 **Running** | [**Product & Architecture**](https://github.com/Unhurried-Careers/unhurried-product)<br/>`unhurried-product` | System specifications, architecture guides, and CI/CD dashboard | `Documentation & Meta` | `main` | [`7bb9759`](https://github.com/Unhurried-Careers/unhurried-product/commit/7bb9759a7fb29df9e5993cb1f2623f8cb76b7a72) | 0m 3s | [Run #42447521749 ↗](https://github.com/Unhurried-Careers/unhurried-product/actions/runs/42447521749) |
+| 🟢 **Passing** | [**Infrastructure & Specs**](https://github.com/Unhurried-Careers/unhurried-infra)<br/>`unhurried-infra` | Terraform GCP infrastructure, API Gateway specs, and security rules | `Terraform · GCP Prod & Staging` | `main` | [`06e3ed0`](https://github.com/Unhurried-Careers/unhurried-infra/commit/06e3ed0ca30ad527888963b3bd09f04b5d9be9f1) | 1m 15s | [Run #42453755047 ↗](https://github.com/Unhurried-Careers/unhurried-infra/actions/runs/42453755047) |
+| 🟡 **Running** | [**Product & Architecture**](https://github.com/Unhurried-Careers/unhurried-product)<br/>`unhurried-product` | System specifications, architecture guides, and CI/CD dashboard | `Documentation & Meta` | `main` | [`6ea773f`](https://github.com/Unhurried-Careers/unhurried-product/commit/6ea773fd7b5362cc909ec6110e0d8209dd2eb12c) | 0m 3s | [Run #42481913114 ↗](https://github.com/Unhurried-Careers/unhurried-product/actions/runs/42481913114) |
 
 ### 🔍 Deep Step-by-Step CI Verifications
 
 <details>
-<summary><b>Job Search & Discovery (unhurried-job-search)</b> — Latest Run #42438331343 (<code>fa457c8</code>) — <i>style: gofmt vertex.go</i></summary>
+<summary><b>Job Search & Discovery (unhurried-job-search)</b> — Latest Run #42480388948 (<code>32192e8</code>) — <i>CI</i></summary>
 
 **Job:** `Lint and test` (success)
 
@@ -116,7 +116,7 @@ Full documentation is in [docs/](docs/README.md): [architecture](docs/architectu
 </details>
 
 <details>
-<summary><b>Resume Studio (unhurried-resume)</b> — Latest Run #42436381291 (<code>da1eb36</code>) — <i>fix(vertex): default to gemini-3.5-flash; gemini-2.0-flash is no long…</i></summary>
+<summary><b>Resume Studio (unhurried-resume)</b> — Latest Run #42481231221 (<code>da1eb36</code>) — <i>CI</i></summary>
 
 **Job:** `Lint and test` (success)
 
@@ -251,9 +251,9 @@ Full documentation is in [docs/](docs/README.md): [architecture](docs/architectu
 </details>
 
 <details>
-<summary><b>Inbox & Calendar (unhurried-inbox)</b> — Latest Run #42420690010 (<code>d674fa6</code>) — <i>docs: interviews are filed into applied opportunities</i></summary>
+<summary><b>Inbox & Calendar (unhurried-inbox)</b> — Latest Run #42481912453 (<code>d674fa6</code>) — <i>CI</i></summary>
 
-**Job:** `Lint and test` (success)
+**Job:** `Lint and test` (running)
 
 | Step | Status |
 | :--- | :---: |
@@ -261,37 +261,17 @@ Full documentation is in [docs/](docs/README.md): [architecture](docs/architectu
 | Check out unhurried-inbox | ✓ `success` |
 | Mint read-only token for unhurried-common | ✓ `success` |
 | Check out unhurried-common | ✓ `success` |
-| Run actions/setup-go@v5 | ✓ `success` |
-| gofmt | ✓ `success` |
-| go vet | ✓ `success` |
-| go test | ✓ `success` |
-| Coverage summary | ✓ `success` |
-| Run actions/upload-artifact@v4 | ✓ `success` |
-| govulncheck | ✓ `success` |
-| Post Run actions/setup-go@v5 | ✓ `success` |
-| Post Check out unhurried-common | ✓ `success` |
-| Post Mint read-only token for unhurried-common | ✓ `success` |
-| Post Check out unhurried-inbox | ✓ `success` |
-| Complete job | ✓ `success` |
-
-**Job:** `Build and smoke-test container image` (success)
-
-| Step | Status |
-| :--- | :---: |
-| Set up job | ✓ `success` |
-| Run actions/checkout@v4 | ✓ `success` |
-| Mint read-only token for unhurried-common | ✓ `success` |
-| Run actions/checkout@v4 | ✓ `success` |
-| Run actions/setup-go@v5 | ✓ `success` |
-| docker build | ✓ `success` |
-| Smoke test the image | ✓ `success` |
-| Image refuses to start without auth config | ✓ `success` |
-| govulncheck the shipped binary | ✓ `success` |
-| Post Run actions/setup-go@v5 | ✓ `success` |
-| Post Run actions/checkout@v4 | ✓ `success` |
-| Post Mint read-only token for unhurried-common | ✓ `success` |
-| Post Run actions/checkout@v4 | ✓ `success` |
-| Complete job | ✓ `success` |
+| Run actions/setup-go@v5 | • `in_progress` |
+| gofmt | • `pending` |
+| go vet | • `pending` |
+| go test | • `pending` |
+| Coverage summary | • `pending` |
+| Run actions/upload-artifact@v4 | • `pending` |
+| govulncheck | • `pending` |
+| Post Run actions/setup-go@v5 | • `pending` |
+| Post Check out unhurried-common | • `pending` |
+| Post Mint read-only token for unhurried-common | • `pending` |
+| Post Check out unhurried-inbox | • `pending` |
 
 </details>
 
@@ -318,7 +298,7 @@ Full documentation is in [docs/](docs/README.md): [architecture](docs/architectu
 </details>
 
 <details>
-<summary><b>Web App (SPA) (unhurried-web)</b> — Latest Run #42437872886 (<code>59eb0ee</code>) — <i>feat(web): role title search with AI-filled keywords and role profile</i></summary>
+<summary><b>Web App (SPA) (unhurried-web)</b> — Latest Run #42474519223 (<code>c2230b9</code>) — <i>Keep job-alert opt-out across visits</i></summary>
 
 **Job:** `Typecheck, test, build` (success)
 
@@ -361,18 +341,30 @@ Full documentation is in [docs/](docs/README.md): [architecture](docs/architectu
 </details>
 
 <details>
-<summary><b>Infrastructure & Specs (unhurried-infra)</b> — Latest Run #42437870868 (<code>7b9f695</code>) — <i>chore: sync job-search gateway spec with the role search and profile …</i></summary>
+<summary><b>Infrastructure & Specs (unhurried-infra)</b> — Latest Run #42453755047 (<code>06e3ed0</code>) — <i>chore: sync job-search gateway spec with the job search and read routes</i></summary>
 
-**Job:** `Terraform fmt, validate, test` (success)
+**Job:** `Checkov (informational)` (success)
+
+| Step | Status |
+| :--- | :---: |
+| Set up job | ✓ `success` |
+| Pull ghcr.io/bridgecrewio/checkov:3.4.3 | ✓ `success` |
+| Run actions/checkout@v4 | ✓ `success` |
+| Checkov | ✓ `success` |
+| Post Run actions/checkout@v4 | ✓ `success` |
+| Complete job | ✓ `success` |
+
+**Job:** `Gateway specs match service repos (unhurried-notifications, notifications.yaml)` (success)
 
 | Step | Status |
 | :--- | :---: |
 | Set up job | ✓ `success` |
 | Run actions/checkout@v4 | ✓ `success` |
-| Run hashicorp/setup-terraform@v3 | ✓ `success` |
-| Run mkdir -p "$TF_PLUGIN_CACHE_DIR" | ✓ `success` |
-| terraform fmt | ✓ `success` |
-| validate and test each module | ✓ `success` |
+| Mint read-only token for unhurried-notifications | ✓ `success` |
+| Run actions/checkout@v4 | ✓ `success` |
+| Compare specs | ✓ `success` |
+| Post Run actions/checkout@v4 | ✓ `success` |
+| Post Mint read-only token for unhurried-notifications | ✓ `success` |
 | Post Run actions/checkout@v4 | ✓ `success` |
 | Complete job | ✓ `success` |
 
@@ -390,17 +382,6 @@ Full documentation is in [docs/](docs/README.md): [architecture](docs/architectu
 | Post Run actions/checkout@v4 | ✓ `success` |
 | Complete job | ✓ `success` |
 
-**Job:** `Checkov (informational)` (success)
-
-| Step | Status |
-| :--- | :---: |
-| Set up job | ✓ `success` |
-| Pull ghcr.io/bridgecrewio/checkov:3.4.3 | ✓ `success` |
-| Run actions/checkout@v4 | ✓ `success` |
-| Checkov | ✓ `success` |
-| Post Run actions/checkout@v4 | ✓ `success` |
-| Complete job | ✓ `success` |
-
 **Job:** `Lint gateway specs` (success)
 
 | Step | Status |
@@ -411,6 +392,33 @@ Full documentation is in [docs/](docs/README.md): [architecture](docs/architectu
 | Run npm ci | ✓ `success` |
 | Run npm run check-specs | ✓ `success` |
 | Post Run actions/setup-node@v4 | ✓ `success` |
+| Post Run actions/checkout@v4 | ✓ `success` |
+| Complete job | ✓ `success` |
+
+**Job:** `Terraform fmt, validate, test` (success)
+
+| Step | Status |
+| :--- | :---: |
+| Set up job | ✓ `success` |
+| Run actions/checkout@v4 | ✓ `success` |
+| Run hashicorp/setup-terraform@v3 | ✓ `success` |
+| Run mkdir -p "$TF_PLUGIN_CACHE_DIR" | ✓ `success` |
+| terraform fmt | ✓ `success` |
+| validate and test each module | ✓ `success` |
+| Post Run actions/checkout@v4 | ✓ `success` |
+| Complete job | ✓ `success` |
+
+**Job:** `Gateway specs match service repos (unhurried-resume, resume.yaml)` (success)
+
+| Step | Status |
+| :--- | :---: |
+| Set up job | ✓ `success` |
+| Run actions/checkout@v4 | ✓ `success` |
+| Mint read-only token for unhurried-resume | ✓ `success` |
+| Run actions/checkout@v4 | ✓ `success` |
+| Compare specs | ✓ `success` |
+| Post Run actions/checkout@v4 | ✓ `success` |
+| Post Mint read-only token for unhurried-resume | ✓ `success` |
 | Post Run actions/checkout@v4 | ✓ `success` |
 | Complete job | ✓ `success` |
 
@@ -442,38 +450,10 @@ Full documentation is in [docs/](docs/README.md): [architecture](docs/architectu
 | Post Run actions/checkout@v4 | ✓ `success` |
 | Complete job | ✓ `success` |
 
-**Job:** `Gateway specs match service repos (unhurried-notifications, notifications.yaml)` (success)
-
-| Step | Status |
-| :--- | :---: |
-| Set up job | ✓ `success` |
-| Run actions/checkout@v4 | ✓ `success` |
-| Mint read-only token for unhurried-notifications | ✓ `success` |
-| Run actions/checkout@v4 | ✓ `success` |
-| Compare specs | ✓ `success` |
-| Post Run actions/checkout@v4 | ✓ `success` |
-| Post Mint read-only token for unhurried-notifications | ✓ `success` |
-| Post Run actions/checkout@v4 | ✓ `success` |
-| Complete job | ✓ `success` |
-
-**Job:** `Gateway specs match service repos (unhurried-resume, resume.yaml)` (success)
-
-| Step | Status |
-| :--- | :---: |
-| Set up job | ✓ `success` |
-| Run actions/checkout@v4 | ✓ `success` |
-| Mint read-only token for unhurried-resume | ✓ `success` |
-| Run actions/checkout@v4 | ✓ `success` |
-| Compare specs | ✓ `success` |
-| Post Run actions/checkout@v4 | ✓ `success` |
-| Post Mint read-only token for unhurried-resume | ✓ `success` |
-| Post Run actions/checkout@v4 | ✓ `success` |
-| Complete job | ✓ `success` |
-
 </details>
 
 <details>
-<summary><b>Product & Architecture (unhurried-product)</b> — Latest Run #42447521749 (<code>7bb9759</code>) — <i>CI/CD Pipeline Dashboard</i></summary>
+<summary><b>Product & Architecture (unhurried-product)</b> — Latest Run #42481913114 (<code>6ea773f</code>) — <i>CI/CD Pipeline Dashboard</i></summary>
 
 **Job:** `Refresh Status & Generate Dashboard` (running)
 
