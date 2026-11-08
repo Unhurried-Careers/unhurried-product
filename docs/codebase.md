@@ -87,6 +87,7 @@ topics/topics.go    Pub/Sub topic names
 internal/api/       direction, research, discovery and postings handlers, the scheduled scan
 internal/boards/    board clients: Adzuna, USAJobs, Greenhouse, Lever, Ashby
 internal/research/  plain-text summaries of a company, role, or posting, with sources
+internal/companies/ company search (Clearbit autocomplete + Wikidata) and company lookup (board probes + AI profile)
 internal/vertex/    Gemini on Vertex AI with Google Search grounding
 internal/store/     Store interface; Memory and Firestore implementations (directions, research, postings)
 ```
@@ -94,6 +95,8 @@ internal/store/     Store interface; Memory and Firestore implementations (direc
 | Endpoint | Purpose |
 | --- | --- |
 | `GET/PUT /v1/direction` | The user's target companies (name, why, careers URL, detected ATS and board token), target roles (title, why, keywords, locations, remote), and requirements (must-haves and dealbreakers). Every why needs at least 30 characters; at most 30 companies, 20 roles, 30 requirements. Items keep their IDs when sent back; new items get IDs here |
+| `GET /v1/companies/search?q=` | Company suggestions as the user types (2 to 80 characters): Clearbit's free autocomplete and Wikidata entity search filtered to employers, asked at once with a 4-second limit, merged, cached 10 minutes; either directory may fail. Only the typed text is sent to them |
+| `POST /v1/companies/profile` | `{name, domain}`: probes likely Greenhouse, Lever and Ashby board names, and asks Gemini with Google Search grounding for the website, careers page, industry, headquarters, size, a summary, and neutral angles to look into (never the user's reason). Answers `{website, careersUrl, ats, boardToken, openRoles, profile, aiError}`; the web app saves the profile on the company |
 | `GET /v1/research` | The user's research notes on their targets |
 | `PUT /v1/research/{kind}/{id}` | Save the user's own notes and source links on a target company (`kind=company`) or role (`kind=role`); the target must be in the user's direction |
 | `POST /v1/research/{kind}/{id}/summary` | Draft and store an AI summary of the target, with sources |
@@ -106,7 +109,7 @@ Postings are deduplicated per user by source and external ID. **AI summaries** d
 
 Board clients only call fixed hosts (`boards-api.greenhouse.io`, `api.lever.co`, `api.ashbyhq.com`, Adzuna, USAJobs) with a 15-second timeout and a 10 MiB response cap. Board tokens must match `^[A-Za-z0-9._-]{1,100}$`, so user input cannot redirect requests elsewhere.
 
-Configuration: `ADZUNA_APP_ID`, `ADZUNA_APP_KEY`, `USAJOBS_API_KEY`, `USAJOBS_EMAIL` (each board is skipped when unset), `GREENHOUSE_BOARD`, `LEVER_COMPANY` (extra single-company searches), `NOTIFICATIONS_INTERNAL_URL` (notifications Cloud Run URL; unset sends no alert emails), `VERTEX_PROJECT`, `VERTEX_LOCATION` (`us-central1`), `VERTEX_MODEL` (`gemini-2.0-flash`), `VERTEX_ENABLED=false` (turns AI summaries off). Google Search grounding is billed per request after a free daily allowance.
+Configuration: `ADZUNA_APP_ID`, `ADZUNA_APP_KEY`, `USAJOBS_API_KEY`, `USAJOBS_EMAIL` (each board is skipped when unset), `GREENHOUSE_BOARD`, `LEVER_COMPANY` (extra single-company searches), `NOTIFICATIONS_INTERNAL_URL` (notifications Cloud Run URL; unset sends no alert emails), `VERTEX_PROJECT`, `VERTEX_LOCATION` (`global`), `VERTEX_MODEL` (`gemini-3.5-flash`), `VERTEX_ENABLED=false` (turns AI summaries off). Google Search grounding is billed per request after a free daily allowance.
 
 ## unhurried-resume
 
@@ -114,7 +117,7 @@ Configuration: `ADZUNA_APP_ID`, `ADZUNA_APP_KEY`, `USAJOBS_API_KEY`, `USAJOBS_EM
 internal/api/        resume, Google Drive, and AI tailoring handlers; template.go is the from-scratch resume
 internal/workspace/  OAuth (PKCE), sealed tokens, resume folder, master resume, copy, edit, trash
 internal/gdocs/      minimal Drive v3 and Docs v1 REST client
-internal/vertex/     Vertex AI Gemini 2.0 Flash client for resume tailoring
+internal/vertex/     Vertex AI Gemini 3.5 Flash client for resume tailoring
 internal/seal/       Cloud KMS sealer and a local AES-GCM sealer for development
 internal/store/      Store interface; Memory and Firestore implementations (resumes, docs_connections, docs_oauth_states)
 ```
@@ -132,15 +135,15 @@ Resumes are Google Docs in an **"Unhurried resumes" folder in the user's own Goo
 | `GET /v1/resumes` | The user's resumes, most recently updated first |
 | `POST /v1/resumes/from-scratch` | Create a Doc from the template (name and email filled in); `asMaster` makes it the master |
 | `POST /v1/resumes/from-master` | Copy the master for a role; named "Resume – Company – Role"; `opportunityId` links the copy to an opportunity |
-| `POST /v1/resumes/{id}/tailor` | Tailor a resume copy for a job description using Vertex AI (Gemini 2.0 Flash); optional `reasons` (the user's own why and requirement evidence, up to 4,000 characters) steer what it emphasizes; analyzes gaps, enforces honesty rules, and proposes find-and-replace edits |
+| `POST /v1/resumes/{id}/tailor` | Tailor a resume copy for a job description using Vertex AI (Gemini 3.5 Flash); optional `reasons` (the user's own why and requirement evidence, up to 4,000 characters) steer what it emphasizes; analyzes gaps, enforces honesty rules, and proposes find-and-replace edits |
 | `POST /v1/resumes/{id}/edit` | Apply up to 20 find-and-replace edits to the Doc, keeping its formatting; returns how many places changed |
 | `DELETE /v1/resumes/{id}` | Move the Doc to the user's Drive trash (recoverable for 30 days) and forget it |
 
 **Folder**: created on connect, reused on reconnect with the same Google account, and recreated automatically if the user deletes or trashes it. **Errors**: a deleted document answers 410, a missing master 409, revoked access 409 with `needsReconnect`; other Google errors answer a generic 502.
 
-Configuration: `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET` (the same OAuth client and Secret Manager secret unhurried-google-oauth-client-secret as Google sign-in and Calendar), `DOCS_REDIRECT_URL` (`/app/docs/callback`), `KMS_KEY_NAME` (required with Firestore), `FIREBASE_PROJECT_NUMBER` (Picker app ID), `VERTEX_PROJECT`, `VERTEX_LOCATION` (`us-central1`), `VERTEX_MODEL` (`gemini-2.0-flash`). Without a client ID the Docs routes answer 503.
+Configuration: `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET` (the same OAuth client and Secret Manager secret unhurried-google-oauth-client-secret as Google sign-in and Calendar), `DOCS_REDIRECT_URL` (`/app/docs/callback`), `KMS_KEY_NAME` (required with Firestore), `FIREBASE_PROJECT_NUMBER` (Picker app ID), `VERTEX_PROJECT`, `VERTEX_LOCATION` (`global`), `VERTEX_MODEL` (`gemini-3.5-flash`). Without a client ID the Docs routes answer 503.
 
-AI resume tailoring uses Google Cloud Vertex AI (Gemini 2.0 Flash) via `POST /v1/resumes/{id}/tailor`. It compares the existing Google Doc resume with the target job description under strict honesty rules (never inventing facts, skills, or employment history). The user's reasons are passed in their own delimited block as data, used only to choose what to bring forward; every fact must still come from the resume. It returns a match score, gaps analysis, and exact find-and-replace text diffs that the user reviews and applies directly to their Google Doc via `POST /v1/resumes/{id}/edit`.
+AI resume tailoring uses Google Cloud Vertex AI (Gemini 3.5 Flash) via `POST /v1/resumes/{id}/tailor`. It compares the existing Google Doc resume with the target job description under strict honesty rules (never inventing facts, skills, or employment history). The user's reasons are passed in their own delimited block as data, used only to choose what to bring forward; every fact must still come from the resume. It returns a match score, gaps analysis, and exact find-and-replace text diffs that the user reviews and applies directly to their Google Doc via `POST /v1/resumes/{id}/edit`.
 ## unhurried-applications
 
 ```
@@ -254,7 +257,7 @@ firebase.json             Hosting: SPA rewrite, caching, security headers
 | --- | --- |
 | `/` | Public homepage; no API calls; Sign in / Open app at top right |
 | `/app` | Pipeline: opportunities grouped by stage, each with what it needs next; a three-step start for new users |
-| `/app/direction` | Target companies, roles, and requirements, each with a reason |
+| `/app/direction` | Target companies (found with a search box and filled in by a lookup), roles, and requirements, each with a reason |
 | `/app/research` | The user's notes and links per target, next to a labeled AI summary with sources |
 | `/app/discover` | Look for postings; each says why it surfaced; considering one needs a reason |
 | `/app/opportunities/:id` | The stepper: Consider, Research, Decide, Resume, Apply, Interviews (`?step=` opens one); drop with a reason; timeline |

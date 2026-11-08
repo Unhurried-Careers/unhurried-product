@@ -42,7 +42,7 @@ flowchart TD
     KMS["Cloud KMS Key Ring: unhurried<br/>(calendar-refresh-tokens, docs-refresh-tokens)"]
     SM["Secret Manager<br/>(OAuth client secrets, SMTP password, build config)"]
     SCH["Cloud Scheduler<br/>(unhurried-job-search-scan: 07:00 Central)"]
-    VERTEX["Vertex AI<br/>(Gemini 2.0 Flash)"]
+    VERTEX["Vertex AI<br/>(Gemini 3.5 Flash)"]
   end
 
   subgraph External["External Integrations & Services"]
@@ -96,7 +96,7 @@ flowchart TD
 | **API Gateways** | 5 managed Google API Gateways | Validates caller API keys, rate limits client traffic (300 req/min per service), validates Firebase ID tokens (signature, issuer, audience), and invokes Cloud Run backend services via dedicated gateway service accounts. |
 | **Compute** | 5 Go Cloud Run services | Containerized Go 1.27 applications (`golang:1.27-alpine` build, `gcr.io/distroless/static-debian13:nonroot` runtime). Each enforces ownership scoping, App Check attestation, user email allowlisting, and specific domain rules. |
 | **Data & Secrets** | Firestore, KMS, Secret Manager | Cloud Firestore (Native mode, `us-central1`) for document persistence. Cloud KMS key ring `unhurried` for envelope encryption of external OAuth tokens. Secret Manager for sensitive third-party credentials. |
-| **AI & External APIs** | Vertex AI, Google Workspace, Resend | Vertex AI Gemini 2.0 Flash for structured resume tailoring (resume service) and for research summaries with Google Search grounding and sources (job-search service). Google Drive & Docs APIs for document management. Google Calendar API for interview discovery. Resend SMTP for outbound alert delivery. |
+| **AI & External APIs** | Vertex AI, Google Workspace, Resend | Vertex AI Gemini 3.5 Flash for structured resume tailoring (resume service) and for research summaries with Google Search grounding and sources (job-search service). Google Drive & Docs APIs for document management. Google Calendar API for interview discovery. Resend SMTP for outbound alert delivery. |
 
 ---
 
@@ -205,7 +205,7 @@ sequenceDiagram
 
 ## 4. AI Resume Tailoring Architecture
 
-The Resume Studio allows users to maintain a master resume as a native Google Doc in their personal Google Drive. Once the user decides to apply for an opportunity, its Resume step copies the master for that role and tailors it for the job description using Google Cloud Vertex AI (Gemini 2.0 Flash), with the user's own reasons (why this role, why this company, and the evidence for each must-have) sent along as focus. Honesty rules are unchanged: the reasons only steer emphasis, and every fact must come from the resume.
+The Resume Studio allows users to maintain a master resume as a native Google Doc in their personal Google Drive. Once the user decides to apply for an opportunity, its Resume step copies the master for that role and tailors it for the job description using Google Cloud Vertex AI (Gemini 3.5 Flash), with the user's own reasons (why this role, why this company, and the evidence for each must-have) sent along as focus. Honesty rules are unchanged: the reasons only steer emphasis, and every fact must come from the resume.
 
 ```mermaid
 sequenceDiagram
@@ -215,7 +215,7 @@ sequenceDiagram
   participant RES as unhurried-resume
   participant KMS as Cloud KMS
   participant GDOCS as Google Docs API
-  participant VERTEX as Vertex AI (Gemini 2.0 Flash)
+  participant VERTEX as Vertex AI (Gemini 3.5 Flash)
   participant FS as Cloud Firestore
 
   U->>WEB: Opportunity → Resume step: copy the master, preview tailoring
@@ -232,7 +232,7 @@ sequenceDiagram
 
   Note over RES: Assemble prompt with strict Honesty Rules:<br/>- Never fabricate employers, dates, degrees, or skills<br/>- Rephrase genuine experience using target role keywords<br/>- Output JSON: summary, matchScore, gaps, exact find/replace edits
 
-  RES->>VERTEX: POST models/gemini-2.0-flash:generateContent (JSON Schema)
+  RES->>VERTEX: POST models/gemini-3.5-flash:generateContent (JSON Schema)
   VERTEX-->>RES: Candidate tailoring payload (analysis, score, gaps, edits)
 
   Note over RES: Sanitization & Verification:<br/>- Strip markdown backticks & extra whitespace<br/>- Verify every findText exists verbatim in the Doc<br/>- Limit to max 20 atomic find-and-replace edits
@@ -424,7 +424,7 @@ All five backend services utilize Cloud Firestore (Native mode in `us-central1`)
 | **Frontend** | React, TypeScript, Vite, React Router, Firebase JS SDK | React 18, TypeScript 5, Vite 5, React Router v7, Firebase SDK v13 |
 | **Extension** | Vanilla JavaScript, Chrome Extensions Manifest V3 | Manifest V3, content scripts, background service worker |
 | **Backend Services** | Go, Standard Library `net/http` | Go 1.23+ modules, Go 1.27 Alpine build, Distroless Debian 13 runtime |
-| **AI Engine** | Google Cloud Vertex AI | Gemini 2.0 Flash (`gemini-2.0-flash`), region `us-central1` |
+| **AI Engine** | Google Cloud Vertex AI | Gemini 3.5 Flash (`gemini-3.5-flash`), location `global` |
 | **Database** | Google Cloud Firestore | Native Mode, delete protection enabled, `us-central1` |
 | **Envelope Encryption** | Google Cloud KMS | Key ring `unhurried`, symmetric encryption (`GOOGLE_SYMMETRIC_ENCRYPTION`), 90-day automatic rotation |
 | **Email Delivery** | Resend SMTP Relay | Host `smtp.resend.com:587`, STARTTLS, credentials in Secret Manager |
