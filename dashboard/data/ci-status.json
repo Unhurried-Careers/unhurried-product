@@ -1,15 +1,15 @@
 {
-  "generatedAt": "2026-11-07T23:26:09.892Z",
+  "generatedAt": "2026-11-08T04:37:00.595Z",
   "org": "Unhurried-Careers",
   "summary": {
     "totalRepositories": 10,
     "trackedPipelines": 10,
-    "successful": 8,
-    "failed": 1,
+    "successful": 9,
+    "failed": 0,
     "inProgress": 1,
-    "successRate": 80,
-    "avgDurationSeconds": 107,
-    "overallStatus": "degraded"
+    "successRate": 90,
+    "avgDurationSeconds": 106,
+    "overallStatus": "running"
   },
   "repositories": [
     {
@@ -24,18 +24,18 @@
       "repoUrl": "https://github.com/Unhurried-Careers/unhurried-job-search",
       "hasActiveRuns": true,
       "latestRun": {
-        "id": 42420681334,
+        "id": 42438331343,
         "workflow": "CI",
         "status": "completed",
         "conclusion": "success",
         "branch": "main",
-        "commitSha": "02e2653",
-        "fullSha": "02e2653aade5b854fb3037736435050b0ac3c33f",
-        "commitTitle": "feat: direction, research with grounded AI summaries, and discovery",
-        "createdAt": "2026-11-07T22:27:18Z",
-        "updatedAt": "2026-11-07T22:30:06Z",
-        "durationSeconds": 168,
-        "url": "https://github.com/Unhurried-Careers/unhurried-job-search/actions/runs/42420681334"
+        "commitSha": "fa457c8",
+        "fullSha": "fa457c8b54419ee5996c509ff931a726dd5aa912",
+        "commitTitle": "style: gofmt vertex.go",
+        "createdAt": "2026-11-08T02:23:25Z",
+        "updatedAt": "2026-11-08T02:26:29Z",
+        "durationSeconds": 184,
+        "url": "https://github.com/Unhurried-Careers/unhurried-job-search/actions/runs/42438331343"
       },
       "runDetails": {
         "jobs": [
@@ -207,6 +207,39 @@
       },
       "history": [
         {
+          "id": 42438331343,
+          "branch": "main",
+          "commitSha": "fa457c8",
+          "commitTitle": "style: gofmt vertex.go",
+          "status": "completed",
+          "conclusion": "success",
+          "durationSeconds": 184,
+          "createdAt": "2026-11-08T02:23:25Z",
+          "url": "https://github.com/Unhurried-Careers/unhurried-job-search/actions/runs/42438331343"
+        },
+        {
+          "id": 42437869184,
+          "branch": "main",
+          "commitSha": "42fe5e8",
+          "commitTitle": "feat: role title search and role lookup for the Direction page",
+          "status": "completed",
+          "conclusion": "failure",
+          "durationSeconds": 39,
+          "createdAt": "2026-11-08T02:17:05Z",
+          "url": "https://github.com/Unhurried-Careers/unhurried-job-search/actions/runs/42437869184"
+        },
+        {
+          "id": 42436379452,
+          "branch": "main",
+          "commitSha": "24e8bf2",
+          "commitTitle": "feat: company search and lookup for the Direction page",
+          "status": "completed",
+          "conclusion": "success",
+          "durationSeconds": 158,
+          "createdAt": "2026-11-08T01:56:27Z",
+          "url": "https://github.com/Unhurried-Careers/unhurried-job-search/actions/runs/42436379452"
+        },
+        {
           "id": 42420681334,
           "branch": "main",
           "commitSha": "02e2653",
@@ -227,39 +260,6 @@
           "durationSeconds": 169,
           "createdAt": "2026-11-07T12:06:43Z",
           "url": "https://github.com/Unhurried-Careers/unhurried-job-search/actions/runs/42371023093"
-        },
-        {
-          "id": 42238803220,
-          "branch": "main",
-          "commitSha": "190cfc6",
-          "commitTitle": "style: format research.go with gofmt",
-          "status": "completed",
-          "conclusion": "success",
-          "durationSeconds": 156,
-          "createdAt": "2026-11-06T14:59:08Z",
-          "url": "https://github.com/Unhurried-Careers/unhurried-job-search/actions/runs/42238803220"
-        },
-        {
-          "id": 42238387488,
-          "branch": "main",
-          "commitSha": "c11e12d",
-          "commitTitle": "feat: add company research endpoint with corporate values, tech stack…",
-          "status": "completed",
-          "conclusion": "failure",
-          "durationSeconds": 34,
-          "createdAt": "2026-11-06T14:56:20Z",
-          "url": "https://github.com/Unhurried-Careers/unhurried-job-search/actions/runs/42238387488"
-        },
-        {
-          "id": 42233770649,
-          "branch": "main",
-          "commitSha": "b989d14",
-          "commitTitle": "chore: update API version to v0.1",
-          "status": "completed",
-          "conclusion": "success",
-          "durationSeconds": 177,
-          "createdAt": "2026-11-06T14:25:22Z",
-          "url": "https://github.com/Unhurried-Careers/unhurried-job-search/actions/runs/42233770649"
         }
       ]
     },
@@ -275,18 +275,18 @@
       "repoUrl": "https://github.com/Unhurried-Careers/unhurried-resume",
       "hasActiveRuns": true,
       "latestRun": {
-        "id": 42420685428,
+        "id": 42436381291,
         "workflow": "CI",
         "status": "completed",
         "conclusion": "success",
         "branch": "main",
-        "commitSha": "7789377",
-        "fullSha": "77893774c7cb3959e587e62543d2405232f1c9b1",
-        "commitTitle": "feat: link resumes to opportunities and tailor with the user's reasons",
-        "createdAt": "2026-11-07T22:27:21Z",
-        "updatedAt": "2026-11-07T22:30:24Z",
-        "durationSeconds": 183,
-        "url": "https://github.com/Unhurried-Careers/unhurried-resume/actions/runs/42420685428"
+        "commitSha": "da1eb36",
+        "fullSha": "da1eb3688c058a3dfcf9013d2584c037861a5d58",
+        "commitTitle": "fix(vertex): default to gemini-3.5-flash; gemini-2.0-flash is no long…",
+        "createdAt": "2026-11-08T01:56:28Z",
+        "updatedAt": "2026-11-08T01:59:03Z",
+        "durationSeconds": 155,
+        "url": "https://github.com/Unhurried-Careers/unhurried-resume/actions/runs/42436381291"
       },
       "runDetails": {
         "jobs": [
@@ -458,6 +458,17 @@
       },
       "history": [
         {
+          "id": 42436381291,
+          "branch": "main",
+          "commitSha": "da1eb36",
+          "commitTitle": "fix(vertex): default to gemini-3.5-flash; gemini-2.0-flash is no long…",
+          "status": "completed",
+          "conclusion": "success",
+          "durationSeconds": 155,
+          "createdAt": "2026-11-08T01:56:28Z",
+          "url": "https://github.com/Unhurried-Careers/unhurried-resume/actions/runs/42436381291"
+        },
+        {
           "id": 42420685428,
           "branch": "main",
           "commitSha": "7789377",
@@ -500,17 +511,6 @@
           "durationSeconds": 173,
           "createdAt": "2026-11-06T13:38:44Z",
           "url": "https://github.com/Unhurried-Careers/unhurried-resume/actions/runs/42227164841"
-        },
-        {
-          "id": 42039762428,
-          "branch": "main",
-          "commitSha": "9d10b1f",
-          "commitTitle": "CI",
-          "status": "completed",
-          "conclusion": "success",
-          "durationSeconds": 181,
-          "createdAt": "2026-11-05T13:53:15Z",
-          "url": "https://github.com/Unhurried-Careers/unhurried-resume/actions/runs/42039762428"
         }
       ]
     },
@@ -1279,18 +1279,18 @@
       "repoUrl": "https://github.com/Unhurried-Careers/unhurried-common",
       "hasActiveRuns": true,
       "latestRun": {
-        "id": 42420679402,
+        "id": 42437866689,
         "workflow": "CI",
         "status": "completed",
         "conclusion": "success",
         "branch": "main",
-        "commitSha": "5d85a65",
-        "fullSha": "5d85a651d6f4d87f7e9d13b3f35e456187d0905d",
-        "commitTitle": "feat(models): Direction, Research, Posting and the Opportunity pipeline",
-        "createdAt": "2026-11-07T22:27:16Z",
-        "updatedAt": "2026-11-07T22:27:46Z",
-        "durationSeconds": 30,
-        "url": "https://github.com/Unhurried-Careers/unhurried-common/actions/runs/42420679402"
+        "commitSha": "903f937",
+        "fullSha": "903f937b557202a60de956350294f8c2143085ae",
+        "commitTitle": "feat(models): target roles keep an AI role profile",
+        "createdAt": "2026-11-08T02:17:03Z",
+        "updatedAt": "2026-11-08T02:17:35Z",
+        "durationSeconds": 32,
+        "url": "https://github.com/Unhurried-Careers/unhurried-common/actions/runs/42437866689"
       },
       "runDetails": {
         "jobs": [
@@ -1365,6 +1365,28 @@
       },
       "history": [
         {
+          "id": 42437866689,
+          "branch": "main",
+          "commitSha": "903f937",
+          "commitTitle": "feat(models): target roles keep an AI role profile",
+          "status": "completed",
+          "conclusion": "success",
+          "durationSeconds": 32,
+          "createdAt": "2026-11-08T02:17:03Z",
+          "url": "https://github.com/Unhurried-Careers/unhurried-common/actions/runs/42437866689"
+        },
+        {
+          "id": 42436377943,
+          "branch": "main",
+          "commitSha": "391b00a",
+          "commitTitle": "feat(models): target companies keep a website and an AI company profile",
+          "status": "completed",
+          "conclusion": "success",
+          "durationSeconds": 27,
+          "createdAt": "2026-11-08T01:56:25Z",
+          "url": "https://github.com/Unhurried-Careers/unhurried-common/actions/runs/42436377943"
+        },
+        {
           "id": 42420679402,
           "branch": "main",
           "commitSha": "5d85a65",
@@ -1396,28 +1418,6 @@
           "durationSeconds": 26,
           "createdAt": "2026-11-04T06:36:07Z",
           "url": "https://github.com/Unhurried-Careers/unhurried-common/actions/runs/41786610297"
-        },
-        {
-          "id": 41755614728,
-          "branch": "main",
-          "commitSha": "da56398",
-          "commitTitle": "refactor(models): remove legacy Gmail status tracking fields",
-          "status": "completed",
-          "conclusion": "success",
-          "durationSeconds": 27,
-          "createdAt": "2026-11-04T01:40:05Z",
-          "url": "https://github.com/Unhurried-Careers/unhurried-common/actions/runs/41755614728"
-        },
-        {
-          "id": 41588900831,
-          "branch": "main",
-          "commitSha": "e37319d",
-          "commitTitle": "ci(cicd): split CI to GitHub Actions and CD to Google Cloud",
-          "status": "completed",
-          "conclusion": "success",
-          "durationSeconds": 103,
-          "createdAt": "2026-11-03T06:16:57Z",
-          "url": "https://github.com/Unhurried-Careers/unhurried-common/actions/runs/41588900831"
         }
       ]
     },
@@ -1433,24 +1433,24 @@
       "repoUrl": "https://github.com/Unhurried-Careers/unhurried-web",
       "hasActiveRuns": true,
       "latestRun": {
-        "id": 42420693644,
+        "id": 42437872886,
         "workflow": "CI",
         "status": "completed",
-        "conclusion": "failure",
+        "conclusion": "success",
         "branch": "main",
-        "commitSha": "e0a09b6",
-        "fullSha": "e0a09b634cf2618caa2a366c84edf54c14b641a7",
-        "commitTitle": "feat: the app as a process",
-        "createdAt": "2026-11-07T22:27:28Z",
-        "updatedAt": "2026-11-07T22:28:28Z",
-        "durationSeconds": 60,
-        "url": "https://github.com/Unhurried-Careers/unhurried-web/actions/runs/42420693644"
+        "commitSha": "59eb0ee",
+        "fullSha": "59eb0ee5c0bae2bc840539fd7cc0845c6fee68de",
+        "commitTitle": "feat(web): role title search with AI-filled keywords and role profile",
+        "createdAt": "2026-11-08T02:17:08Z",
+        "updatedAt": "2026-11-08T02:18:02Z",
+        "durationSeconds": 54,
+        "url": "https://github.com/Unhurried-Careers/unhurried-web/actions/runs/42437872886"
       },
       "runDetails": {
         "jobs": [
           {
             "name": "Typecheck, test, build",
-            "conclusion": "failure",
+            "conclusion": "success",
             "status": "completed",
             "steps": [
               {
@@ -1481,12 +1481,12 @@
               {
                 "name": "Unit tests with coverage thresholds",
                 "status": "completed",
-                "conclusion": "failure"
+                "conclusion": "success"
               },
               {
                 "name": "Coverage summary",
                 "status": "completed",
-                "conclusion": "failure"
+                "conclusion": "success"
               },
               {
                 "name": "Run actions/upload-artifact@v4",
@@ -1496,17 +1496,17 @@
               {
                 "name": "Production build check",
                 "status": "completed",
-                "conclusion": "skipped"
+                "conclusion": "success"
               },
               {
                 "name": "Audit runtime dependencies",
                 "status": "completed",
-                "conclusion": "skipped"
+                "conclusion": "success"
               },
               {
                 "name": "Post Run actions/setup-node@v4",
                 "status": "completed",
-                "conclusion": "skipped"
+                "conclusion": "success"
               },
               {
                 "name": "Post Run actions/checkout@v4",
@@ -1523,6 +1523,39 @@
         ]
       },
       "history": [
+        {
+          "id": 42437872886,
+          "branch": "main",
+          "commitSha": "59eb0ee",
+          "commitTitle": "feat(web): role title search with AI-filled keywords and role profile",
+          "status": "completed",
+          "conclusion": "success",
+          "durationSeconds": 54,
+          "createdAt": "2026-11-08T02:17:08Z",
+          "url": "https://github.com/Unhurried-Careers/unhurried-web/actions/runs/42437872886"
+        },
+        {
+          "id": 42436385706,
+          "branch": "main",
+          "commitSha": "fa90b42",
+          "commitTitle": "feat(web): company name search with AI-filled careers board and profile",
+          "status": "completed",
+          "conclusion": "success",
+          "durationSeconds": 82,
+          "createdAt": "2026-11-08T01:56:32Z",
+          "url": "https://github.com/Unhurried-Careers/unhurried-web/actions/runs/42436385706"
+        },
+        {
+          "id": 42431475999,
+          "branch": "main",
+          "commitSha": "b9161fd",
+          "commitTitle": "test(web): mock Firebase in the process page tests so they load witho…",
+          "status": "completed",
+          "conclusion": "success",
+          "durationSeconds": 52,
+          "createdAt": "2026-11-08T00:48:58Z",
+          "url": "https://github.com/Unhurried-Careers/unhurried-web/actions/runs/42431475999"
+        },
         {
           "id": 42420693644,
           "branch": "main",
@@ -1544,39 +1577,6 @@
           "durationSeconds": 71,
           "createdAt": "2026-11-06T15:01:53Z",
           "url": "https://github.com/Unhurried-Careers/unhurried-web/actions/runs/42239228746"
-        },
-        {
-          "id": 42238584398,
-          "branch": "main",
-          "commitSha": "c94651e",
-          "commitTitle": "feat: revamp watchlist with company research, corporate values, tech …",
-          "status": "completed",
-          "conclusion": "failure",
-          "durationSeconds": 22,
-          "createdAt": "2026-11-06T14:57:39Z",
-          "url": "https://github.com/Unhurried-Careers/unhurried-web/actions/runs/42238584398"
-        },
-        {
-          "id": 42234073782,
-          "branch": "main",
-          "commitSha": "2d6c83f",
-          "commitTitle": "chore: display v0.1 version and clean up criteria backwards compatibi…",
-          "status": "completed",
-          "conclusion": "success",
-          "durationSeconds": 56,
-          "createdAt": "2026-11-06T14:27:25Z",
-          "url": "https://github.com/Unhurried-Careers/unhurried-web/actions/runs/42234073782"
-        },
-        {
-          "id": 42230273031,
-          "branch": "main",
-          "commitSha": "9e02c70",
-          "commitTitle": "feat: auto-retrieve and populate appointment booking page when connec…",
-          "status": "completed",
-          "conclusion": "success",
-          "durationSeconds": 83,
-          "createdAt": "2026-11-06T14:01:35Z",
-          "url": "https://github.com/Unhurried-Careers/unhurried-web/actions/runs/42230273031"
         }
       ]
     },
@@ -1736,21 +1736,157 @@
       "repoUrl": "https://github.com/Unhurried-Careers/unhurried-infra",
       "hasActiveRuns": true,
       "latestRun": {
-        "id": 42420691830,
+        "id": 42437870868,
         "workflow": "CI",
         "status": "completed",
         "conclusion": "success",
         "branch": "main",
-        "commitSha": "b63fd22",
-        "fullSha": "b63fd2275dc146ab23c1fef6c59e0db27a1d7b8a",
-        "commitTitle": "feat: Vertex AI for job-search research summaries; gateway specs for …",
-        "createdAt": "2026-11-07T22:27:26Z",
-        "updatedAt": "2026-11-07T22:28:40Z",
-        "durationSeconds": 74,
-        "url": "https://github.com/Unhurried-Careers/unhurried-infra/actions/runs/42420691830"
+        "commitSha": "7b9f695",
+        "fullSha": "7b9f6958906f337b6b43a07ddb04011a9dcdc377",
+        "commitTitle": "chore: sync job-search gateway spec with the role search and profile …",
+        "createdAt": "2026-11-08T02:17:07Z",
+        "updatedAt": "2026-11-08T02:18:26Z",
+        "durationSeconds": 79,
+        "url": "https://github.com/Unhurried-Careers/unhurried-infra/actions/runs/42437870868"
       },
       "runDetails": {
         "jobs": [
+          {
+            "name": "Terraform fmt, validate, test",
+            "conclusion": "success",
+            "status": "completed",
+            "steps": [
+              {
+                "name": "Set up job",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Run actions/checkout@v4",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Run hashicorp/setup-terraform@v3",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Run mkdir -p \"$TF_PLUGIN_CACHE_DIR\"",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "terraform fmt",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "validate and test each module",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Post Run actions/checkout@v4",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Complete job",
+                "status": "completed",
+                "conclusion": "success"
+              }
+            ]
+          },
+          {
+            "name": "Gateway specs match service repos (unhurried-applications, applications.yaml)",
+            "conclusion": "success",
+            "status": "completed",
+            "steps": [
+              {
+                "name": "Set up job",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Run actions/checkout@v4",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Mint read-only token for unhurried-applications",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Run actions/checkout@v4",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Compare specs",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Post Run actions/checkout@v4",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Post Mint read-only token for unhurried-applications",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Post Run actions/checkout@v4",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Complete job",
+                "status": "completed",
+                "conclusion": "success"
+              }
+            ]
+          },
+          {
+            "name": "Checkov (informational)",
+            "conclusion": "success",
+            "status": "completed",
+            "steps": [
+              {
+                "name": "Set up job",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Pull ghcr.io/bridgecrewio/checkov:3.4.3",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Run actions/checkout@v4",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Checkov",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Post Run actions/checkout@v4",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Complete job",
+                "status": "completed",
+                "conclusion": "success"
+              }
+            ]
+          },
           {
             "name": "Lint gateway specs",
             "conclusion": "success",
@@ -1799,7 +1935,7 @@
             ]
           },
           {
-            "name": "Terraform fmt, validate, test",
+            "name": "Gateway specs match service repos (unhurried-job-search, job-search.yaml)",
             "conclusion": "success",
             "status": "completed",
             "steps": [
@@ -1814,22 +1950,27 @@
                 "conclusion": "success"
               },
               {
-                "name": "Run hashicorp/setup-terraform@v3",
+                "name": "Mint read-only token for unhurried-job-search",
                 "status": "completed",
                 "conclusion": "success"
               },
               {
-                "name": "Run mkdir -p \"$TF_PLUGIN_CACHE_DIR\"",
+                "name": "Run actions/checkout@v4",
                 "status": "completed",
                 "conclusion": "success"
               },
               {
-                "name": "terraform fmt",
+                "name": "Compare specs",
                 "status": "completed",
                 "conclusion": "success"
               },
               {
-                "name": "validate and test each module",
+                "name": "Post Run actions/checkout@v4",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Post Mint read-only token for unhurried-job-search",
                 "status": "completed",
                 "conclusion": "success"
               },
@@ -1950,147 +2091,6 @@
             ]
           },
           {
-            "name": "Checkov (informational)",
-            "conclusion": "success",
-            "status": "completed",
-            "steps": [
-              {
-                "name": "Set up job",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Pull ghcr.io/bridgecrewio/checkov:3.4.3",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Checkov",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Post Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Complete job",
-                "status": "completed",
-                "conclusion": "success"
-              }
-            ]
-          },
-          {
-            "name": "Gateway specs match service repos (unhurried-applications, applications.yaml)",
-            "conclusion": "success",
-            "status": "completed",
-            "steps": [
-              {
-                "name": "Set up job",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Mint read-only token for unhurried-applications",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Compare specs",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Post Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Post Mint read-only token for unhurried-applications",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Post Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Complete job",
-                "status": "completed",
-                "conclusion": "success"
-              }
-            ]
-          },
-          {
-            "name": "Gateway specs match service repos (unhurried-job-search, job-search.yaml)",
-            "conclusion": "success",
-            "status": "completed",
-            "steps": [
-              {
-                "name": "Set up job",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Mint read-only token for unhurried-job-search",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Compare specs",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Post Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Post Mint read-only token for unhurried-job-search",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Post Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Complete job",
-                "status": "completed",
-                "conclusion": "success"
-              }
-            ]
-          },
-          {
             "name": "Gateway specs match service repos (unhurried-resume, resume.yaml)",
             "conclusion": "success",
             "status": "completed",
@@ -2146,6 +2146,28 @@
       },
       "history": [
         {
+          "id": 42437870868,
+          "branch": "main",
+          "commitSha": "7b9f695",
+          "commitTitle": "chore: sync job-search gateway spec with the role search and profile …",
+          "status": "completed",
+          "conclusion": "success",
+          "durationSeconds": 79,
+          "createdAt": "2026-11-08T02:17:07Z",
+          "url": "https://github.com/Unhurried-Careers/unhurried-infra/actions/runs/42437870868"
+        },
+        {
+          "id": 42436383729,
+          "branch": "main",
+          "commitSha": "512e6f6",
+          "commitTitle": "fix: move Vertex AI to gemini-3.5-flash in the global location; sync …",
+          "status": "completed",
+          "conclusion": "success",
+          "durationSeconds": 70,
+          "createdAt": "2026-11-08T01:56:30Z",
+          "url": "https://github.com/Unhurried-Careers/unhurried-infra/actions/runs/42436383729"
+        },
+        {
           "id": 42420691830,
           "branch": "main",
           "commitSha": "b63fd22",
@@ -2177,28 +2199,6 @@
           "durationSeconds": 73,
           "createdAt": "2026-11-06T14:57:01Z",
           "url": "https://github.com/Unhurried-Careers/unhurried-infra/actions/runs/42238491233"
-        },
-        {
-          "id": 42233994096,
-          "branch": "main",
-          "commitSha": "d53e4bc",
-          "commitTitle": "chore: sync gateway specs with v0.1 API versions and retrieve-appoint…",
-          "status": "completed",
-          "conclusion": "success",
-          "durationSeconds": 63,
-          "createdAt": "2026-11-06T14:26:53Z",
-          "url": "https://github.com/Unhurried-Careers/unhurried-infra/actions/runs/42233994096"
-        },
-        {
-          "id": 42229078579,
-          "branch": "main",
-          "commitSha": "9112fe0",
-          "commitTitle": "CI",
-          "status": "completed",
-          "conclusion": "success",
-          "durationSeconds": 72,
-          "createdAt": "2026-11-06T13:52:54Z",
-          "url": "https://github.com/Unhurried-Careers/unhurried-infra/actions/runs/42229078579"
         }
       ]
     },
@@ -2214,18 +2214,18 @@
       "repoUrl": "https://github.com/Unhurried-Careers/unhurried-product",
       "hasActiveRuns": true,
       "latestRun": {
-        "id": 42425215514,
+        "id": 42447521749,
         "workflow": "CI/CD Pipeline Dashboard",
         "status": "in_progress",
         "conclusion": "running",
         "branch": "main",
-        "commitSha": "af30eb5",
-        "fullSha": "af30eb52b66a157d58749856dc85ac3750dc945d",
+        "commitSha": "7bb9759",
+        "fullSha": "7bb9759a7fb29df9e5993cb1f2623f8cb76b7a72",
         "commitTitle": "CI/CD Pipeline Dashboard",
-        "createdAt": "2026-11-07T23:25:55Z",
-        "updatedAt": "2026-11-07T23:25:59Z",
-        "durationSeconds": 4,
-        "url": "https://github.com/Unhurried-Careers/unhurried-product/actions/runs/42425215514"
+        "createdAt": "2026-11-08T04:36:48Z",
+        "updatedAt": "2026-11-08T04:36:51Z",
+        "durationSeconds": 3,
+        "url": "https://github.com/Unhurried-Careers/unhurried-product/actions/runs/42447521749"
       },
       "runDetails": {
         "jobs": [
@@ -2305,13 +2305,24 @@
       },
       "history": [
         {
+          "id": 42447521749,
+          "branch": "main",
+          "commitSha": "7bb9759",
+          "commitTitle": "CI/CD Pipeline Dashboard",
+          "status": "in_progress",
+          "conclusion": "running",
+          "durationSeconds": 3,
+          "createdAt": "2026-11-08T04:36:48Z",
+          "url": "https://github.com/Unhurried-Careers/unhurried-product/actions/runs/42447521749"
+        },
+        {
           "id": 42425215514,
           "branch": "main",
           "commitSha": "af30eb5",
           "commitTitle": "CI/CD Pipeline Dashboard",
-          "status": "in_progress",
-          "conclusion": "running",
-          "durationSeconds": 4,
+          "status": "completed",
+          "conclusion": "success",
+          "durationSeconds": 37,
           "createdAt": "2026-11-07T23:25:55Z",
           "url": "https://github.com/Unhurried-Careers/unhurried-product/actions/runs/42425215514"
         },
@@ -2347,17 +2358,6 @@
           "durationSeconds": 33,
           "createdAt": "2026-11-07T12:29:55Z",
           "url": "https://github.com/Unhurried-Careers/unhurried-product/actions/runs/42372739924"
-        },
-        {
-          "id": 42342840846,
-          "branch": "main",
-          "commitSha": "972270b",
-          "commitTitle": "CI/CD Pipeline Dashboard",
-          "status": "completed",
-          "conclusion": "success",
-          "durationSeconds": 34,
-          "createdAt": "2026-11-07T05:28:00Z",
-          "url": "https://github.com/Unhurried-Careers/unhurried-product/actions/runs/42342840846"
         }
       ]
     }
