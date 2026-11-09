@@ -29,7 +29,7 @@ The change is complete and works when deployed, not just locally.
 
 | Area | Criterion | How to check |
 | --- | --- | --- |
-| CI | GitHub Actions is green on the latest `dev` commit of every repository being promoted. This covers formatting, vet, race tests, coverage thresholds (web 85% lines and 75% branches, extension 90% lines), `govulncheck`, `npm audit`, Terraform tests, and spec sync | Repository Actions tab, or the [CI/CD dashboard](../dashboard/) |
+| CI | GitHub Actions is green on the latest `dev` commit of every repository being promoted. This covers formatting, vet, race tests, coverage thresholds (web 85% lines and 75% branches, extension 90% lines), `govulncheck`, `npm audit`, Terraform tests, and spec sync | Repository Actions tab, or the [status dashboard](https://status.unhurried-careers.com) |
 | Deploy | Every dev Cloud Build trigger for those commits succeeded, every Cloud Deploy rollout `SUCCEEDED`, and every Cloud Run service is Ready | [Verification commands](#verification-commands) |
 | Infrastructure | The dev `unhurried-infra-apply` build succeeded, and the next apply reports `No changes` (nothing drifted or half-applied) | Cloud Build log for `unhurried-infra-apply` |
 | Function | The change works end to end on https://dev.unhurried-careers.com, and the [smoke test](#smoke-test) passes | Manual |

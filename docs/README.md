@@ -27,7 +27,8 @@ The product reasoning behind the features is in [MOTIVATION.md](../MOTIVATION.md
 | Data | Cloud Firestore (Native mode), Cloud KMS for Google Calendar and Google Drive tokens |
 | Identity | Google sign-in through Firebase Authentication (Identity Platform), App Check with reCAPTCHA Enterprise |
 | Infrastructure | Terraform, applied by Google Cloud Build |
-| Source | 10 private repositories in the [Unhurried-Careers](https://github.com/Unhurried-Careers) GitHub organization |
+| Status | https://status.unhurried-careers.com, from [unhurried-ops](https://github.com/Unhurried-Careers/unhurried-ops) in its own Google Cloud project |
+| Source | 11 private repositories in the [Unhurried-Careers](https://github.com/Unhurried-Careers) GitHub organization |
 
 ## Glossary
 

@@ -1,6 +1,6 @@
 # Codebase guide
 
-The system is split into 10 repositories in the [Unhurried-Careers](https://github.com/Unhurried-Careers) organization. Locally they sit side by side in one `Unhurried/` folder, because the Go services import `unhurried-common` through a relative `replace github.com/unhurried/common => ../unhurried-common` in `go.mod`.
+The system is split into 11 repositories in the [Unhurried-Careers](https://github.com/Unhurried-Careers) organization. Locally they sit side by side in one `Unhurried/` folder, because the Go services import `unhurried-common` through a relative `replace github.com/unhurried/common => ../unhurried-common` in `go.mod`.
 
 | Repository | Language | Purpose |
 | --- | --- | --- |
@@ -14,6 +14,7 @@ The system is split into 10 repositories in the [Unhurried-Careers](https://gith
 | [unhurried-extension](#unhurried-extension) | JavaScript | Chrome apply assistant |
 | [unhurried-infra](#unhurried-infra) | Terraform | All cloud resources, gateway specs, CI/CD identities |
 | unhurried-product | Markdown | Product README, motivation, and this documentation |
+| [unhurried-ops](https://github.com/Unhurried-Careers/unhurried-ops) | JavaScript, Terraform | Live CI/CD status dashboard: collector on Cloud Run, Firebase Hosting site, and the ops project's infrastructure |
 
 ## Conventions shared by the Go services
 
