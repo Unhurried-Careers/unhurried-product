@@ -9,6 +9,7 @@ This folder is the reference for how the system is built, delivered, and secured
 | [Architecture](architecture.md) | The three tiers, how a request travels from the browser to Firestore, the environments, and where each kind of data lives |
 | [Codebase guide](codebase.md) | Every repository: layout, packages, API endpoints, configuration, local development, and tests |
 | [CI/CD](ci-cd.md) | Branches and environments, GitHub Actions CI checks, Google Cloud Build & Cloud Deploy CD rollouts, least-privilege service accounts, secrets, and operational runbooks |
+| [Promotion criteria](promotion.md) | What must be true before a change moves from dev to staging and from staging to production, with checklists and the commands to check them |
 | [Security](security.md) | The threat model and every control, layer by layer: identity, API protection, service-to-service trust, data, secrets, Google Calendar and Drive, the extension, supply chain, and CI/CD |
 | [Implementation status](status.md) | Which features are fully working, which are partial or stubbed, and the known gaps and risks |
 
@@ -20,6 +21,7 @@ The product reasoning behind the features is in [MOTIVATION.md](../MOTIVATION.md
 | --- | --- |
 | Production | https://unhurried-careers.com (`main` branch), Google Cloud project `project-191091d4-b2e5-4294-9e7` |
 | Staging | https://staging.unhurried-careers.com (`staging` branch), Google Cloud project `unhurried-staging` |
+| Dev | https://dev.unhurried-careers.com (`dev` branch), Google Cloud project `unhurried-dev` |
 | Frontend | React + TypeScript single-page app on Firebase Hosting |
 | Backend | Five Go services on Cloud Run, each behind its own API Gateway |
 | Data | Cloud Firestore (Native mode), Cloud KMS for Google Calendar and Google Drive tokens |

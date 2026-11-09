@@ -362,7 +362,7 @@ flowchart TD
   end
 
   subgraph GCP["Google Cloud — Pure CD (Cloud Build + Cloud Deploy)"]
-    MERGE["Merge PR to staging or main"] -->|"2nd-gen GitHub App webhook"| CB["Cloud Build (cloudbuild.yaml)"]
+    MERGE["Push or merge PR to dev, staging, or main"] -->|"2nd-gen GitHub App webhook"| CB["Cloud Build (cloudbuild.yaml)"]
     
     subgraph BuildPipeline["Cloud Build Execution (unhurried-builder SA)"]
       CB --> DOCKER_BUILD["Multi-stage Docker Build<br/>(Go 1.27 static binary + Distroless non-root)"]
