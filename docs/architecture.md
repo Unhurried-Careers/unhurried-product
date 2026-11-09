@@ -25,23 +25,21 @@ flowchart TD
       GW2["resume-gw"]
       GW3["applications-gw"]
       GW4["notifications-gw"]
-      GW5["inbox-gw"]
-      GW6["profile-gw"]
+      GW5["profile-gw"]
     end
   end
 
   subgraph Compute["Compute Tier (Cloud Run Services, us-central1)"]
     S1["unhurried-job-search<br/>(Direction, Research & AI Summaries, Discovery)"]
     S2["unhurried-resume<br/>(Google Docs Workspace, AI Tailoring)"]
-    S3["unhurried-applications<br/>(Opportunity Pipeline & Gates, Outreach, Conversations, Rounds)"]
+    S3["unhurried-applications<br/>(Opportunity Pipeline & Gates, Outreach, Conversations, Rounds, Prep & Debrief)"]
     S4["unhurried-notifications<br/>(Alert Preferences, Resend SMTP Relay)"]
-    S5["unhurried-inbox<br/>(Calendar Sync, Interview Heuristics, Free Slots)"]
-    S6["unhurried-profile<br/>(User Profiles, LinkedIn Import, Public Profile Pages)"]
+    S5["unhurried-profile<br/>(User Profiles, LinkedIn Import, Public Profile Pages)"]
   end
 
   subgraph Managed["GCP Managed Platform & Data Tier"]
     FS[("Cloud Firestore<br/>(Native mode, us-central1)")]
-    KMS["Cloud KMS Key Ring: unhurried<br/>(calendar-refresh-tokens, docs-refresh-tokens)"]
+    KMS["Cloud KMS Key Ring: unhurried<br/>(docs-refresh-tokens)"]
     SM["Secret Manager<br/>(OAuth client secrets, SMTP password, build config)"]
     SCH["Cloud Scheduler<br/>(unhurried-job-search-scan: 07:00 Central)"]
     VERTEX["Vertex AI<br/>(Gemini 3.5 Flash)"]
@@ -374,7 +372,7 @@ flowchart TD
     end
 
     subgraph DeployPipeline["Cloud Deploy Progressive Rollout"]
-      CREATE_RELEASE --> CD_PIPELINE["Cloud Deploy Delivery Pipeline<br/>(per service: job-search, resume, applications, notifications, inbox)"]
+      CREATE_RELEASE --> CD_PIPELINE["Cloud Deploy Delivery Pipeline<br/>(per service: job-search, resume, applications, notifications, profile)"]
       CD_PIPELINE --> ROLLOUT["Rollout to Target: unhurried-prod (Cloud Run)"]
       ROLLOUT --> POST_VERIFY["Post-Deploy Verify Hook<br/>(Query gateway /health endpoint)"]
       ROLLOUT -.->|"One-Click Rollback"| PREV_SHA["Instant Rollback to Previous Revision"]
@@ -407,10 +405,10 @@ All five backend services utilize Cloud Firestore (Native mode in `us-central1`)
 | **`applications`**| `opportunities` | Random UUID (`ids.New()`) | `userId` | One posting in the pipeline: snapshot, stage, the reason for every stage, requirement checks, notes, AI summary, resume link, apply details, outcome, timeline |
 | **`applications`**| `conversations` | Random UUID (`ids.New()`) | `userId` | Coffee chats and informational interview records, optionally linked to an opportunity |
 | **`applications`**| `conversation_settings` | User ID (`userID`) | `userId` | User Google Calendar booking page link and availability notes |
-| **`applications`**| `opportunity_rounds` | Random UUID (`ids.New()`) | `userId` | Interview rounds of an applied opportunity: skills to show/shown, learnings, prep checklist |
+| **`applications`**| `opportunity_rounds` | Random UUID (`ids.New()`) | `userId` | Interview rounds of an applied opportunity: skills to show/shown, learnings, interviews with video links, prep checklist, debrief reflection |
 | **`notifications`**| `notification_preferences` | User ID (`userID`) | `userId` | Alert preferences, destination email, enabled toggle |
-| **`inbox`** | `calendar_connections` | User ID (`userID`) | `userId` | Sealed Google Calendar refresh token, Google email, sync status |
-| **`inbox`** | `calendar_oauth_states`| SHA-256 of state token | — | Pending Google Calendar OAuth 2.0 PKCE state verifiers |
+| **`profile`** | `profiles` | User ID (`userID`) | `userId` | Structured user profile, LinkedIn import, experience, skills, education, visibility toggle |
+| **`profile`** | `profile_slugs`| Normalized custom slug | `userId` | Unique slug registry mapping public URLs to user IDs |
 
 > [!NOTE]
 > Queries against Firestore use equality filters (`Where("userId", "==", userID)`) and sort in Go memory, eliminating the need for composite index maintenance. Every document contains a `userId` field, and foreign lookups return `404 Not Found` rather than `403 Forbidden` to prevent object identifier enumeration.

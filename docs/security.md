@@ -51,7 +51,7 @@ Each service's `openapi.yaml` (linted in CI by `tools/check-specs.mjs`) requires
 ### 2. Cloud Run
 
 - **Invocation is IAM-only.** Each service's only `roles/run.invoker` grants are its gateway's service account and, for internal routes, the specific Scheduler or job-search accounts. Unauthenticated direct calls get 403 from Google before reaching the code.
-- **Each service runs as its own service account** with only what it needs (Firestore user; the inbox additionally gets the KMS key and the OAuth secret).
+- **Each service runs as its own service account** with only what it needs (Firestore user; resume additionally gets the KMS key and the OAuth secret).
 
 ### 3. Service middleware (`unhurried-common`)
 
@@ -82,33 +82,16 @@ Each service's `openapi.yaml` (linted in CI by `tools/check-specs.mjs`) requires
 | --- | --- |
 | job-search | `unhurried-scheduler` |
 | notifications | `unhurried-job-search-run` |
-| resume, applications, inbox | none (all internal calls rejected) |
+| resume, applications, profile | none (all internal calls rejected) |
 
 Cloud Run's IAM binding enforces the same caller list a second time. Cloud Run is configured with `unhurried-internal` as a custom audience so it accepts these tokens.
 
 ## Data protection
 
 - **Firestore** has delete protection enabled. The web app never talks to Firestore; all access goes through the services' service accounts, which bypass security rules. Terraform (`modules/auth`) deploys rules that deny every read and write from client SDKs, so even someone holding the public Firebase config cannot reach the database directly.
-- **Google Calendar refresh tokens** are encrypted with Cloud KMS before storage, with the user ID as additional authenticated data, so a sealed token copied onto another user's record fails to decrypt. The key (`calendar-refresh-tokens`) rotates every 90 days (old versions stay enabled to decrypt existing tokens), is protected from Terraform destroy, and only the inbox service account can encrypt or decrypt with it. Without a KMS key name the inbox refuses to start in Firestore mode, so tokens are never stored unsealed.
-- **Minimal calendar data.** Events are read live when the Interviews page opens and never stored. Only each event's ID, title, link, times, and guest addresses are requested (never descriptions or attachments), and guests leave the inbox only as email domains. What is stored is what the user chooses to add to a round: the interview's title, times, and calendar event ID.
+- **Zero-auth Google Calendar scheduling.** Interview events and coffee chat reminders are created directly in the user's browser using Google Calendar URL templates (`https://calendar.google.com/calendar/render?action=TEMPLATE&...`). No calendar OAuth scopes, background sync workers, or stored calendar tokens are required.
 - **Extension data.** The user's contact details for form filling stay in `chrome.storage.local` in their browser. Portal passwords are never collected.
 - **Terraform state** is in a versioned Cloud Storage bucket in the same project.
-
-## Google Calendar connection
-
-| Control | Detail |
-| --- | --- |
-| Least scope | `https://www.googleapis.com/auth/calendar.events.readonly` (view events, no changes) and `userinfo.email` (to show which account is connected). Google classifies the calendar scope as sensitive, not restricted |
-| Authorization code flow with PKCE | S256 code challenge; the verifier never leaves the server |
-| State | 32 random bytes; only its SHA-256 hash is stored; bound to the user who started the flow; expires after 10 minutes; deleted on first use (Firestore transaction), so a replayed or stolen callback fails |
-| Scope check | If the user unticked the calendar on Google's consent screen, nothing is stored. The partial grant is not revoked, because that would also end Drive access granted to the same OAuth client |
-| Server-side exchange | The browser only relays the code; tokens are never sent to or stored in the browser |
-| Expired or revoked access | Detected (`invalid_grant`, 401/403) and shown as "Reconnect Google Calendar"; Google is not called again until the user reconnects |
-| User confirms every link | Events that look like interviews are only suggestions; nothing is added to a round until the user picks the opportunity and round |
-| Disconnect | Deletes the connection and its sealed token, without revoking at Google for the same reason as Drive; myaccount.google.com/permissions removes all access |
-| Client secret | In Secret Manager, readable only by the inbox and resume service accounts, injected by reference |
-
-While the OAuth consent screen is in Testing mode, Google limits access to listed test users and expires refresh tokens after 7 days.
 
 ## Google Drive (resumes)
 

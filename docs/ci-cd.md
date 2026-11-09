@@ -51,7 +51,7 @@ flowchart LR
 - **`.github/workflows/ci.yml`** (all 9 code repositories): pure CI checks on pull requests, pushes to `dev`, `staging`, and `main`, `workflow_dispatch`, and daily `06:00 UTC` cron (Go services and `unhurried-infra`). Never authenticates to Google Cloud.
 - **`cloudbuild.yaml`** (the 8 deployable repositories: 5 Go services, `unhurried-web`, `unhurried-extension`, `unhurried-infra`): pure CD pipeline invoked by Cloud Build 2nd-gen push triggers on `^<deploy_branch>$`. Every `cloudbuild.yaml` sets `options.logging: CLOUD_LOGGING_ONLY` (required for custom least-privilege trigger service accounts) and `options.substitutionOption: ALLOW_LOOSE`.
 
-### Go services (`job-search`, `resume`, `applications`, `notifications`, `inbox`)
+### Go services (`job-search`, `resume`, `applications`, `notifications`, `profile`)
 
 | Plane | File | Steps |
 | --- | --- | --- |
@@ -126,7 +126,7 @@ Google Cloud Build's 2nd-generation GitHub connection requires a one-time OAuth 
 3. Watch CD builds and rollouts in Google Cloud Console (**Cloud Build → History** and **Cloud Deploy → Delivery pipelines**) or via CLI:
    ```bash
    gcloud builds list --region=us-central1 --project=project-191091d4-b2e5-4294-9e7 --limit=10
-   gcloud deploy rollouts list --delivery-pipeline=unhurried-inbox --release=- --region=us-central1 --project=project-191091d4-b2e5-4294-9e7
+   gcloud deploy rollouts list --delivery-pipeline=unhurried-applications --release=- --region=us-central1 --project=project-191091d4-b2e5-4294-9e7
    ```
 4. If `require_deploy_approval = true` is enabled on the environment, approve pending Cloud Deploy rollouts in the Cloud Deploy console or via `gcloud deploy rollouts approve <rollout> --delivery-pipeline=<service> --release=<release> --region=us-central1`.
 
@@ -153,7 +153,7 @@ Covered in `unhurried-infra/README.md`: create the staging GCP project, link bil
 
 1. Create a new client secret on the Web OAuth client in Google Auth Platform.
 2. Update `envs/prod/terraform.tfvars` locally (or add a new version directly to `unhurried-google-oauth-client-secret` in Secret Manager: `printf '%s' "$NEW_SECRET" | gcloud secrets versions add unhurried-google-oauth-client-secret --data-file=- --project=project-191091d4-b2e5-4294-9e7`) and run `unhurried-infra-apply` (updates Identity Platform and Secret Manager).
-3. Trigger a rollout of `unhurried-inbox` and `unhurried-resume` so new Cloud Run revisions pick up `latest`, then delete the old secret in Google Auth Platform.
+3. Trigger a rollout of `unhurried-resume` so new Cloud Run revisions pick up `latest`, then delete the old secret in Google Auth Platform.
 
 ### Bootstrap or rotate the GitHub CI Reader App
 

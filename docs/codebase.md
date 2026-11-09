@@ -7,9 +7,8 @@ The system is split into 12 repositories in the [Unhurried-Careers](https://gith
 | [unhurried-common](#unhurried-common) | Go | Shared library: auth, HTTP hardening, validation, models, IDs |
 | [unhurried-job-search](#unhurried-job-search) | Go | Direction (target companies, roles, requirements), research notes and AI summaries, discovery of postings |
 | [unhurried-resume](#unhurried-resume) | Go | Resumes as Google Docs in the user's Drive: master resume, tailored copies per opportunity, edits |
-| [unhurried-applications](#unhurried-applications) | Go | The opportunity pipeline and its gates, conversations, interview rounds, extension API |
+| [unhurried-applications](#unhurried-applications) | Go | The opportunity pipeline and its gates, conversations, interview rounds, prep & debrief notes, extension API |
 | [unhurried-notifications](#unhurried-notifications) | Go | Email digests of new postings for the user's targets |
-| [unhurried-inbox](#unhurried-inbox) | Go | Google Calendar interview discovery |
 | [unhurried-profile](#unhurried-profile) | Go | User profile management, LinkedIn profile import, and public/private profile view |
 | [unhurried-web](#unhurried-web) | TypeScript | React single-page app |
 | [unhurried-extension](#unhurried-extension) | JavaScript | Chrome apply assistant |
@@ -37,7 +36,7 @@ cloudbuild.yaml           GCP CD: SLSA VERIFIED image push + Google Cloud Deploy
 - **Handlers** decode with `httpx.DecodeOrReject` (400 on bad JSON, 413 over 1 MiB), validate with `validate.Errors`, read the caller with `auth.FromContext`, and answer with `httpx.JSON`, `httpx.Error`, or `httpx.ServerError` (logs the cause, returns a generic message).
 - **Ownership**: every user-facing lookup takes the caller's user ID; another user's record answers 404, not 403, so IDs cannot be probed.
 - **Health**: `GET /health` (used by CI smoke tests and gateways). Skips auth.
-- **Ports** locally: job-search 8081, resume 8082, applications 8083, notifications 8084, inbox 8085, profile 8086. Containers listen on `PORT=8080`.
+- **Ports** locally: job-search 8081, resume 8082, applications 8083, notifications 8084, profile 8086. Containers listen on `PORT=8080`.
 
 ### Common environment variables
 
@@ -52,7 +51,7 @@ Read by `unhurried-common/auth` and `httpx` in every service:
 | `INTERNAL_AUDIENCE` | Audience expected on `/internal/*` OIDC tokens (`unhurried-internal`) |
 | `INTERNAL_CALLERS` | Service accounts allowed on `/internal/*`; empty rejects all internal calls |
 | `CORS_ALLOWED_ORIGINS` | Browser origins allowed; defaults to the local Vite server |
-| `STORE=firestore` | Use Firestore (supported across all five services: applications, inbox, resume, job-search, notifications) |
+| `STORE=firestore` | Use Firestore (supported across all five services: applications, resume, job-search, notifications, profile) |
 | `PORT` | Listen port |
 
 Terraform sets all of these on Cloud Run (`envs/<env>/main.tf`, `local.commons`).
@@ -211,27 +210,6 @@ internal/store/  Store interface; Memory and Firestore implementations (notifica
 
 Emails go only to users who turned alerts on; responses report `sent`, `skipped`, or `logged`. Job fields are escaped in the HTML email and only https links are accepted. Configuration: `SMTP_HOST` (default `smtp.resend.com`; unset logs emails instead of sending), `SMTP_PORT` (default 587), `SMTP_USERNAME` (`resend`), `SMTP_PASSWORD` (from Secret Manager `unhurried-smtp-password`), `MAIL_FROM` (`Unhurried <alerts@unhurried-careers.com>`), `APP_URL` (links in emails).
 
-## unhurried-inbox
-
-```
-internal/api/api.go         routes and server setup
-internal/api/calendar.go    read-only Google Calendar endpoints
-internal/calsync/           OAuth (PKCE), sealing, and calendar sync service
-internal/gcal/              Google Calendar REST client (events)
-internal/seal/              Cloud KMS sealer and dev AES-GCM sealer
-internal/store/             Store interface; Memory and Firestore implementations (calendar_connections, calendar_oauth_states)
-```
-
-| Endpoint | Purpose |
-| --- | --- |
-| `GET /v1/calendar/status` | Read-only Google Calendar connection status and email |
-| `POST /v1/calendar/connect` | Start OAuth; returns Google's consent URL |
-| `POST /v1/calendar/callback` | Finish OAuth with `code` and `state` from the web callback page |
-| `POST /v1/calendar/disconnect` | Delete the connection and its sealed token (Google access is not revoked, so Drive keeps working) |
-| `GET /v1/calendar/events` | Timed events on primary calendar (past and next 60 days), each flagged `likelyInterview` |
-
-Configuration: `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET` (from Secret Manager `unhurried-google-oauth-client-secret`), `CALENDAR_REDIRECT_URL` (`https://<site>/app/calendar/callback`), `KMS_KEY_NAME` (required with Firestore). Without a client ID the calendar routes answer 503.
-
 ## unhurried-profile
 
 ```
@@ -313,7 +291,7 @@ modules/service    Cloud Run service, its service account, API Gateway API/confi
 modules/data       Firestore, the discovery Scheduler job, Adzuna secrets, Artifact Registry
 modules/auth       Firebase project, Identity Platform config, Google provider, web app, App Check
 modules/hosting    Hosting site, custom domain and redirects, web deployer service account
-modules/google_oauth Calendar API, key ring, calendar token key, OAuth client secret, inbox access
+modules/google_oauth KMS key ring, OAuth client secret
 modules/docs       Drive, Docs, and Picker APIs, Drive token key, resume access to the OAuth secret
 modules/cicd       Cloud Build 2nd-gen GitHub connection & CD triggers, Cloud Deploy pipelines, CD service accounts, web build config secret
 envs/prod          Production root module (main), settings.auto.tfvars
@@ -332,18 +310,15 @@ $env:PORT = "8081"; go -C unhurried-job-search run ./cmd/server
 $env:PORT = "8082"; go -C unhurried-resume run ./cmd/server
 $env:PORT = "8083"; go -C unhurried-applications run ./cmd/server
 $env:PORT = "8084"; go -C unhurried-notifications run ./cmd/server
-$env:PORT = "8085"; go -C unhurried-inbox run ./cmd/server
 $env:PORT = "8086"; go -C unhurried-profile run ./cmd/server
 cd unhurried-web; npm ci; npm run dev   # .env.local with VITE_AUTH_MODE=dev
 ```
-
-Google Calendar works locally when `GOOGLE_OAUTH_CLIENT_ID`/`SECRET` and `CALENDAR_REDIRECT_URL=http://localhost:5173/app/calendar/callback` are set; connections then live in memory and tokens are sealed with a per-process key.
 
 ## Tests
 
 | Repo | Command | What is covered |
 | --- | --- | --- |
-| Go services, common | `go test ./...` (CI adds `-race` and coverage) | Handlers through `httptest`, ownership scoping, validation, every pipeline gate as table tests, the decided-opportunity limit, discovery and AI summaries with fake boards and a fake Gemini, auth verifiers with test keys, board clients against local servers, Google Calendar OAuth and event sync against a fake Google, store contract (memory; Firestore when `FIRESTORE_EMULATOR_HOST` is set) |
+| Go services, common | `go test ./...` (CI adds `-race` and coverage) | Handlers through `httptest`, ownership scoping, validation, every pipeline gate as table tests, the decided-opportunity limit, discovery and AI summaries with fake boards and a fake Gemini, auth verifiers with test keys, board clients against local servers, store contract (memory; Firestore when `FIRESTORE_EMULATOR_HOST` is set) |
 | unhurried-web | `npm test`, `npm run test:coverage` | Each stage form, the gate messages and the stepper, pages, API client headers and paths, auth, Firebase config, Hosting config, extension bridge; thresholds 85% lines, 75% branches |
 | unhurried-extension | `npm test`, `npm run test:coverage` | Filler, bridge, popup, background relay, manifest permissions; 90% line threshold |
-| unhurried-infra | `terraform -chdir=<dir> test` | Every module and both environments with mocked providers: IAM bindings, deploy restrictions, key restrictions, internal audiences, custom domain wiring, Calendar wiring, Vertex AI grants for resume and job-search |
+| unhurried-infra | `terraform -chdir=<dir> test` | Every module and both environments with mocked providers: IAM bindings, deploy restrictions, key restrictions, internal audiences, custom domain wiring, Vertex AI grants for resume and job-search |

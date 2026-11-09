@@ -31,7 +31,7 @@ What is fully working in production today, what is partial, and what is not buil
 | Dev at https://dev.unhurried-careers.com | Live in `unhurried-dev`; deploys on every push to `dev` |
 | CI on every repository | GitHub Actions (`.github/workflows/ci.yml` on PRs, pushes & daily 06:00 UTC scans; zero GCP credentials) |
 | Deploys from `dev`, `staging`, and `main` (services, web, extension, Terraform) | Google Cloud Build + Google Cloud Deploy (`cloudbuild.yaml`); all deployment secrets in GCP Secret Manager |
-| Firestore persistence | All five backend services: applications (opportunities, conversations, interview rounds), resume, inbox (Google Calendar connections), job-search (directions, research, postings), and notifications (alert preferences) |
+| Firestore persistence | All five backend services: applications (opportunities, conversations, interview rounds), resume, job-search (directions, research, postings), notifications (alert preferences), and profile (user profiles and public slugs) |
 
 ## Known gaps
 
