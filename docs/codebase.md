@@ -7,7 +7,7 @@ The system is split into 11 repositories in the [Unhurried-Careers](https://gith
 | [unhurried-common](#unhurried-common) | Go | Shared library: auth, HTTP hardening, validation, models, IDs |
 | [unhurried-job-search](#unhurried-job-search) | Go | Direction (target companies, roles, requirements), research notes and AI summaries, discovery of postings |
 | [unhurried-resume](#unhurried-resume) | Go | Resumes as Google Docs in the user's Drive: master resume, tailored copies per opportunity, edits |
-| [unhurried-applications](#unhurried-applications) | Go | The opportunity pipeline and its gates, outreach kit, conversations, interview rounds, extension API |
+| [unhurried-applications](#unhurried-applications) | Go | The opportunity pipeline and its gates, conversations, interview rounds, extension API |
 | [unhurried-notifications](#unhurried-notifications) | Go | Email digests of new postings for the user's targets |
 | [unhurried-inbox](#unhurried-inbox) | Go | Google Calendar interview discovery |
 | [unhurried-web](#unhurried-web) | TypeScript | React single-page app |
@@ -24,7 +24,7 @@ Every service has the same shape:
 cmd/server/main.go        wiring: store selection, config, httpx.Serve
 internal/api/             routes and handlers (one Server struct)
 internal/store/           persistence (memory and, where implemented, Firestore)
-internal/<domain>/        domain logic (boards, research, pipeline, outreach, rounds, ...)
+internal/<domain>/        domain logic (boards, research, pipeline, rounds, ...)
 openapi.yaml              Swagger 2.0 spec for the service's API Gateway
 Dockerfile                multi-stage build; context is the parent folder
 .github/workflows/ci.yml  GitHub Actions CI (PRs, pushes, daily 06:00 UTC; zero GCP access)
@@ -35,7 +35,7 @@ cloudbuild.yaml           GCP CD: SLSA VERIFIED image push + Google Cloud Deploy
 - **Middleware** is applied in `Routes()`: `httpx.CORS(httpx.Recover(httpx.Harden(httpx.AccessLog(auth.Middleware(mux)))))`.
 - **Handlers** decode with `httpx.DecodeOrReject` (400 on bad JSON, 413 over 1 MiB), validate with `validate.Errors`, read the caller with `auth.FromContext`, and answer with `httpx.JSON`, `httpx.Error`, or `httpx.ServerError` (logs the cause, returns a generic message).
 - **Ownership**: every user-facing lookup takes the caller's user ID; another user's record answers 404, not 403, so IDs cannot be probed.
-- **Health**: `GET /health` (used by CI smoke tests and gateways) and `GET /healthz` (kept for local runs; Cloud Run reserves `/healthz`). Both skip auth.
+- **Health**: `GET /health` (used by CI smoke tests and gateways). Skips auth.
 - **Ports** locally: job-search 8081, resume 8082, applications 8083, notifications 8084, inbox 8085. Containers listen on `PORT=8080`.
 
 ### Common environment variables
@@ -75,7 +75,7 @@ ids/ids.go          Random UUIDs
 
 **How auth decides** (`auth.Wrap`):
 
-1. `/health`, `/healthz`, and `OPTIONS` pass through.
+1. `/health` and `OPTIONS` pass through.
 2. `/internal/*`: the `Authorization` bearer token must be a Google-signed OIDC token with issuer `accounts.google.com`, audience `INTERNAL_AUDIENCE`, a verified email in `INTERNAL_CALLERS`, and valid times.
 3. Everything else: App Check (when required), then the Firebase ID token from `X-Forwarded-Authorization` (set by API Gateway) or `Authorization` (direct calls), then the allowlist. The principal (user ID, email, name) goes into the request context.
 
@@ -153,12 +153,11 @@ AI resume tailoring uses Google Cloud Vertex AI (Gemini 3.5 Flash) via `POST /v1
 ## unhurried-applications
 
 ```
-internal/api/opportunities.go    the opportunity pipeline, drop, outreach kit, extension fill/submit/tracking
+internal/api/opportunities.go    the opportunity pipeline, drop, extension submit/tracking
 internal/api/conversations.go    conversations and booking link settings
 internal/api/rounds.go           interview rounds and interviews (only after applying)
 internal/pipeline/               the stage gates, as pure functions
 internal/conversations/          conversation logic and validation
-internal/outreach/               outreach kit text and LinkedIn search links
 internal/rounds/                 round management, interviews, skills, and prep
 internal/store/                  Store interface; Memory and Firestore implementations
                                  (opportunities, conversations, conversation_settings, opportunity_rounds)
@@ -173,8 +172,6 @@ An **opportunity** is one posting the user is working through the process. It ke
 | `GET/PATCH /v1/opportunities/{id}` | Read, or save notes and reasons; reasons lock once applied or dropped; `outcome` only after applying |
 | `POST /v1/opportunities/{id}/advance` | `{to, confirmed, ...stage fields}`: saves the fields, then moves one stage forward if the gate is met. A refused move still keeps the fields and answers 422 with `{error, missing[]}` |
 | `POST /v1/opportunities/{id}/drop` | `{reason}` (at least 30 characters); not after applying |
-| `GET /v1/opportunities/{id}/outreach?name=` | Outreach kit: LinkedIn searches, a note asking to learn, a follow-up, questions |
-| `GET /v1/opportunities/{id}/fill-payload` | Data the extension fills into a form; only once the resume is ready (stage `tailored`) |
 | `POST /v1/opportunities/{id}/submit` | Record a submit from the extension; requires `confirmed: true` and an https page URL; moves it to applied |
 | `POST /v1/opportunities/{id}/tracking` | Save the employer portal URL, username, notes |
 | `GET/POST /v1/conversations` | Conversations, newest first / add one, optionally linked to an opportunity (`opportunityId`) |
@@ -230,7 +227,7 @@ internal/store/             Store interface; Memory and Firestore implementation
 | `POST /v1/calendar/connect` | Start OAuth; returns Google's consent URL |
 | `POST /v1/calendar/callback` | Finish OAuth with `code` and `state` from the web callback page |
 | `POST /v1/calendar/disconnect` | Delete the connection and its sealed token (Google access is not revoked, so Drive keeps working) |
-| `GET /v1/calendar/events?from=&to=` | Timed events on primary calendar (default past and next 60 days), each flagged `likelyInterview` |
+| `GET /v1/calendar/events` | Timed events on primary calendar (past and next 60 days), each flagged `likelyInterview` |
 
 Configuration: `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET` (from Secret Manager `unhurried-google-oauth-client-secret`), `CALENDAR_REDIRECT_URL` (`https://<site>/app/calendar/callback`), `KMS_KEY_NAME` (required with Firestore). Without a client ID the calendar routes answer 503.
 

@@ -144,7 +144,7 @@ Request ──► httpx.CORS ──► httpx.Recover ──► httpx.Harden ─�
 3. **`httpx.Harden`**: Attaches strict security headers: `X-Content-Type-Options: nosniff`, `Cache-Control: no-store`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`.
 4. **`httpx.AccessLog`**: Emits structured JSON access logs with request method, path, status, latency, and client IP.
 5. **`auth.Middleware`**:
-   - Skips authentication only for `GET /health`, `GET /healthz`, and `OPTIONS`.
+   - Skips authentication only for `GET /health` and `OPTIONS`.
    - On `/internal/*` endpoints: validates Google OIDC token (`accounts.google.com`, audience `INTERNAL_AUDIENCE`, email in `INTERNAL_CALLERS`).
    - On public `/v1/*` endpoints: validates App Check token, extracts Firebase ID token from `X-Forwarded-Authorization`, verifies RS256 signature against cached Google x509 certificates, and checks that the verified email matches `ALLOWED_EMAILS`.
 6. **Route Handler**: Validates request parameters and payload structure (`validate.Errors`), reads the principal from context (`auth.FromContext`), and enforces strict ownership scoping.
@@ -300,7 +300,7 @@ flowchart LR
     EXT_BG["Extension Background Worker"]
     BRIDGE["bridge.js<br/>(Content Script on web app)"]
     WEB_BRIDGE["extensionBridge.ts<br/>(Unhurried Web App)"]
-    APP_API["unhurried-applications<br/>(GET /fill-payload, POST /submit)"]
+    APP_API["unhurried-applications<br/>(POST /v1/opportunities/{id}/submit)"]
   end
 
   PAGE -->|"activeTab"| EXT_POPUP
@@ -308,8 +308,7 @@ flowchart LR
   EXT_BG -->|"chrome.tabs.sendMessage"| BRIDGE
   BRIDGE -->|"window.postMessage"| WEB_BRIDGE
   WEB_BRIDGE -->|"authenticated API call"| APP_API
-  APP_API -->>|"fill fields"| WEB_BRIDGE
-  WEB_BRIDGE -->>|"DOM form input"| PAGE
+  EXT_POPUP -->|"fill fields from local profile"| PAGE
   PAGE -.->|"user manually clicks submit"| PAGE
   EXT_POPUP -->|"POST /submit with confirmation"| APP_API
 ```
@@ -333,18 +332,17 @@ flowchart TD
   end
 
   subgraph EventDiscovery["Privacy-First Interview Detection"]
-    U2["User views Interviews page"] --> GET_EVENTS["GET /v1/calendar/events?from=&to="]
+    U2["User views Interviews page"] --> GET_EVENTS["GET /v1/calendar/events"]
     GET_EVENTS --> DECRYPT["Cloud KMS Decrypt Refresh Token"]
     DECRYPT --> GCAL_API["Google Calendar API: list events (past 60 to next 60 days)"]
     GCAL_API --> HEURISTICS["Heuristic Classification Engine<br/>- Match recruiter emails & domains<br/>- Video links (Meet, Zoom, Teams)<br/>- Keywords: Interview, Screen, Debrief, Chat"]
     HEURISTICS --> FLAGGED["Return timed events with likelyInterview: true/false<br/>(Events are NEVER stored in Firestore)"]
-    FLAGGED --> C  subgraph Booking["Booking Page for Outreach"]
+    subgraph Booking["Booking Page for Outreach"]
     U3["User clicks 'Get my booking link'"] --> OPEN["Google Calendar opens in a new tab"]
     OPEN --> COPY["User creates or opens a booking page and clicks Copy link"]
     COPY --> PICK["Back in Unhurried: the copied link is read from the clipboard and checked"]
     PICK --> SAVE["Saved in conversation_settings; used in drafted messages"]
- an appointment schedule booking page in the calendar"]
-    FIND --> SHARE["Booking link placed in the drafted message; the user sends it"]
+    SAVE --> SHARE["Booking link placed in the drafted message; the user sends it"]
   end
 ```
 
