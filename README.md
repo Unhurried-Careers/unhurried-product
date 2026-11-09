@@ -52,6 +52,7 @@ Live status of every repository's CI and every environment's deploys, and which 
 | [unhurried-applications](https://github.com/Unhurried-Careers/unhurried-applications) | The opportunity pipeline and its gates, outreach kit, conversations, interview rounds, extension API |
 | [unhurried-notifications](https://github.com/Unhurried-Careers/unhurried-notifications) | Email digests of new postings for your target companies and roles |
 | [unhurried-inbox](https://github.com/Unhurried-Careers/unhurried-inbox) | Google Calendar interview discovery |
+| [unhurried-profile](https://github.com/Unhurried-Careers/unhurried-profile) | User profiles, LinkedIn profile import, and public/private career profile pages |
 | [unhurried-web](https://github.com/Unhurried-Careers/unhurried-web) | TypeScript React frontend (static, on Firebase Hosting) |
 | [unhurried-extension](https://github.com/Unhurried-Careers/unhurried-extension) | Chrome MV3 apply assistant |
 | [unhurried-ops](https://github.com/Unhurried-Careers/unhurried-ops) | Live CI/CD and environment status dashboard, in its own Google Cloud project |
@@ -60,8 +61,8 @@ Each folder is its **own git repository** with `dev` (the default branch, where 
 
 ## Three tiers
 
-1. **Frontend** — `unhurried-web` is a static single-page app on Firebase Hosting (global CDN): a public homepage at `/` and the signed-in app at `/app`. It and `unhurried-extension` call the HTTPS API Gateways.
-2. **Backend** — five Go Cloud Run services, each fronted by its own API Gateway.
+1. **Frontend** — `unhurried-web` is a static single-page app on Firebase Hosting (global CDN): a public homepage at `/`, public profiles at `/p/:slug`, and the signed-in app at `/app`. It and `unhurried-extension` call the HTTPS API Gateways.
+2. **Backend** — six Go Cloud Run services, each fronted by its own API Gateway.
 3. **Data** — Cloud Firestore (Native mode), plus read-only Google Calendar (interviews) and Google Drive (resumes) connections.
 
 ## Sign in
@@ -80,6 +81,7 @@ $env:PORT  = "8082"; go -C unhurried-resume run ./cmd/server
 $env:PORT  = "8083"; go -C unhurried-applications run ./cmd/server
 $env:PORT  = "8084"; go -C unhurried-notifications run ./cmd/server
 $env:PORT  = "8085"; go -C unhurried-inbox run ./cmd/server
+$env:PORT  = "8086"; go -C unhurried-profile run ./cmd/server
 cd unhurried-web; npm install; npm run dev
 ```
 

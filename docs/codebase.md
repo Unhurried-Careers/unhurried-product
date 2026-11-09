@@ -1,6 +1,6 @@
 # Codebase guide
 
-The system is split into 11 repositories in the [Unhurried-Careers](https://github.com/Unhurried-Careers) organization. Locally they sit side by side in one `Unhurried/` folder, because the Go services import `unhurried-common` through a relative `replace github.com/unhurried/common => ../unhurried-common` in `go.mod`.
+The system is split into 12 repositories in the [Unhurried-Careers](https://github.com/Unhurried-Careers) organization. Locally they sit side by side in one `Unhurried/` folder, because the Go services import `unhurried-common` through a relative `replace github.com/unhurried/common => ../unhurried-common` in `go.mod`.
 
 | Repository | Language | Purpose |
 | --- | --- | --- |
@@ -10,6 +10,7 @@ The system is split into 11 repositories in the [Unhurried-Careers](https://gith
 | [unhurried-applications](#unhurried-applications) | Go | The opportunity pipeline and its gates, conversations, interview rounds, extension API |
 | [unhurried-notifications](#unhurried-notifications) | Go | Email digests of new postings for the user's targets |
 | [unhurried-inbox](#unhurried-inbox) | Go | Google Calendar interview discovery |
+| [unhurried-profile](#unhurried-profile) | Go | User profile management, LinkedIn profile import, and public/private profile view |
 | [unhurried-web](#unhurried-web) | TypeScript | React single-page app |
 | [unhurried-extension](#unhurried-extension) | JavaScript | Chrome apply assistant |
 | [unhurried-infra](#unhurried-infra) | Terraform | All cloud resources, gateway specs, CI/CD identities |
@@ -36,7 +37,7 @@ cloudbuild.yaml           GCP CD: SLSA VERIFIED image push + Google Cloud Deploy
 - **Handlers** decode with `httpx.DecodeOrReject` (400 on bad JSON, 413 over 1 MiB), validate with `validate.Errors`, read the caller with `auth.FromContext`, and answer with `httpx.JSON`, `httpx.Error`, or `httpx.ServerError` (logs the cause, returns a generic message).
 - **Ownership**: every user-facing lookup takes the caller's user ID; another user's record answers 404, not 403, so IDs cannot be probed.
 - **Health**: `GET /health` (used by CI smoke tests and gateways). Skips auth.
-- **Ports** locally: job-search 8081, resume 8082, applications 8083, notifications 8084, inbox 8085. Containers listen on `PORT=8080`.
+- **Ports** locally: job-search 8081, resume 8082, applications 8083, notifications 8084, inbox 8085, profile 8086. Containers listen on `PORT=8080`.
 
 ### Common environment variables
 
@@ -231,6 +232,27 @@ internal/store/             Store interface; Memory and Firestore implementation
 
 Configuration: `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET` (from Secret Manager `unhurried-google-oauth-client-secret`), `CALENDAR_REDIRECT_URL` (`https://<site>/app/calendar/callback`), `KMS_KEY_NAME` (required with Firestore). Without a client ID the calendar routes answer 503.
 
+## unhurried-profile
+
+```
+internal/api/api.go         routes, handlers, and server setup
+internal/profile/profile.go domain logic, slug normalization, LinkedIn payload parser, validation
+internal/store/store.go     Store interface and in-memory store
+internal/store/firestore.go Cloud Firestore implementation (profiles collection)
+cmd/server/main.go          service entrypoint and wiring
+openapi.yaml                Swagger 2.0 API Gateway specification
+```
+
+| Endpoint | Purpose |
+| --- | --- |
+| `GET /health` | Health check (public) |
+| `GET /v1/profile` | Get current user's profile |
+| `PUT /v1/profile` | Update profile details, custom slug, and public/private status |
+| `POST /v1/profile/import-linkedin` | Parse and import profile details extracted from LinkedIn |
+| `GET /v1/public/profiles/{slug}` | Public unauthenticated profile view (returns 404 if not found or private) |
+
+Configuration: `PORT` (defaults to 8086 locally, 8080 in container), `STORE` (`memory` or `firestore`), `ALLOWED_EMAILS`, `PROJECT_ID`, `FIREBASE_PROJECT_ID`.
+
 ## unhurried-web
 
 ```
@@ -311,6 +333,7 @@ $env:PORT = "8082"; go -C unhurried-resume run ./cmd/server
 $env:PORT = "8083"; go -C unhurried-applications run ./cmd/server
 $env:PORT = "8084"; go -C unhurried-notifications run ./cmd/server
 $env:PORT = "8085"; go -C unhurried-inbox run ./cmd/server
+$env:PORT = "8086"; go -C unhurried-profile run ./cmd/server
 cd unhurried-web; npm ci; npm run dev   # .env.local with VITE_AUTH_MODE=dev
 ```
 

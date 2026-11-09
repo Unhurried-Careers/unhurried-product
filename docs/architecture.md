@@ -6,7 +6,7 @@ Unhurried is a deliberate, privacy-first job search process built on Google Clou
 
 ## 1. System Topology
 
-Unhurried consists of five Go microservices, a React 18 TypeScript web application, a Chrome Manifest V3 browser extension, and supporting Google Cloud managed services.
+Unhurried consists of six Go microservices, a React 18 TypeScript web application, a Chrome Manifest V3 browser extension, and supporting Google Cloud managed services.
 
 ```mermaid
 flowchart TD
@@ -26,6 +26,7 @@ flowchart TD
       GW3["applications-gw"]
       GW4["notifications-gw"]
       GW5["inbox-gw"]
+      GW6["profile-gw"]
     end
   end
 
@@ -35,6 +36,7 @@ flowchart TD
     S3["unhurried-applications<br/>(Opportunity Pipeline & Gates, Outreach, Conversations, Rounds)"]
     S4["unhurried-notifications<br/>(Alert Preferences, Resend SMTP Relay)"]
     S5["unhurried-inbox<br/>(Calendar Sync, Interview Heuristics, Free Slots)"]
+    S6["unhurried-profile<br/>(User Profiles, LinkedIn Import, Public Profile Pages)"]
   end
 
   subgraph Managed["GCP Managed Platform & Data Tier"]
@@ -64,6 +66,7 @@ flowchart TD
   GW3 -->|"IAM invoke"| S3
   GW4 -->|"IAM invoke"| S4
   GW5 -->|"IAM invoke"| S5
+  GW6 -->|"IAM invoke"| S6
 
   SCH -->|"POST /internal/scan (OIDC)"| S1
   S1 -->|"POST /internal/job-digest (OIDC)"| S4
@@ -87,14 +90,16 @@ flowchart TD
   S5 -->|"read/write connections, interviews"| FS
   S5 -->|"decrypt Calendar tokens"| KMS
   S5 -->|"live query events"| GCAL
+
+  S6 -->|"read/write profiles"| FS
 ```
 
 | Tier | Components | Responsibilities |
 | --- | --- | --- |
-| **Frontend** | `unhurried-web` | React 18 single-page application built with TypeScript and Vite. Deployed to Firebase Hosting (`unhurried-careers.com`). Walks the user through the process: Direction, Research, Discover, the Pipeline, and one page per opportunity with a stage stepper; plus Conversations, Resume Studio (Google Picker), Interviews, and Settings. |
-| **Extension** | `unhurried-extension` | Chrome Manifest V3 apply assistant. Communicates exclusively through the active signed-in tab of `unhurried-web` via `window.postMessage`. Lists the opportunities whose resume is ready, detects ATS platforms (Greenhouse, Lever, Ashby, Workday), pre-fills applicant data, and records submissions (moving the opportunity to applied) without storing user credentials or auto-submitting. |
-| **API Gateways** | 5 managed Google API Gateways | Validates caller API keys, rate limits client traffic (300 req/min per service), validates Firebase ID tokens (signature, issuer, audience), and invokes Cloud Run backend services via dedicated gateway service accounts. |
-| **Compute** | 5 Go Cloud Run services | Containerized Go 1.27 applications (`golang:1.27-alpine` build, `gcr.io/distroless/static-debian13:nonroot` runtime). Each enforces ownership scoping, App Check attestation, user email allowlisting, and specific domain rules. |
+| **Frontend** | `unhurried-web` | React 18 single-page application built with TypeScript and Vite. Deployed to Firebase Hosting (`unhurried-careers.com`). Walks the user through the process: Direction, Research, Discover, the Pipeline, and one page per opportunity with a stage stepper; plus Conversations, Resume Studio (Google Picker), Interviews, Profile management, public career profiles (`/p/:slug`), and Settings. |
+| **Extension** | `unhurried-extension` | Chrome Manifest V3 apply assistant. Communicates exclusively through the active signed-in tab of `unhurried-web` via `window.postMessage`. Lists the opportunities whose resume is ready, extracts LinkedIn profiles for one-click import into Unhurried, detects ATS platforms (Greenhouse, Lever, Ashby, Workday), pre-fills applicant data, and records submissions without storing user credentials or auto-submitting. |
+| **API Gateways** | 6 managed Google API Gateways | Validates caller API keys, rate limits client traffic (300 req/min per service), validates Firebase ID tokens (signature, issuer, audience), and invokes Cloud Run backend services via dedicated gateway service accounts. Also routes public profile endpoints (`/v1/public/*`) without authentication. |
+| **Compute** | 6 Go Cloud Run services | Containerized Go applications (`golang:alpine` build, `gcr.io/distroless/static-debian13:nonroot` runtime). Each enforces ownership scoping, App Check attestation, user email allowlisting, and specific domain rules. |
 | **Data & Secrets** | Firestore, KMS, Secret Manager | Cloud Firestore (Native mode, `us-central1`) for document persistence. Cloud KMS key ring `unhurried` for envelope encryption of external OAuth tokens. Secret Manager for sensitive third-party credentials. |
 | **AI & External APIs** | Vertex AI, Google Workspace, Resend | Vertex AI Gemini 3.5 Flash for structured resume tailoring (resume service) and for research summaries with Google Search grounding and sources (job-search service). Google Drive & Docs APIs for document management. Google Calendar API for interview discovery. Resend SMTP for outbound alert delivery. |
 
