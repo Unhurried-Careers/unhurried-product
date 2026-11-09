@@ -1,14 +1,14 @@
 {
-  "generatedAt": "2026-11-08T23:26:08.980Z",
+  "generatedAt": "2026-11-09T04:47:34.052Z",
   "org": "Unhurried-Careers",
   "summary": {
     "totalRepositories": 10,
     "trackedPipelines": 10,
-    "successful": 9,
+    "successful": 8,
     "failed": 0,
-    "inProgress": 1,
-    "successRate": 90,
-    "avgDurationSeconds": 126,
+    "inProgress": 2,
+    "successRate": 80,
+    "avgDurationSeconds": 98,
     "overallStatus": "running"
   },
   "repositories": [
@@ -24,18 +24,18 @@
       "repoUrl": "https://github.com/Unhurried-Careers/unhurried-job-search",
       "hasActiveRuns": true,
       "latestRun": {
-        "id": 42523393713,
+        "id": 42559737847,
         "workflow": "CI",
         "status": "completed",
         "conclusion": "success",
-        "branch": "dev",
-        "commitSha": "7d65e5d",
-        "fullSha": "7d65e5d44dd5ea6f2d6c836906c7db62b3ee0fa5",
-        "commitTitle": "CI runs on dev, and dev builds use unhurried-common@dev",
-        "createdAt": "2026-11-08T21:05:14Z",
-        "updatedAt": "2026-11-08T21:07:41Z",
-        "durationSeconds": 147,
-        "url": "https://github.com/Unhurried-Careers/unhurried-job-search/actions/runs/42523393713"
+        "branch": "staging",
+        "commitSha": "72d3613",
+        "fullSha": "72d3613d32d9ea2186fc063d7d95c83f4fa2286f",
+        "commitTitle": "Dev deploys build against unhurried-common@dev",
+        "createdAt": "2026-11-09T04:04:18Z",
+        "updatedAt": "2026-11-09T04:07:09Z",
+        "durationSeconds": 171,
+        "url": "https://github.com/Unhurried-Careers/unhurried-job-search/actions/runs/42559737847"
       },
       "runDetails": {
         "jobs": [
@@ -207,6 +207,28 @@
       },
       "history": [
         {
+          "id": 42559737847,
+          "branch": "staging",
+          "commitSha": "72d3613",
+          "commitTitle": "Dev deploys build against unhurried-common@dev",
+          "status": "completed",
+          "conclusion": "success",
+          "durationSeconds": 171,
+          "createdAt": "2026-11-09T04:04:18Z",
+          "url": "https://github.com/Unhurried-Careers/unhurried-job-search/actions/runs/42559737847"
+        },
+        {
+          "id": 42554322875,
+          "branch": "dev",
+          "commitSha": "72d3613",
+          "commitTitle": "Dev deploys build against unhurried-common@dev",
+          "status": "completed",
+          "conclusion": "success",
+          "durationSeconds": 287,
+          "createdAt": "2026-11-09T03:04:17Z",
+          "url": "https://github.com/Unhurried-Careers/unhurried-job-search/actions/runs/42554322875"
+        },
+        {
           "id": 42523393713,
           "branch": "dev",
           "commitSha": "7d65e5d",
@@ -238,28 +260,6 @@
           "durationSeconds": 171,
           "createdAt": "2026-11-08T19:37:28Z",
           "url": "https://github.com/Unhurried-Careers/unhurried-job-search/actions/runs/42515954651"
-        },
-        {
-          "id": 42480388948,
-          "branch": "main",
-          "commitSha": "32192e8",
-          "commitTitle": "CI",
-          "status": "completed",
-          "conclusion": "success",
-          "durationSeconds": 162,
-          "createdAt": "2026-11-08T12:28:02Z",
-          "url": "https://github.com/Unhurried-Careers/unhurried-job-search/actions/runs/42480388948"
-        },
-        {
-          "id": 42454336938,
-          "branch": "main",
-          "commitSha": "32192e8",
-          "commitTitle": "fix(deps): golang.org/x/net v0.62.0 for GO-2026-6860 in html.Parse",
-          "status": "completed",
-          "conclusion": "success",
-          "durationSeconds": 308,
-          "createdAt": "2026-11-08T06:20:26Z",
-          "url": "https://github.com/Unhurried-Careers/unhurried-job-search/actions/runs/42454336938"
         }
       ]
     },
@@ -275,18 +275,18 @@
       "repoUrl": "https://github.com/Unhurried-Careers/unhurried-resume",
       "hasActiveRuns": true,
       "latestRun": {
-        "id": 42523404179,
+        "id": 42559742883,
         "workflow": "CI",
         "status": "completed",
         "conclusion": "success",
-        "branch": "dev",
-        "commitSha": "4d19ec9",
-        "fullSha": "4d19ec9817412352871d32be8c3c7c8479cc2579",
-        "commitTitle": "CI runs on dev, and dev builds use unhurried-common@dev",
-        "createdAt": "2026-11-08T21:05:20Z",
-        "updatedAt": "2026-11-08T21:09:07Z",
-        "durationSeconds": 227,
-        "url": "https://github.com/Unhurried-Careers/unhurried-resume/actions/runs/42523404179"
+        "branch": "staging",
+        "commitSha": "d1301e5",
+        "fullSha": "d1301e57b0f1d801e52cbc3517b4ecf51a4bb174",
+        "commitTitle": "Dev deploys build against unhurried-common@dev",
+        "createdAt": "2026-11-09T04:04:21Z",
+        "updatedAt": "2026-11-09T04:06:44Z",
+        "durationSeconds": 143,
+        "url": "https://github.com/Unhurried-Careers/unhurried-resume/actions/runs/42559742883"
       },
       "runDetails": {
         "jobs": [
@@ -458,6 +458,28 @@
       },
       "history": [
         {
+          "id": 42559742883,
+          "branch": "staging",
+          "commitSha": "d1301e5",
+          "commitTitle": "Dev deploys build against unhurried-common@dev",
+          "status": "completed",
+          "conclusion": "success",
+          "durationSeconds": 143,
+          "createdAt": "2026-11-09T04:04:21Z",
+          "url": "https://github.com/Unhurried-Careers/unhurried-resume/actions/runs/42559742883"
+        },
+        {
+          "id": 42554332850,
+          "branch": "dev",
+          "commitSha": "d1301e5",
+          "commitTitle": "Dev deploys build against unhurried-common@dev",
+          "status": "completed",
+          "conclusion": "success",
+          "durationSeconds": 312,
+          "createdAt": "2026-11-09T03:04:24Z",
+          "url": "https://github.com/Unhurried-Careers/unhurried-resume/actions/runs/42554332850"
+        },
+        {
           "id": 42523404179,
           "branch": "dev",
           "commitSha": "4d19ec9",
@@ -489,28 +511,6 @@
           "durationSeconds": 257,
           "createdAt": "2026-11-08T19:37:34Z",
           "url": "https://github.com/Unhurried-Careers/unhurried-resume/actions/runs/42515964973"
-        },
-        {
-          "id": 42509652873,
-          "branch": "main",
-          "commitSha": "0252487",
-          "commitTitle": "feat(docs): copy a picked master resume into the Unhurried folder",
-          "status": "completed",
-          "conclusion": "success",
-          "durationSeconds": 250,
-          "createdAt": "2026-11-08T18:22:05Z",
-          "url": "https://github.com/Unhurried-Careers/unhurried-resume/actions/runs/42509652873"
-        },
-        {
-          "id": 42481231221,
-          "branch": "main",
-          "commitSha": "da1eb36",
-          "commitTitle": "CI",
-          "status": "completed",
-          "conclusion": "success",
-          "durationSeconds": 229,
-          "createdAt": "2026-11-08T12:38:52Z",
-          "url": "https://github.com/Unhurried-Careers/unhurried-resume/actions/runs/42481231221"
         }
       ]
     },
@@ -526,18 +526,18 @@
       "repoUrl": "https://github.com/Unhurried-Careers/unhurried-applications",
       "hasActiveRuns": true,
       "latestRun": {
-        "id": 42523402210,
+        "id": 42559733188,
         "workflow": "CI",
         "status": "completed",
         "conclusion": "success",
-        "branch": "dev",
-        "commitSha": "b4be05a",
-        "fullSha": "b4be05abc4e84c37f56fe45849d2416b084478d2",
-        "commitTitle": "CI runs on dev, and dev builds use unhurried-common@dev",
-        "createdAt": "2026-11-08T21:05:19Z",
-        "updatedAt": "2026-11-08T21:09:25Z",
-        "durationSeconds": 246,
-        "url": "https://github.com/Unhurried-Careers/unhurried-applications/actions/runs/42523402210"
+        "branch": "staging",
+        "commitSha": "a5d78b3",
+        "fullSha": "a5d78b318e4f1d3ad136c058093c059a4462e810",
+        "commitTitle": "Dev deploys build against unhurried-common@dev",
+        "createdAt": "2026-11-09T04:04:14Z",
+        "updatedAt": "2026-11-09T04:07:06Z",
+        "durationSeconds": 172,
+        "url": "https://github.com/Unhurried-Careers/unhurried-applications/actions/runs/42559733188"
       },
       "runDetails": {
         "jobs": [
@@ -709,6 +709,28 @@
       },
       "history": [
         {
+          "id": 42559733188,
+          "branch": "staging",
+          "commitSha": "a5d78b3",
+          "commitTitle": "Dev deploys build against unhurried-common@dev",
+          "status": "completed",
+          "conclusion": "success",
+          "durationSeconds": 172,
+          "createdAt": "2026-11-09T04:04:14Z",
+          "url": "https://github.com/Unhurried-Careers/unhurried-applications/actions/runs/42559733188"
+        },
+        {
+          "id": 42554329633,
+          "branch": "dev",
+          "commitSha": "a5d78b3",
+          "commitTitle": "Dev deploys build against unhurried-common@dev",
+          "status": "completed",
+          "conclusion": "success",
+          "durationSeconds": 265,
+          "createdAt": "2026-11-09T03:04:22Z",
+          "url": "https://github.com/Unhurried-Careers/unhurried-applications/actions/runs/42554329633"
+        },
+        {
           "id": 42523402210,
           "branch": "dev",
           "commitSha": "b4be05a",
@@ -740,28 +762,6 @@
           "durationSeconds": 247,
           "createdAt": "2026-11-08T19:37:33Z",
           "url": "https://github.com/Unhurried-Careers/unhurried-applications/actions/runs/42515962373"
-        },
-        {
-          "id": 42482838919,
-          "branch": "main",
-          "commitSha": "30767e8",
-          "commitTitle": "CI",
-          "status": "completed",
-          "conclusion": "success",
-          "durationSeconds": 261,
-          "createdAt": "2026-11-08T13:00:12Z",
-          "url": "https://github.com/Unhurried-Careers/unhurried-applications/actions/runs/42482838919"
-        },
-        {
-          "id": 42420683553,
-          "branch": "main",
-          "commitSha": "30767e8",
-          "commitTitle": "feat: opportunity pipeline with server-checked gates",
-          "status": "completed",
-          "conclusion": "success",
-          "durationSeconds": 174,
-          "createdAt": "2026-11-07T22:27:19Z",
-          "url": "https://github.com/Unhurried-Careers/unhurried-applications/actions/runs/42420683553"
         }
       ]
     },
@@ -777,18 +777,18 @@
       "repoUrl": "https://github.com/Unhurried-Careers/unhurried-notifications",
       "hasActiveRuns": true,
       "latestRun": {
-        "id": 42523395977,
+        "id": 42559741104,
         "workflow": "CI",
         "status": "completed",
         "conclusion": "success",
-        "branch": "dev",
-        "commitSha": "9765b67",
-        "fullSha": "9765b67fcf6250ed0f007de23d8976dcff993564",
-        "commitTitle": "CI runs on dev, and dev builds use unhurried-common@dev",
-        "createdAt": "2026-11-08T21:05:15Z",
-        "updatedAt": "2026-11-08T21:07:46Z",
-        "durationSeconds": 151,
-        "url": "https://github.com/Unhurried-Careers/unhurried-notifications/actions/runs/42523395977"
+        "branch": "staging",
+        "commitSha": "26f84ee",
+        "fullSha": "26f84ee68bd332581d46007c16a5b6a4ec0e9c44",
+        "commitTitle": "Dev deploys build against unhurried-common@dev",
+        "createdAt": "2026-11-09T04:04:20Z",
+        "updatedAt": "2026-11-09T04:06:32Z",
+        "durationSeconds": 132,
+        "url": "https://github.com/Unhurried-Careers/unhurried-notifications/actions/runs/42559741104"
       },
       "runDetails": {
         "jobs": [
@@ -960,6 +960,28 @@
       },
       "history": [
         {
+          "id": 42559741104,
+          "branch": "staging",
+          "commitSha": "26f84ee",
+          "commitTitle": "Dev deploys build against unhurried-common@dev",
+          "status": "completed",
+          "conclusion": "success",
+          "durationSeconds": 132,
+          "createdAt": "2026-11-09T04:04:20Z",
+          "url": "https://github.com/Unhurried-Careers/unhurried-notifications/actions/runs/42559741104"
+        },
+        {
+          "id": 42554325236,
+          "branch": "dev",
+          "commitSha": "26f84ee",
+          "commitTitle": "Dev deploys build against unhurried-common@dev",
+          "status": "completed",
+          "conclusion": "success",
+          "durationSeconds": 285,
+          "createdAt": "2026-11-09T03:04:18Z",
+          "url": "https://github.com/Unhurried-Careers/unhurried-notifications/actions/runs/42554325236"
+        },
+        {
           "id": 42523395977,
           "branch": "dev",
           "commitSha": "9765b67",
@@ -991,28 +1013,6 @@
           "durationSeconds": 174,
           "createdAt": "2026-11-08T19:37:29Z",
           "url": "https://github.com/Unhurried-Careers/unhurried-notifications/actions/runs/42515957144"
-        },
-        {
-          "id": 42483184816,
-          "branch": "main",
-          "commitSha": "35972d4",
-          "commitTitle": "CI",
-          "status": "completed",
-          "conclusion": "success",
-          "durationSeconds": 156,
-          "createdAt": "2026-11-08T13:04:21Z",
-          "url": "https://github.com/Unhurried-Careers/unhurried-notifications/actions/runs/42483184816"
-        },
-        {
-          "id": 42420687448,
-          "branch": "main",
-          "commitSha": "35972d4",
-          "commitTitle": "chore(mail): digest copy for postings found for the user's targets",
-          "status": "completed",
-          "conclusion": "success",
-          "durationSeconds": 167,
-          "createdAt": "2026-11-07T22:27:23Z",
-          "url": "https://github.com/Unhurried-Careers/unhurried-notifications/actions/runs/42420687448"
         }
       ]
     },
@@ -1028,18 +1028,18 @@
       "repoUrl": "https://github.com/Unhurried-Careers/unhurried-inbox",
       "hasActiveRuns": true,
       "latestRun": {
-        "id": 42523397862,
+        "id": 42559735392,
         "workflow": "CI",
         "status": "completed",
         "conclusion": "success",
-        "branch": "dev",
-        "commitSha": "b7d2658",
-        "fullSha": "b7d26582a040b5d5769d1879886a342b98d4e454",
-        "commitTitle": "CI runs on dev, and dev builds use unhurried-common@dev",
-        "createdAt": "2026-11-08T21:05:17Z",
-        "updatedAt": "2026-11-08T21:09:20Z",
-        "durationSeconds": 243,
-        "url": "https://github.com/Unhurried-Careers/unhurried-inbox/actions/runs/42523397862"
+        "branch": "staging",
+        "commitSha": "8708241",
+        "fullSha": "8708241cee10db012ad5c19c92e88019e32173a7",
+        "commitTitle": "Dev deploys build against unhurried-common@dev",
+        "createdAt": "2026-11-09T04:04:16Z",
+        "updatedAt": "2026-11-09T04:07:10Z",
+        "durationSeconds": 174,
+        "url": "https://github.com/Unhurried-Careers/unhurried-inbox/actions/runs/42559735392"
       },
       "runDetails": {
         "jobs": [
@@ -1211,6 +1211,28 @@
       },
       "history": [
         {
+          "id": 42559735392,
+          "branch": "staging",
+          "commitSha": "8708241",
+          "commitTitle": "Dev deploys build against unhurried-common@dev",
+          "status": "completed",
+          "conclusion": "success",
+          "durationSeconds": 174,
+          "createdAt": "2026-11-09T04:04:16Z",
+          "url": "https://github.com/Unhurried-Careers/unhurried-inbox/actions/runs/42559735392"
+        },
+        {
+          "id": 42554327492,
+          "branch": "dev",
+          "commitSha": "8708241",
+          "commitTitle": "Dev deploys build against unhurried-common@dev",
+          "status": "completed",
+          "conclusion": "success",
+          "durationSeconds": 329,
+          "createdAt": "2026-11-09T03:04:20Z",
+          "url": "https://github.com/Unhurried-Careers/unhurried-inbox/actions/runs/42554327492"
+        },
+        {
           "id": 42523397862,
           "branch": "dev",
           "commitSha": "b7d2658",
@@ -1242,28 +1264,6 @@
           "durationSeconds": 262,
           "createdAt": "2026-11-08T20:29:36Z",
           "url": "https://github.com/Unhurried-Careers/unhurried-inbox/actions/runs/42520380163"
-        },
-        {
-          "id": 42515959804,
-          "branch": "main",
-          "commitSha": "9cf9b19",
-          "commitTitle": "Remove interview slot proposals; the inbox is the calendar connection…",
-          "status": "completed",
-          "conclusion": "success",
-          "durationSeconds": 268,
-          "createdAt": "2026-11-08T19:37:31Z",
-          "url": "https://github.com/Unhurried-Careers/unhurried-inbox/actions/runs/42515959804"
-        },
-        {
-          "id": 42481912453,
-          "branch": "main",
-          "commitSha": "d674fa6",
-          "commitTitle": "CI",
-          "status": "completed",
-          "conclusion": "success",
-          "durationSeconds": 225,
-          "createdAt": "2026-11-08T12:47:53Z",
-          "url": "https://github.com/Unhurried-Careers/unhurried-inbox/actions/runs/42481912453"
         }
       ]
     },
@@ -1279,18 +1279,18 @@
       "repoUrl": "https://github.com/Unhurried-Careers/unhurried-common",
       "hasActiveRuns": true,
       "latestRun": {
-        "id": 42523384617,
+        "id": 42559727871,
         "workflow": "CI",
         "status": "completed",
         "conclusion": "success",
-        "branch": "dev",
+        "branch": "staging",
         "commitSha": "6c4cc7e",
         "fullSha": "6c4cc7e1a4b4fcbcacf8e8ab2115857102f715d3",
         "commitTitle": "CI runs on dev pushes",
-        "createdAt": "2026-11-08T21:05:09Z",
-        "updatedAt": "2026-11-08T21:06:27Z",
-        "durationSeconds": 78,
-        "url": "https://github.com/Unhurried-Careers/unhurried-common/actions/runs/42523384617"
+        "createdAt": "2026-11-09T04:04:10Z",
+        "updatedAt": "2026-11-09T04:05:43Z",
+        "durationSeconds": 93,
+        "url": "https://github.com/Unhurried-Careers/unhurried-common/actions/runs/42559727871"
       },
       "runDetails": {
         "jobs": [
@@ -1365,6 +1365,17 @@
       },
       "history": [
         {
+          "id": 42559727871,
+          "branch": "staging",
+          "commitSha": "6c4cc7e",
+          "commitTitle": "CI runs on dev pushes",
+          "status": "completed",
+          "conclusion": "success",
+          "durationSeconds": 93,
+          "createdAt": "2026-11-09T04:04:10Z",
+          "url": "https://github.com/Unhurried-Careers/unhurried-common/actions/runs/42559727871"
+        },
+        {
           "id": 42523384617,
           "branch": "dev",
           "commitSha": "6c4cc7e",
@@ -1407,17 +1418,6 @@
           "durationSeconds": 32,
           "createdAt": "2026-11-08T02:17:03Z",
           "url": "https://github.com/Unhurried-Careers/unhurried-common/actions/runs/42437866689"
-        },
-        {
-          "id": 42436377943,
-          "branch": "main",
-          "commitSha": "391b00a",
-          "commitTitle": "feat(models): target companies keep a website and an AI company profile",
-          "status": "completed",
-          "conclusion": "success",
-          "durationSeconds": 27,
-          "createdAt": "2026-11-08T01:56:25Z",
-          "url": "https://github.com/Unhurried-Careers/unhurried-common/actions/runs/42436377943"
         }
       ]
     },
@@ -1433,18 +1433,18 @@
       "repoUrl": "https://github.com/Unhurried-Careers/unhurried-web",
       "hasActiveRuns": true,
       "latestRun": {
-        "id": 42523409829,
+        "id": 42563511149,
         "workflow": "CI",
         "status": "completed",
         "conclusion": "success",
-        "branch": "dev",
-        "commitSha": "cc03c99",
-        "fullSha": "cc03c99c9a58c96a86b3eac055f838b5f8d865f1",
-        "commitTitle": "CI runs on dev pushes",
-        "createdAt": "2026-11-08T21:05:24Z",
-        "updatedAt": "2026-11-08T21:06:39Z",
-        "durationSeconds": 75,
-        "url": "https://github.com/Unhurried-Careers/unhurried-web/actions/runs/42523409829"
+        "branch": "staging",
+        "commitSha": "9bb5959",
+        "fullSha": "9bb5959249a1ee2ad94c2c2bbc32715811e35483",
+        "commitTitle": "Staging lives in unhurried-staging at staging.unhurried-careers.com",
+        "createdAt": "2026-11-09T04:45:08Z",
+        "updatedAt": "2026-11-09T04:46:13Z",
+        "durationSeconds": 65,
+        "url": "https://github.com/Unhurried-Careers/unhurried-web/actions/runs/42563511149"
       },
       "runDetails": {
         "jobs": [
@@ -1524,6 +1524,39 @@
       },
       "history": [
         {
+          "id": 42563511149,
+          "branch": "staging",
+          "commitSha": "9bb5959",
+          "commitTitle": "Staging lives in unhurried-staging at staging.unhurried-careers.com",
+          "status": "completed",
+          "conclusion": "success",
+          "durationSeconds": 65,
+          "createdAt": "2026-11-09T04:45:08Z",
+          "url": "https://github.com/Unhurried-Careers/unhurried-web/actions/runs/42563511149"
+        },
+        {
+          "id": 42563421927,
+          "branch": "dev",
+          "commitSha": "9bb5959",
+          "commitTitle": "Staging lives in unhurried-staging at staging.unhurried-careers.com",
+          "status": "completed",
+          "conclusion": "success",
+          "durationSeconds": 87,
+          "createdAt": "2026-11-09T04:44:08Z",
+          "url": "https://github.com/Unhurried-Careers/unhurried-web/actions/runs/42563421927"
+        },
+        {
+          "id": 42559745214,
+          "branch": "staging",
+          "commitSha": "cc03c99",
+          "commitTitle": "CI runs on dev pushes",
+          "status": "completed",
+          "conclusion": "success",
+          "durationSeconds": 81,
+          "createdAt": "2026-11-09T04:04:23Z",
+          "url": "https://github.com/Unhurried-Careers/unhurried-web/actions/runs/42559745214"
+        },
+        {
           "id": 42523409829,
           "branch": "dev",
           "commitSha": "cc03c99",
@@ -1544,39 +1577,6 @@
           "durationSeconds": 65,
           "createdAt": "2026-11-08T21:02:41Z",
           "url": "https://github.com/Unhurried-Careers/unhurried-web/actions/runs/42523160774"
-        },
-        {
-          "id": 42520385131,
-          "branch": "main",
-          "commitSha": "1b74dd4",
-          "commitTitle": "Get the booking link by opening Google Calendar and picking up the co…",
-          "status": "completed",
-          "conclusion": "success",
-          "durationSeconds": 98,
-          "createdAt": "2026-11-08T20:29:40Z",
-          "url": "https://github.com/Unhurried-Careers/unhurried-web/actions/runs/42520385131"
-        },
-        {
-          "id": 42518906696,
-          "branch": "main",
-          "commitSha": "6b763a8",
-          "commitTitle": "Add a dark theme that follows the device, with a light/dark choice in…",
-          "status": "completed",
-          "conclusion": "success",
-          "durationSeconds": 92,
-          "createdAt": "2026-11-08T20:12:09Z",
-          "url": "https://github.com/Unhurried-Careers/unhurried-web/actions/runs/42518906696"
-        },
-        {
-          "id": 42515969719,
-          "branch": "main",
-          "commitSha": "2e1d8c2",
-          "commitTitle": "Remove dead pipeline helpers, unused paths, styles and logo; refresh …",
-          "status": "completed",
-          "conclusion": "success",
-          "durationSeconds": 74,
-          "createdAt": "2026-11-08T19:37:37Z",
-          "url": "https://github.com/Unhurried-Careers/unhurried-web/actions/runs/42515969719"
         }
       ]
     },
@@ -1592,18 +1592,18 @@
       "repoUrl": "https://github.com/Unhurried-Careers/unhurried-extension",
       "hasActiveRuns": true,
       "latestRun": {
-        "id": 42523412581,
+        "id": 42563509689,
         "workflow": "CI",
         "status": "completed",
         "conclusion": "success",
-        "branch": "dev",
-        "commitSha": "87f27fd",
-        "fullSha": "87f27fd5cc199c8bf2dbe65358ab4214c94aa57b",
-        "commitTitle": "CI runs on dev pushes",
-        "createdAt": "2026-11-08T21:05:26Z",
-        "updatedAt": "2026-11-08T21:05:49Z",
-        "durationSeconds": 23,
-        "url": "https://github.com/Unhurried-Careers/unhurried-extension/actions/runs/42523412581"
+        "branch": "staging",
+        "commitSha": "cde3569",
+        "fullSha": "cde3569b4ffcf1989736c5dd9599c794d110d618",
+        "commitTitle": "Point the staging option at staging.unhurried-careers.com",
+        "createdAt": "2026-11-09T04:45:08Z",
+        "updatedAt": "2026-11-09T04:45:30Z",
+        "durationSeconds": 22,
+        "url": "https://github.com/Unhurried-Careers/unhurried-extension/actions/runs/42563509689"
       },
       "runDetails": {
         "jobs": [
@@ -1668,6 +1668,39 @@
       },
       "history": [
         {
+          "id": 42563509689,
+          "branch": "staging",
+          "commitSha": "cde3569",
+          "commitTitle": "Point the staging option at staging.unhurried-careers.com",
+          "status": "completed",
+          "conclusion": "success",
+          "durationSeconds": 22,
+          "createdAt": "2026-11-09T04:45:08Z",
+          "url": "https://github.com/Unhurried-Careers/unhurried-extension/actions/runs/42563509689"
+        },
+        {
+          "id": 42563427026,
+          "branch": "dev",
+          "commitSha": "cde3569",
+          "commitTitle": "Point the staging option at staging.unhurried-careers.com",
+          "status": "completed",
+          "conclusion": "success",
+          "durationSeconds": 21,
+          "createdAt": "2026-11-09T04:44:12Z",
+          "url": "https://github.com/Unhurried-Careers/unhurried-extension/actions/runs/42563427026"
+        },
+        {
+          "id": 42559747057,
+          "branch": "staging",
+          "commitSha": "87f27fd",
+          "commitTitle": "CI runs on dev pushes",
+          "status": "completed",
+          "conclusion": "success",
+          "durationSeconds": 23,
+          "createdAt": "2026-11-09T04:04:24Z",
+          "url": "https://github.com/Unhurried-Careers/unhurried-extension/actions/runs/42559747057"
+        },
+        {
           "id": 42523412581,
           "branch": "dev",
           "commitSha": "87f27fd",
@@ -1688,39 +1721,6 @@
           "durationSeconds": 33,
           "createdAt": "2026-11-08T21:02:43Z",
           "url": "https://github.com/Unhurried-Careers/unhurried-extension/actions/runs/42523163485"
-        },
-        {
-          "id": 42420696736,
-          "branch": "main",
-          "commitSha": "8ae5a84",
-          "commitTitle": "feat: list opportunities ready to apply",
-          "status": "completed",
-          "conclusion": "success",
-          "durationSeconds": 29,
-          "createdAt": "2026-11-07T22:27:30Z",
-          "url": "https://github.com/Unhurried-Careers/unhurried-extension/actions/runs/42420696736"
-        },
-        {
-          "id": 42233649823,
-          "branch": "main",
-          "commitSha": "5da805b",
-          "commitTitle": "chore: update extension version to v0.1",
-          "status": "completed",
-          "conclusion": "success",
-          "durationSeconds": 21,
-          "createdAt": "2026-11-06T14:24:35Z",
-          "url": "https://github.com/Unhurried-Careers/unhurried-extension/actions/runs/42233649823"
-        },
-        {
-          "id": 42153608434,
-          "branch": "main",
-          "commitSha": "ac50632",
-          "commitTitle": "feat(branding): add brand logo to extension popup header and sign-in …",
-          "status": "completed",
-          "conclusion": "success",
-          "durationSeconds": 27,
-          "createdAt": "2026-11-06T02:58:05Z",
-          "url": "https://github.com/Unhurried-Careers/unhurried-extension/actions/runs/42153608434"
         }
       ]
     },
@@ -1736,62 +1736,25 @@
       "repoUrl": "https://github.com/Unhurried-Careers/unhurried-infra",
       "hasActiveRuns": true,
       "latestRun": {
-        "id": 42523407064,
+        "id": 42563635010,
         "workflow": "CI",
-        "status": "completed",
-        "conclusion": "success",
+        "status": "in_progress",
+        "conclusion": "running",
         "branch": "dev",
-        "commitSha": "c83ac0f",
-        "fullSha": "c83ac0f54be4f20e1826388611f11da4c6921311",
-        "commitTitle": "CI runs on dev, and dev compares gateway specs with the services' dev…",
-        "createdAt": "2026-11-08T21:05:22Z",
-        "updatedAt": "2026-11-08T21:06:32Z",
-        "durationSeconds": 70,
-        "url": "https://github.com/Unhurried-Careers/unhurried-infra/actions/runs/42523407064"
+        "commitSha": "00d737f",
+        "fullSha": "00d737fd775853363543bed26c835cae3d63d109",
+        "commitTitle": "Grant job-search the Adzuna secrets without waiting for the service",
+        "createdAt": "2026-11-09T04:46:29Z",
+        "updatedAt": "2026-11-09T04:46:33Z",
+        "durationSeconds": 4,
+        "url": "https://github.com/Unhurried-Careers/unhurried-infra/actions/runs/42563635010"
       },
       "runDetails": {
         "jobs": [
           {
-            "name": "Checkov (informational)",
-            "conclusion": "success",
-            "status": "completed",
-            "steps": [
-              {
-                "name": "Set up job",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Pull ghcr.io/bridgecrewio/checkov:3.4.3",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Checkov",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Post Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Complete job",
-                "status": "completed",
-                "conclusion": "success"
-              }
-            ]
-          },
-          {
             "name": "Terraform fmt, validate, test",
-            "conclusion": "success",
-            "status": "completed",
+            "conclusion": "running",
+            "status": "in_progress",
             "steps": [
               {
                 "name": "Set up job",
@@ -1820,6 +1783,142 @@
               },
               {
                 "name": "validate and test each module",
+                "status": "in_progress",
+                "conclusion": ""
+              },
+              {
+                "name": "Post Run actions/checkout@v4",
+                "status": "pending",
+                "conclusion": ""
+              }
+            ]
+          },
+          {
+            "name": "Gateway specs match service repos (unhurried-resume, resume.yaml)",
+            "conclusion": "success",
+            "status": "completed",
+            "steps": [
+              {
+                "name": "Set up job",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Run actions/checkout@v4",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Mint read-only token for unhurried-resume",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Run actions/checkout@v4",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Compare specs",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Post Run actions/checkout@v4",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Post Mint read-only token for unhurried-resume",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Post Run actions/checkout@v4",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Complete job",
+                "status": "completed",
+                "conclusion": "success"
+              }
+            ]
+          },
+          {
+            "name": "Gateway specs match service repos (unhurried-notifications, notifications.yaml)",
+            "conclusion": "success",
+            "status": "completed",
+            "steps": [
+              {
+                "name": "Set up job",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Run actions/checkout@v4",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Mint read-only token for unhurried-notifications",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Run actions/checkout@v4",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Compare specs",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Post Run actions/checkout@v4",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Post Mint read-only token for unhurried-notifications",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Post Run actions/checkout@v4",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Complete job",
+                "status": "completed",
+                "conclusion": "success"
+              }
+            ]
+          },
+          {
+            "name": "Checkov (informational)",
+            "conclusion": "success",
+            "status": "completed",
+            "steps": [
+              {
+                "name": "Set up job",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Pull ghcr.io/bridgecrewio/checkov:3.4.3",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Run actions/checkout@v4",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Checkov",
                 "status": "completed",
                 "conclusion": "success"
               },
@@ -1987,110 +2086,6 @@
             ]
           },
           {
-            "name": "Gateway specs match service repos (unhurried-resume, resume.yaml)",
-            "conclusion": "success",
-            "status": "completed",
-            "steps": [
-              {
-                "name": "Set up job",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Mint read-only token for unhurried-resume",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Compare specs",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Post Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Post Mint read-only token for unhurried-resume",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Post Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Complete job",
-                "status": "completed",
-                "conclusion": "success"
-              }
-            ]
-          },
-          {
-            "name": "Gateway specs match service repos (unhurried-notifications, notifications.yaml)",
-            "conclusion": "success",
-            "status": "completed",
-            "steps": [
-              {
-                "name": "Set up job",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Mint read-only token for unhurried-notifications",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Compare specs",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Post Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Post Mint read-only token for unhurried-notifications",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Post Run actions/checkout@v4",
-                "status": "completed",
-                "conclusion": "success"
-              },
-              {
-                "name": "Complete job",
-                "status": "completed",
-                "conclusion": "success"
-              }
-            ]
-          },
-          {
             "name": "Gateway specs match service repos (unhurried-job-search, job-search.yaml)",
             "conclusion": "success",
             "status": "completed",
@@ -2146,59 +2141,59 @@
       },
       "history": [
         {
-          "id": 42523407064,
+          "id": 42563635010,
           "branch": "dev",
-          "commitSha": "c83ac0f",
-          "commitTitle": "CI runs on dev, and dev compares gateway specs with the services' dev…",
-          "status": "completed",
-          "conclusion": "success",
-          "durationSeconds": 70,
-          "createdAt": "2026-11-08T21:05:22Z",
-          "url": "https://github.com/Unhurried-Careers/unhurried-infra/actions/runs/42523407064"
+          "commitSha": "00d737f",
+          "commitTitle": "Grant job-search the Adzuna secrets without waiting for the service",
+          "status": "in_progress",
+          "conclusion": "running",
+          "durationSeconds": 4,
+          "createdAt": "2026-11-09T04:46:29Z",
+          "url": "https://github.com/Unhurried-Careers/unhurried-infra/actions/runs/42563635010"
         },
         {
-          "id": 42523157003,
+          "id": 42563429403,
+          "branch": "dev",
+          "commitSha": "0909f05",
+          "commitTitle": "README: runbook for adding an environment, from bringing up staging",
+          "status": "completed",
+          "conclusion": "success",
+          "durationSeconds": 68,
+          "createdAt": "2026-11-09T04:44:13Z",
+          "url": "https://github.com/Unhurried-Careers/unhurried-infra/actions/runs/42563429403"
+        },
+        {
+          "id": 42563297805,
+          "branch": "dev",
+          "commitSha": "a41039b",
+          "commitTitle": "Dev and staging send alerts through Resend and search Adzuna, like pr…",
+          "status": "completed",
+          "conclusion": "cancelled",
+          "durationSeconds": 95,
+          "createdAt": "2026-11-09T04:42:41Z",
+          "url": "https://github.com/Unhurried-Careers/unhurried-infra/actions/runs/42563297805"
+        },
+        {
+          "id": 42559537238,
           "branch": "staging",
-          "commitSha": "9e6377e",
-          "commitTitle": "Sync inbox gateway spec: drop retrieve-appointment",
+          "commitSha": "6145675",
+          "commitTitle": "Turn on staging: unhurried-staging project at staging.unhurried-caree…",
           "status": "completed",
-          "conclusion": "success",
-          "durationSeconds": 74,
-          "createdAt": "2026-11-08T21:02:39Z",
-          "url": "https://github.com/Unhurried-Careers/unhurried-infra/actions/runs/42523157003"
+          "conclusion": "failure",
+          "durationSeconds": 27,
+          "createdAt": "2026-11-09T04:02:03Z",
+          "url": "https://github.com/Unhurried-Careers/unhurried-infra/actions/runs/42559537238"
         },
         {
-          "id": 42520382217,
-          "branch": "main",
-          "commitSha": "9e6377e",
-          "commitTitle": "Sync inbox gateway spec: drop retrieve-appointment",
+          "id": 42559515848,
+          "branch": "dev",
+          "commitSha": "6145675",
+          "commitTitle": "Turn on staging: unhurried-staging project at staging.unhurried-caree…",
           "status": "completed",
-          "conclusion": "success",
-          "durationSeconds": 75,
-          "createdAt": "2026-11-08T20:29:37Z",
-          "url": "https://github.com/Unhurried-Careers/unhurried-infra/actions/runs/42520382217"
-        },
-        {
-          "id": 42515967560,
-          "branch": "main",
-          "commitSha": "fd52a85",
-          "commitTitle": "Remove unused Pub/Sub topics and IAM, the placeholder OpenAI secret, …",
-          "status": "completed",
-          "conclusion": "success",
-          "durationSeconds": 75,
-          "createdAt": "2026-11-08T19:37:36Z",
-          "url": "https://github.com/Unhurried-Careers/unhurried-infra/actions/runs/42515967560"
-        },
-        {
-          "id": 42507227147,
-          "branch": "main",
-          "commitSha": "c5a8d56",
-          "commitTitle": "fix(auth): run Google sign-in on the custom domain",
-          "status": "completed",
-          "conclusion": "success",
-          "durationSeconds": 76,
-          "createdAt": "2026-11-08T17:53:47Z",
-          "url": "https://github.com/Unhurried-Careers/unhurried-infra/actions/runs/42507227147"
+          "conclusion": "failure",
+          "durationSeconds": 29,
+          "createdAt": "2026-11-09T04:01:48Z",
+          "url": "https://github.com/Unhurried-Careers/unhurried-infra/actions/runs/42559515848"
         }
       ]
     },
@@ -2214,18 +2209,18 @@
       "repoUrl": "https://github.com/Unhurried-Careers/unhurried-product",
       "hasActiveRuns": true,
       "latestRun": {
-        "id": 42535141321,
+        "id": 42563707920,
         "workflow": "CI/CD Pipeline Dashboard",
         "status": "in_progress",
         "conclusion": "running",
         "branch": "dev",
-        "commitSha": "dcc0d87",
-        "fullSha": "dcc0d87e0d421840a0a968eb05ad0e2cdc6111d3",
+        "commitSha": "3a434ca",
+        "fullSha": "3a434cae21ec2331604a61b1eb3ffebe8b8fc079",
         "commitTitle": "CI/CD Pipeline Dashboard",
-        "createdAt": "2026-11-08T23:25:56Z",
-        "updatedAt": "2026-11-08T23:26:00Z",
-        "durationSeconds": 4,
-        "url": "https://github.com/Unhurried-Careers/unhurried-product/actions/runs/42535141321"
+        "createdAt": "2026-11-09T04:47:19Z",
+        "updatedAt": "2026-11-09T04:47:22Z",
+        "durationSeconds": 3,
+        "url": "https://github.com/Unhurried-Careers/unhurried-product/actions/runs/42563707920"
       },
       "runDetails": {
         "jobs": [
@@ -2305,13 +2300,24 @@
       },
       "history": [
         {
+          "id": 42563707920,
+          "branch": "dev",
+          "commitSha": "3a434ca",
+          "commitTitle": "CI/CD Pipeline Dashboard",
+          "status": "in_progress",
+          "conclusion": "running",
+          "durationSeconds": 3,
+          "createdAt": "2026-11-09T04:47:19Z",
+          "url": "https://github.com/Unhurried-Careers/unhurried-product/actions/runs/42563707920"
+        },
+        {
           "id": 42535141321,
           "branch": "dev",
           "commitSha": "dcc0d87",
           "commitTitle": "CI/CD Pipeline Dashboard",
-          "status": "in_progress",
-          "conclusion": "running",
-          "durationSeconds": 4,
+          "status": "completed",
+          "conclusion": "success",
+          "durationSeconds": 39,
           "createdAt": "2026-11-08T23:25:56Z",
           "url": "https://github.com/Unhurried-Careers/unhurried-product/actions/runs/42535141321"
         },
@@ -2347,17 +2353,6 @@
           "durationSeconds": 33,
           "createdAt": "2026-11-08T19:38:34Z",
           "url": "https://github.com/Unhurried-Careers/unhurried-product/actions/runs/42516050279"
-        },
-        {
-          "id": 42511110605,
-          "branch": "main",
-          "commitSha": "c97ef3b",
-          "commitTitle": "CI/CD Pipeline Dashboard",
-          "status": "completed",
-          "conclusion": "success",
-          "durationSeconds": 41,
-          "createdAt": "2026-11-08T18:39:45Z",
-          "url": "https://github.com/Unhurried-Careers/unhurried-product/actions/runs/42511110605"
         }
       ]
     }
