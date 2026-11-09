@@ -19,7 +19,7 @@ The product reasoning behind the features is in [MOTIVATION.md](../MOTIVATION.md
 | | |
 | --- | --- |
 | Production | https://unhurried-careers.com (`main` branch), Google Cloud project `project-191091d4-b2e5-4294-9e7` |
-| Staging | https://unhurried-careers-staging-web.web.app (`staging` branch), project not created yet |
+| Staging | https://staging.unhurried-careers.com (`staging` branch), Google Cloud project `unhurried-staging` |
 | Frontend | React + TypeScript single-page app on Firebase Hosting |
 | Backend | Five Go services on Cloud Run, each behind its own API Gateway |
 | Data | Cloud Firestore (Native mode), Cloud KMS for Google Calendar and Google Drive tokens |

@@ -11,7 +11,7 @@ Unhurried splits **Continuous Integration (CI)** and **Continuous Delivery (CD)*
 | --- | --- | --- | --- |
 | `dev` | `.github/workflows/ci.yml` | None: CI only, the default branch where work happens | Active |
 | `main` | `.github/workflows/ci.yml` | Production (`project-191091d4-b2e5-4294-9e7`), https://unhurried-careers.com (`production` Cloud Deploy target) | Active |
-| `staging` | `.github/workflows/ci.yml` | Staging (`STAGING_PROJECT_ID`), https://unhurried-careers-staging-web.web.app (`staging` Cloud Deploy target) | Branches and `envs/staging` ready; turns on as soon as the staging GCP project is created and applied |
+| `staging` | `.github/workflows/ci.yml` | Staging (`unhurried-staging`), https://staging.unhurried-careers.com (`staging` Cloud Deploy target) | Active |
 | pull requests | `.github/workflows/ci.yml` | None (never touches GCP) | Active |
 | `06:00 UTC` daily cron | `.github/workflows/ci.yml` (Go services + `unhurried-infra`) | None | Active |
 
