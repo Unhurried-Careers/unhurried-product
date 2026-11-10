@@ -38,6 +38,7 @@ jobs:
             'docs/codebase.md',
             'docs/promotion.md',
             'docs/security.md',
+            'docs/versioning.md',
             'docs/status.md',
           ];
           for (const doc of requiredDocs) {

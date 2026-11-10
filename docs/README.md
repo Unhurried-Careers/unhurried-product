@@ -11,6 +11,7 @@ This folder is the reference for how the system is built, delivered, and secured
 | [CI/CD](ci-cd.md) | Branches and environments, GitHub Actions CI checks, Google Cloud Build & Cloud Deploy CD rollouts, least-privilege service accounts, secrets, and operational runbooks |
 | [Promotion criteria](promotion.md) | What must be true before a change moves from dev to staging and from staging to production, with checklists and the commands to check them |
 | [Security](security.md) | The threat model and every control, layer by layer: identity, API protection, service-to-service trust, data, secrets, Google Calendar and Drive, the extension, supply chain, and CI/CD |
+| [Versioning policy](versioning.md) | Semantic Versioning across the app and APIs, header standards, and the update-on-each-commit rule |
 | [Implementation status](status.md) | Which features are fully working, which are partial or stubbed, and the known gaps and risks |
 
 The product reasoning behind the features is in [MOTIVATION.md](../MOTIVATION.md).

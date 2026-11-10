@@ -35,7 +35,7 @@ Every arrow out of a stage is a **gate**: the server refuses the move until that
 
 ## Documentation
 
-Full documentation is in [docs/](docs/README.md): [architecture](docs/architecture.md), [codebase guide](docs/codebase.md), [CI/CD](docs/ci-cd.md), [security](docs/security.md), and [implementation status](docs/status.md).
+Full documentation is in [docs/](docs/README.md): [architecture](docs/architecture.md), [codebase guide](docs/codebase.md), [CI/CD](docs/ci-cd.md), [security](docs/security.md), [versioning policy](docs/versioning.md), and [implementation status](docs/status.md).
 
 ## CI/CD status
 
