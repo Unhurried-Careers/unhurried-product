@@ -128,10 +128,9 @@ Cloud Run's IAM binding enforces the same caller list a second time. Cloud Run i
 
 | Secret | Where it lives | Who can read it |
 | --- | --- | --- |
-| Google OAuth client secret | Secret Manager `unhurried-google-oauth-client-secret`; Identity Platform config; Terraform state; local gitignored `envs/prod/terraform.tfvars` | Inbox and resume service accounts; project owners; the `unhurried-terraform` Cloud Build account |
+| Google OAuth client secret | Secret Manager `unhurried-google-oauth-client-secret`; Identity Platform config; Terraform state; local gitignored `envs/prod/terraform.tfvars` | Resume service account; project owners; the `unhurried-terraform` Cloud Build account |
 | Web build configuration (includes the browser API key) | Secret Manager `unhurried-web-build-config` | `unhurried-web-deployer` service account |
-| Google Calendar refresh tokens (per user) | Firestore, sealed with Cloud KMS | Inbox service account (decrypt) |
-| Google Drive refresh tokens (per user) | Firestore, sealed with a separate Cloud KMS key | Resume service account (decrypt) |
+| Google Drive refresh tokens (per user) | Firestore, sealed with a Cloud KMS key | Resume service account (decrypt) |
 | Cross-repo GitHub clone tokens (CD) | Ephemeral tokens minted on demand via Cloud Build v2 `repositories:accessReadToken` (never stored) | `unhurried-builder` and `unhurried-terraform` service accounts |
 | Cross-repo GitHub App credentials (CI) | GitHub Actions repository secrets `CI_APP_CLIENT_ID` and `CI_APP_PRIVATE_KEY` for internal `Unhurried-Careers CI Reader` App (`Contents: Read-only` only; mints downscoped, auto-revoked tokens via `actions/create-github-app-token@v3`) | `.github/workflows/ci.yml` in the 5 Go services (downscoped to `unhurried-common`) and `unhurried-infra` (downscoped per matrix service repo) |
 | SMTP relay password (alert emails) | Secret Manager `unhurried-smtp-password` (only once `smtp_password` is set); Terraform state | Notifications service account; project owners; the `unhurried-terraform` Cloud Build account |

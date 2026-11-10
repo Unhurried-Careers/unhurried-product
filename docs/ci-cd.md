@@ -69,7 +69,7 @@ Why a Cloud Deploy **Custom Target Type** (`cloud-run-image`) instead of the bui
 | Plane | File | Steps |
 | --- | --- | --- |
 | **CI (GitHub Actions)** | `.github/workflows/ci.yml` | `npm ci` · `npm run typecheck` · `npm run test:coverage` (85% lines, 75% branches) + coverage summary & artifact · production build smoke check · `npm audit --omit=dev --audit-level=high` |
-| **CD (Cloud Build)** | `cloudbuild.yaml` | `npm ci` · injects `unhurried-web-build-config` from Secret Manager via `availableSecrets` + `_CANONICAL_ORIGIN` · builds `dist/` without leaking `WEB_BUILD_CONFIG` to logs · verifies `dist/assets` embeds `VITE_FIREBASE_PROJECT_ID` and `VITE_INBOX_API` with zero `localhost:80xx` URLs · publishes via `npx firebase target:apply` and `npx firebase deploy --only hosting:web --message "$COMMIT_SHA"` as `unhurried-web-deployer` |
+| **CD (Cloud Build)** | `cloudbuild.yaml` | `npm ci` · injects `unhurried-web-build-config` from Secret Manager via `availableSecrets` + `_CANONICAL_ORIGIN` · builds `dist/` without leaking `WEB_BUILD_CONFIG` to logs · verifies `dist/assets` embeds `VITE_FIREBASE_PROJECT_ID`, `VITE_APPLICATIONS_API`, and `VITE_PROFILE_API` with zero `localhost:80xx` URLs · publishes via `npx firebase target:apply` and `npx firebase deploy --only hosting:web --message "$COMMIT_SHA"` as `unhurried-web-deployer` |
 
 ### `unhurried-extension`
 
