@@ -73,8 +73,9 @@ Why a Cloud Deploy **Custom Target Type** (`cloud-run-image`) instead of the bui
 
 ### `unhurried-extension`
 
-- **CI (`.github/workflows/ci.yml`)**: `npm ci`, `npm run test:coverage` (90% line threshold), `npm run build`, Manifest V3 assertion on `dist/manifest.json`, and `dist/` workflow artifact upload.
+- **CI (`.github/workflows/ci.yml`)**: `npm ci`, `npm run test:coverage` (90% line threshold), `npm run package`, Manifest V3 assertion on `dist/manifest.json`, and `dist/` workflow artifact upload (including `unhurried-extension.zip`).
 - **CD (`cloudbuild.yaml`)**: `npm ci && npm run build`, Manifest V3 assertion on `dist/manifest.json`, and archives `unhurried-extension-${COMMIT_SHA}.tar.gz` to `gs://<project>-cicd-artifacts/extension/`.
+- **Store CD (`.github/workflows/deploy-cws.yml`)**: on pushes to `main` or manual trigger, builds, packages, and deploys `unhurried-extension.zip` directly to the Chrome Web Store via the Chrome Web Store API (`scripts/publish-cws.mjs`).
 
 ### `unhurried-infra`
 
