@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+    branches: [dev, staging, main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate docs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Verify documents and links
+        run: |
+          node -e "
+          const fs = require('fs');
+          const path = require('path');
+          const requiredDocs = [
+            'README.md',
+            'MOTIVATION.md',
+            'docs/README.md',
+            'docs/architecture.md',
+            'docs/ci-cd.md',
+            'docs/codebase.md',
+            'docs/promotion.md',
+            'docs/security.md',
+            'docs/status.md',
+          ];
+          for (const doc of requiredDocs) {
+            if (!fs.existsSync(doc) || fs.statSync(doc).size === 0) {
+              console.error('Missing or empty required document: ' + doc);
+              process.exit(1);
+            }
+          }
+          let failed = false;
+          function walk(dir) {
+            for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+              if (entry.name === '.git' || entry.name === 'node_modules') continue;
+              const full = path.join(dir, entry.name);
+              if (entry.isDirectory()) walk(full);
+              else if (entry.name.endsWith('.md')) {
+                const content = fs.readFileSync(full, 'utf8');
+                const matches = content.matchAll(/\[.*?\]\((?!https?:\/\/|mailto:|#)(.*?)\)/g);
+                for (const m of matches) {
+                  const target = m[1].split('#')[0];
+                  if (!target) continue;
+                  const targetPath = path.resolve(dir, target);
+                  if (!fs.existsSync(targetPath)) {
+                    console.error('Broken link in ' + full + ': ' + m[1] + ' -> ' + targetPath);
+                    failed = true;
+                  }
+                }
+              }
+            }
+          }
+          walk('.');
+          if (failed) process.exit(1);
+          console.log('All documents and internal markdown links verified successfully.');
+          "
