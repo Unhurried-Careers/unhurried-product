@@ -6,13 +6,12 @@ Unhurried is a deliberate, privacy-first job search process built on Google Clou
 
 ## 1. System Topology
 
-Unhurried consists of six Go microservices, a React 18 TypeScript web application, a Chrome Manifest V3 browser extension, and supporting Google Cloud managed services.
+Unhurried consists of four Go microservices, a React 18 TypeScript web application, and supporting Google Cloud managed services.
 
 ```mermaid
 flowchart TD
   subgraph Clients["Client Tier"]
     WEB["Browser SPA<br/>(unhurried-web: React 18 / Vite)"]
-    EXT["Chrome Extension MV3<br/>(unhurried-extension: Apply Assistant)"]
   end
 
   subgraph Edge["Edge & Ingress Tier"]
@@ -25,7 +24,6 @@ flowchart TD
       GW2["resume-gw"]
       GW3["applications-gw"]
       GW4["notifications-gw"]
-      GW5["profile-gw"]
     end
   end
 
@@ -34,7 +32,6 @@ flowchart TD
     S2["unhurried-resume<br/>(Google Docs Workspace, AI Tailoring)"]
     S3["unhurried-applications<br/>(Opportunity Pipeline & Gates, Outreach, Conversations, Rounds, Prep & Debrief)"]
     S4["unhurried-notifications<br/>(Alert Preferences, Resend SMTP Relay)"]
-    S5["unhurried-profile<br/>(User Profiles, LinkedIn Import, Public Profile Pages)"]
   end
 
   subgraph Managed["GCP Managed Platform & Data Tier"]
@@ -55,15 +52,12 @@ flowchart TD
   WEB -->|"static assets"| FH
   WEB -->|"Google OAuth"| FA
   WEB -->|"attestation"| AC
-  EXT -.->|"window.postMessage relay"| WEB
   WEB -->|"HTTPS + ID Token + App Check + x-api-key"| Gateways
 
   GW1 -->|"IAM invoke"| S1
   GW2 -->|"IAM invoke"| S2
   GW3 -->|"IAM invoke"| S3
   GW4 -->|"IAM invoke"| S4
-  GW5 -->|"IAM invoke"| S5
-  GW6 -->|"IAM invoke"| S6
 
   SCH -->|"POST /internal/scan (OIDC)"| S1
   S1 -->|"POST /internal/job-digest (OIDC)"| S4
@@ -87,10 +81,9 @@ flowchart TD
 
 | Tier | Components | Responsibilities |
 | --- | --- | --- |
-| **Frontend** | `unhurried-web` | React 18 single-page application built with TypeScript and Vite. Deployed to Firebase Hosting (`unhurried-careers.com`). Walks the user through the process: Direction, Research, Discover, the Pipeline, and one page per opportunity with a stage stepper; plus Conversations, Resume Studio (Google Picker), Interviews, Profile management, public career profiles (`/p/:slug`), and Settings. |
-| **Extension** | `unhurried-extension` | Chrome Manifest V3 apply assistant. Communicates exclusively through the active signed-in tab of `unhurried-web` via `window.postMessage`. Lists the opportunities whose resume is ready, extracts LinkedIn profiles for one-click import into Unhurried, detects ATS platforms (Greenhouse, Lever, Ashby, Workday), pre-fills applicant data, and records submissions without storing user credentials or auto-submitting. |
-| **API Gateways** | 6 managed Google API Gateways | Validates caller API keys, rate limits client traffic (300 req/min per service), validates Firebase ID tokens (signature, issuer, audience), and invokes Cloud Run backend services via dedicated gateway service accounts. Also routes public profile endpoints (`/v1/public/*`) without authentication. |
-| **Compute** | 6 Go Cloud Run services | Containerized Go applications (`golang:alpine` build, `gcr.io/distroless/static-debian13:nonroot` runtime). Each enforces ownership scoping, App Check attestation, user email allowlisting, and specific domain rules. |
+| **Frontend** | `unhurried-web` | React 18 single-page application built with TypeScript and Vite. Deployed to Firebase Hosting (`unhurried-careers.com`). Walks the user through the process: Direction, Research, Discover, the Pipeline, and one page per opportunity with a stage stepper; plus Conversations, Resume Studio (Google Picker), Interviews, and Settings. |
+| **API Gateways** | 4 managed Google API Gateways | Validates caller API keys, rate limits client traffic (300 req/min per service), validates Firebase ID tokens (signature, issuer, audience), and invokes Cloud Run backend services via dedicated gateway service accounts. |
+| **Compute** | 4 Go Cloud Run services | Containerized Go applications (`golang:alpine` build, `gcr.io/distroless/static-debian13:nonroot` runtime). Each enforces ownership scoping, App Check attestation, user email allowlisting, and specific domain rules. |
 | **Data & Secrets** | Firestore, KMS, Secret Manager | Cloud Firestore (Native mode, `us-central1`) for document persistence. Cloud KMS key ring `unhurried` for envelope encryption of external OAuth tokens. Secret Manager for sensitive third-party credentials. |
 | **AI & External APIs** | Vertex AI, Google Workspace, Resend | Vertex AI Gemini 3.5 Flash for structured resume tailoring (resume service) and for research summaries with Google Search grounding and sources (job-search service). Google Drive & Docs APIs for document management. Resend SMTP for outbound alert delivery. |
 
@@ -377,7 +370,7 @@ flowchart TD
 
 ## 8. Data Model & Firestore Persistence
 
-All five backend services utilize Cloud Firestore (Native mode in `us-central1`) for document persistence. Client direct access to Firestore is permanently disabled via security rules (`allow read, write: if false;`), ensuring all data access is mediated through the Go backend services.
+All four backend services utilize Cloud Firestore (Native mode in `us-central1`) for document persistence. Client direct access to Firestore is permanently disabled via security rules (`allow read, write: if false;`), ensuring all data access is mediated through the Go backend services.
 
 | Service | Firestore Collection | Document ID Scheme | Scoped By | Purpose |
 | --- | --- | --- | --- | --- |
@@ -392,8 +385,6 @@ All five backend services utilize Cloud Firestore (Native mode in `us-central1`)
 | **`applications`**| `conversation_settings` | User ID (`userID`) | `userId` | User Google Calendar booking page link and availability notes |
 | **`applications`**| `opportunity_rounds` | Random UUID (`ids.New()`) | `userId` | Interview rounds of an applied opportunity: skills to show/shown, learnings, interviews with video links, prep checklist, debrief reflection |
 | **`notifications`**| `notification_preferences` | User ID (`userID`) | `userId` | Alert preferences, destination email, enabled toggle |
-| **`profile`** | `profiles` | User ID (`userID`) | `userId` | Structured user profile, LinkedIn import, experience, skills, education, visibility toggle |
-| **`profile`** | `profile_slugs`| Normalized custom slug | `userId` | Unique slug registry mapping public URLs to user IDs |
 
 > [!NOTE]
 > Queries against Firestore use equality filters (`Where("userId", "==", userID)`) and sort in Go memory, eliminating the need for composite index maintenance. Every document contains a `userId` field, and foreign lookups return `404 Not Found` rather than `403 Forbidden` to prevent object identifier enumeration.
@@ -405,7 +396,6 @@ All five backend services utilize Cloud Firestore (Native mode in `us-central1`)
 | Area | Technology & Tooling | Version / Configuration |
 | --- | --- | --- |
 | **Frontend** | React, TypeScript, Vite, React Router, Firebase JS SDK | React 18, TypeScript 5, Vite 5, React Router v7, Firebase SDK v13 |
-| **Extension** | Vanilla JavaScript, Chrome Extensions Manifest V3 | Manifest V3, content scripts, background service worker |
 | **Backend Services** | Go, Standard Library `net/http` | Go 1.23+ modules, Go 1.27 Alpine build, Distroless Debian 13 runtime |
 | **AI Engine** | Google Cloud Vertex AI | Gemini 3.5 Flash (`gemini-3.5-flash`), location `global` |
 | **Database** | Google Cloud Firestore | Native Mode, delete protection enabled, `us-central1` |

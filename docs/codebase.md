@@ -1,17 +1,15 @@
 # Codebase guide
 
-The system is split into 12 repositories in the [Unhurried-Careers](https://github.com/Unhurried-Careers) organization. Locally they sit side by side in one `Unhurried/` folder, because the Go services import `unhurried-common` through a relative `replace github.com/unhurried/common => ../unhurried-common` in `go.mod`.
+The system is split into 8 active repositories in the [Unhurried-Careers](https://github.com/Unhurried-Careers) organization. Locally they sit side by side in one `Unhurried/` folder, because the Go services import `unhurried-common` through a relative `replace github.com/unhurried/common => ../unhurried-common` in `go.mod`.
 
 | Repository | Language | Purpose |
 | --- | --- | --- |
 | [unhurried-common](#unhurried-common) | Go | Shared library: auth, HTTP hardening, validation, models, IDs |
 | [unhurried-job-search](#unhurried-job-search) | Go | Direction (target companies, roles, requirements), research notes and AI summaries, discovery of postings |
 | [unhurried-resume](#unhurried-resume) | Go | Resumes as Google Docs in the user's Drive: master resume, tailored copies per opportunity, edits |
-| [unhurried-applications](#unhurried-applications) | Go | The opportunity pipeline and its gates, conversations, interview rounds, prep & debrief notes, extension API |
+| [unhurried-applications](#unhurried-applications) | Go | The opportunity pipeline and its gates, conversations, interview rounds, prep & debrief notes |
 | [unhurried-notifications](#unhurried-notifications) | Go | Email digests of new postings for the user's targets |
-| [unhurried-profile](#unhurried-profile) | Go | User profile management, LinkedIn profile import, and public/private profile view |
 | [unhurried-web](#unhurried-web) | TypeScript | React single-page app |
-| [unhurried-extension](#unhurried-extension) | JavaScript | Chrome apply assistant |
 | [unhurried-infra](#unhurried-infra) | Terraform | All cloud resources, gateway specs, CI/CD identities |
 | unhurried-product | Markdown | Product README, motivation, and this documentation |
 | [unhurried-ops](https://github.com/Unhurried-Careers/unhurried-ops) | JavaScript, Terraform | Live CI/CD status dashboard: collector on Cloud Run, Firebase Hosting site, and the ops project's infrastructure |
@@ -36,7 +34,7 @@ cloudbuild.yaml           GCP CD: SLSA VERIFIED image push + Google Cloud Deploy
 - **Handlers** decode with `httpx.DecodeOrReject` (400 on bad JSON, 413 over 1 MiB), validate with `validate.Errors`, read the caller with `auth.FromContext`, and answer with `httpx.JSON`, `httpx.Error`, or `httpx.ServerError` (logs the cause, returns a generic message).
 - **Ownership**: every user-facing lookup takes the caller's user ID; another user's record answers 404, not 403, so IDs cannot be probed.
 - **Health**: `GET /health` (used by CI smoke tests and gateways). Skips auth.
-- **Ports** locally: job-search 8081, resume 8082, applications 8083, notifications 8084, profile 8086. Containers listen on `PORT=8080`.
+- **Ports** locally: job-search 8081, resume 8082, applications 8083, notifications 8084. Containers listen on `PORT=8080`.
 
 ### Common environment variables
 
@@ -51,7 +49,7 @@ Read by `unhurried-common/auth` and `httpx` in every service:
 | `INTERNAL_AUDIENCE` | Audience expected on `/internal/*` OIDC tokens (`unhurried-internal`) |
 | `INTERNAL_CALLERS` | Service accounts allowed on `/internal/*`; empty rejects all internal calls |
 | `CORS_ALLOWED_ORIGINS` | Browser origins allowed; defaults to the local Vite server |
-| `STORE=firestore` | Use Firestore (supported across all five services: applications, resume, job-search, notifications, profile) |
+| `STORE=firestore` | Use Firestore (supported across all four services: applications, resume, job-search, notifications) |
 | `PORT` | Listen port |
 
 Terraform sets all of these on Cloud Run (`envs/<env>/main.tf`, `local.commons`).
@@ -210,27 +208,6 @@ internal/store/  Store interface; Memory and Firestore implementations (notifica
 
 Emails go only to users who turned alerts on; responses report `sent`, `skipped`, or `logged`. Job fields are escaped in the HTML email and only https links are accepted. Configuration: `SMTP_HOST` (default `smtp.resend.com`; unset logs emails instead of sending), `SMTP_PORT` (default 587), `SMTP_USERNAME` (`resend`), `SMTP_PASSWORD` (from Secret Manager `unhurried-smtp-password`), `MAIL_FROM` (`Unhurried <alerts@unhurried-careers.com>`), `APP_URL` (links in emails).
 
-## unhurried-profile
-
-```
-internal/api/api.go         routes, handlers, and server setup
-internal/profile/profile.go domain logic, slug normalization, LinkedIn payload parser, validation
-internal/store/store.go     Store interface and in-memory store
-internal/store/firestore.go Cloud Firestore implementation (profiles collection)
-cmd/server/main.go          service entrypoint and wiring
-openapi.yaml                Swagger 2.0 API Gateway specification
-```
-
-| Endpoint | Purpose |
-| --- | --- |
-| `GET /health` | Health check (public) |
-| `GET /v1/profile` | Get current user's profile |
-| `PUT /v1/profile` | Update profile details, custom slug, and public/private status |
-| `POST /v1/profile/import-linkedin` | Parse and import profile details extracted from LinkedIn |
-| `GET /v1/public/profiles/{slug}` | Public unauthenticated profile view (returns 404 if not found or private) |
-
-Configuration: `PORT` (defaults to 8086 locally, 8080 in container), `STORE` (`memory` or `firestore`), `ALLOWED_EMAILS`, `PROJECT_ID`, `FIREBASE_PROJECT_ID`.
-
 ## unhurried-web
 
 ```
@@ -269,21 +246,6 @@ firebase.json             Hosting: SPA rewrite, caching, security headers
 
 Signed-out visitors to `/app/*` see the sign-in screen (popup with `prompt=select_account`). Build-time configuration is `VITE_*` variables (`.env.example`); deployed builds read them from the `unhurried-web-build-config` secret. `VITE_AUTH_MODE=dev` with `VITE_TOKEN=user:<id>` works against services running with `AUTH_DEV_BYPASS=true`.
 
-## unhurried-extension
-
-```
-manifest.json   MV3: storage, activeTab, scripting; host access to the Unhurried web app only
-content.js      form filler for Greenhouse, Lever, Workday, Ashby
-bridge.js       content script on the Unhurried web app; relays requests to extensionBridge.ts
-background.js   service worker: finds or opens an Unhurried tab, relays five operations
-                (status, listReady, fillPayload, recordSubmit, saveTracking)
-popup.html/js   choose an opportunity that is ready to apply, open its tailored resume, fill the page,
-                record the submit, save portal details, settings
-build.mjs       copies the files into dist/
-```
-
-The extension holds no tokens: requests go popup → background → `bridge.js` in a signed-in Unhurried tab → `window.postMessage` → `extensionBridge.ts`, which calls the API with the page's own credentials. The filler skips files, passwords, hidden fields, checkboxes, free-text questions, and fields the user already filled, and never submits.
-
 ## unhurried-infra
 
 ```
@@ -310,7 +272,6 @@ $env:PORT = "8081"; go -C unhurried-job-search run ./cmd/server
 $env:PORT = "8082"; go -C unhurried-resume run ./cmd/server
 $env:PORT = "8083"; go -C unhurried-applications run ./cmd/server
 $env:PORT = "8084"; go -C unhurried-notifications run ./cmd/server
-$env:PORT = "8086"; go -C unhurried-profile run ./cmd/server
 cd unhurried-web; npm ci; npm run dev   # .env.local with VITE_AUTH_MODE=dev
 ```
 
@@ -319,6 +280,5 @@ cd unhurried-web; npm ci; npm run dev   # .env.local with VITE_AUTH_MODE=dev
 | Repo | Command | What is covered |
 | --- | --- | --- |
 | Go services, common | `go test ./...` (CI adds `-race` and coverage) | Handlers through `httptest`, ownership scoping, validation, every pipeline gate as table tests, the decided-opportunity limit, discovery and AI summaries with fake boards and a fake Gemini, auth verifiers with test keys, board clients against local servers, store contract (memory; Firestore when `FIRESTORE_EMULATOR_HOST` is set) |
-| unhurried-web | `npm test`, `npm run test:coverage` | Each stage form, the gate messages and the stepper, pages, API client headers and paths, auth, Firebase config, Hosting config, extension bridge; thresholds 85% lines, 75% branches |
-| unhurried-extension | `npm test`, `npm run test:coverage` | Filler, bridge, popup, background relay, manifest permissions; 90% line threshold |
+| unhurried-web | `npm test`, `npm run test:coverage` | Each stage form, the gate messages and the stepper, pages, API client headers and paths, auth, Firebase config, Hosting config; thresholds 85% lines, 75% branches |
 | unhurried-infra | `terraform -chdir=<dir> test` | Every module and both environments with mocked providers: IAM bindings, deploy restrictions, key restrictions, internal audiences, custom domain wiring, Vertex AI grants for resume and job-search |

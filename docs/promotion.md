@@ -110,7 +110,7 @@ gcloud builds list --project=$PROJECT --region=us-central1 --limit=15 \
   --format="table(createTime.date(),substitutions.TRIGGER_NAME,substitutions.SHORT_SHA,status)"
 
 # Latest release of each service
-for s in unhurried-applications unhurried-job-search unhurried-notifications unhurried-profile unhurried-resume; do
+for s in unhurried-applications unhurried-job-search unhurried-notifications unhurried-resume; do
   gcloud deploy releases list --delivery-pipeline=$s --project=$PROJECT --region=us-central1 --limit=1 \
     --format="value(name.basename(),renderState)"
 done

@@ -24,7 +24,7 @@ The product reasoning behind the features is in [MOTIVATION.md](../MOTIVATION.md
 | Staging | https://staging.unhurried-careers.com (`staging` branch), Google Cloud project `unhurried-staging` |
 | Dev | https://dev.unhurried-careers.com (`dev` branch), Google Cloud project `unhurried-dev` |
 | Frontend | React + TypeScript single-page app on Firebase Hosting |
-| Backend | Six Go services on Cloud Run, each behind its own API Gateway |
+| Backend | Four Go services on Cloud Run, each behind its own API Gateway |
 | Data | Cloud Firestore (Native mode), Cloud KMS for Google Drive tokens |
 | Identity | Google sign-in through Firebase Authentication (Identity Platform), App Check with reCAPTCHA Enterprise |
 | Infrastructure | Terraform, applied by Google Cloud Build |

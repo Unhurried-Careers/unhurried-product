@@ -38,9 +38,8 @@ flowchart LR
       CD -->|verify revision + gateway /health| GW["API Gateway"]
     end
 
-    subgraph Web_Infra["Web, Extension & Infra"]
+    subgraph Web_Infra["Web & Infra"]
       CB -->|unhurried-web-deployer + Secret Manager| FH["Firebase Hosting"]
-      CB -->|unhurried-builder| GCS["GCS cicd-artifacts<br/>extension archive"]
       CB -->|unhurried-terraform + Secret Manager| TF["spec-sync guard +<br/>Terraform plan & apply"]
     end
   end
@@ -48,10 +47,10 @@ flowchart LR
 
 ## Pipeline files per repository
 
-- **`.github/workflows/ci.yml`** (all 9 code repositories): pure CI checks on pull requests, pushes to `dev`, `staging`, and `main`, `workflow_dispatch`, and daily `06:00 UTC` cron (Go services and `unhurried-infra`). Never authenticates to Google Cloud.
-- **`cloudbuild.yaml`** (the 8 deployable repositories: 5 Go services, `unhurried-web`, `unhurried-extension`, `unhurried-infra`): pure CD pipeline invoked by Cloud Build 2nd-gen push triggers on `^<deploy_branch>$`. Every `cloudbuild.yaml` sets `options.logging: CLOUD_LOGGING_ONLY` (required for custom least-privilege trigger service accounts) and `options.substitutionOption: ALLOW_LOOSE`.
+- **`.github/workflows/ci.yml`** (all 7 code repositories): pure CI checks on pull requests, pushes to `dev`, `staging`, and `main`, `workflow_dispatch`, and daily `06:00 UTC` cron (Go services and `unhurried-infra`). Never authenticates to Google Cloud.
+- **`cloudbuild.yaml`** (the 6 deployable repositories: 4 Go services, `unhurried-web`, `unhurried-infra`): pure CD pipeline invoked by Cloud Build 2nd-gen push triggers on `^<deploy_branch>$`. Every `cloudbuild.yaml` sets `options.logging: CLOUD_LOGGING_ONLY` (required for custom least-privilege trigger service accounts) and `options.substitutionOption: ALLOW_LOOSE`.
 
-### Go services (`job-search`, `resume`, `applications`, `notifications`, `profile`)
+### Go services (`job-search`, `resume`, `applications`, `notifications`)
 
 | Plane | File | Steps |
 | --- | --- | --- |
@@ -62,26 +61,20 @@ Why a Cloud Deploy **Custom Target Type** (`cloud-run-image`) instead of the bui
 
 ### `unhurried-common`
 
- CI-only shared library (`.github/workflows/ci.yml`): runs `gofmt -l`, `go vet ./...`, `go test -race -covermode=atomic -coverprofile=coverage.out ./...`, coverage summary + artifact upload, and `govulncheck` on pull requests and pushes. Daily `06:00 UTC` scheduled runs across all five Go services test against the latest `unhurried-common`. In GCP, `unhurried-common` is linked as a Cloud Build 2nd-gen repository resource (with no trigger) so Go service CD pipelines can mint ephemeral read tokens for it.
+ CI-only shared library (`.github/workflows/ci.yml`): runs `gofmt -l`, `go vet ./...`, `go test -race -covermode=atomic -coverprofile=coverage.out ./...`, coverage summary + artifact upload, and `govulncheck` on pull requests and pushes. Daily `06:00 UTC` scheduled runs across all four Go services test against the latest `unhurried-common`. In GCP, `unhurried-common` is linked as a Cloud Build 2nd-gen repository resource (with no trigger) so Go service CD pipelines can mint ephemeral read tokens for it.
 
 ### `unhurried-web`
 
 | Plane | File | Steps |
 | --- | --- | --- |
 | **CI (GitHub Actions)** | `.github/workflows/ci.yml` | `npm ci` · `npm run typecheck` · `npm run test:coverage` (85% lines, 75% branches) + coverage summary & artifact · production build smoke check · `npm audit --omit=dev --audit-level=high` |
-| **CD (Cloud Build)** | `cloudbuild.yaml` | `npm ci` · injects `unhurried-web-build-config` from Secret Manager via `availableSecrets` + `_CANONICAL_ORIGIN` · builds `dist/` without leaking `WEB_BUILD_CONFIG` to logs · verifies `dist/assets` embeds `VITE_FIREBASE_PROJECT_ID`, `VITE_APPLICATIONS_API`, and `VITE_PROFILE_API` with zero `localhost:80xx` URLs · publishes via `npx firebase target:apply` and `npx firebase deploy --only hosting:web --message "$COMMIT_SHA"` as `unhurried-web-deployer` |
-
-### `unhurried-extension`
-
-- **CI (`.github/workflows/ci.yml`)**: `npm ci`, `npm run test:coverage` (90% line threshold), `npm run package`, Manifest V3 assertion on `dist/manifest.json`, and `dist/` workflow artifact upload (including `unhurried-extension.zip`).
-- **CD (`cloudbuild.yaml`)**: `npm ci && npm run build`, Manifest V3 assertion on `dist/manifest.json`, and archives `unhurried-extension-${COMMIT_SHA}.tar.gz` to `gs://<project>-cicd-artifacts/extension/`.
-- **Store CD (`.github/workflows/deploy-cws.yml`)**: on pushes to `main` or manual trigger, builds, packages, and deploys `unhurried-extension.zip` directly to the Chrome Web Store via the Chrome Web Store API (`scripts/publish-cws.mjs`).
+| **CD (Cloud Build)** | `cloudbuild.yaml` | `npm ci` · injects `unhurried-web-build-config` from Secret Manager via `availableSecrets` + `_CANONICAL_ORIGIN` · builds `dist/` without leaking `WEB_BUILD_CONFIG` to logs · verifies `dist/assets` embeds `VITE_FIREBASE_PROJECT_ID` and `VITE_APPLICATIONS_API` with zero `localhost:80xx` URLs · publishes via `npx firebase target:apply` and `npx firebase deploy --only hosting:web --message "$COMMIT_SHA"` as `unhurried-web-deployer` |
 
 ### `unhurried-infra`
 
 | Plane | File | Steps |
 | --- | --- | --- |
-| **CI (GitHub Actions)** | `.github/workflows/ci.yml` | `terraform fmt -check -recursive -diff` · matrix `init -backend=false`, `validate`, and `test` (mocked providers, no credentials) across all 8 modules (`service`, `data`, `auth`, `hosting`, `google_oauth`, `docs`, `mail`, `cicd`) and all three environments (`envs/dev`, `envs/staging`, `envs/prod`) · `tools/check-specs.mjs` gateway spec linter · matrix spec-sync diff against `openapi.yaml` in all 5 service repos · Checkov Terraform scan (`soft_fail: true`) |
+| **CI (GitHub Actions)** | `.github/workflows/ci.yml` | `terraform fmt -check -recursive -diff` · matrix `init -backend=false`, `validate`, and `test` (mocked providers, no credentials) across all 8 modules (`service`, `data`, `auth`, `hosting`, `google_oauth`, `docs`, `mail`, `cicd`) and all three environments (`envs/dev`, `envs/staging`, `envs/prod`) · `tools/check-specs.mjs` gateway spec linter · matrix spec-sync diff against `openapi.yaml` in all 4 service repos · Checkov Terraform scan (`soft_fail: true`) |
 | **CD (Cloud Build)** | `cloudbuild.yaml` | Runs `tools/check-specs.mjs` and `verify-gateway-spec-sync` (via Cloud Build v2 `accessReadToken`) as a pre-apply safety guard · reads `unhurried-google-oauth-client-secret` (required) and `unhurried-smtp-password` (optional) from Secret Manager into an isolated `/tf-secrets` volume · runs `terraform init -reconfigure`, `plan -lock-timeout=10m -out=tfplan`, and `apply -lock-timeout=10m tfplan` against `gs://<project>-tfstate` as `unhurried-terraform` |
 
 ## Least-privilege identities & secrets
