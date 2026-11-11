@@ -10,7 +10,7 @@ This folder is the reference for how the system is built, delivered, and secured
 | [Codebase guide](codebase.md) | Every repository: layout, packages, API endpoints, configuration, local development, and tests |
 | [CI/CD](ci-cd.md) | Branches and environments, GitHub Actions CI checks, Google Cloud Build & Cloud Deploy CD rollouts, least-privilege service accounts, secrets, and operational runbooks |
 | [Promotion criteria](promotion.md) | What must be true before a change moves from dev to staging and from staging to production, with checklists and the commands to check them |
-| [Security](security.md) | The threat model and every control, layer by layer: identity, API protection, service-to-service trust, data, secrets, Google Calendar and Drive, the extension, supply chain, and CI/CD |
+| [Security](security.md) | The threat model and every control, layer by layer: identity, API protection, service-to-service trust, data, secrets, Google Drive, the extension, supply chain, and CI/CD |
 | [Versioning policy](versioning.md) | Semantic Versioning across the app and APIs, header standards, and the update-on-each-commit rule |
 | [Implementation status](status.md) | Which features are fully working, which are partial or stubbed, and the known gaps and risks |
 
@@ -25,7 +25,7 @@ The product reasoning behind the features is in [MOTIVATION.md](../MOTIVATION.md
 | Dev | https://dev.unhurried-careers.com (`dev` branch), Google Cloud project `unhurried-dev` |
 | Frontend | React + TypeScript single-page app on Firebase Hosting |
 | Backend | Six Go services on Cloud Run, each behind its own API Gateway |
-| Data | Cloud Firestore (Native mode), Cloud KMS for Google Calendar and Google Drive tokens |
+| Data | Cloud Firestore (Native mode), Cloud KMS for Google Drive tokens |
 | Identity | Google sign-in through Firebase Authentication (Identity Platform), App Check with reCAPTCHA Enterprise |
 | Infrastructure | Terraform, applied by Google Cloud Build |
 | Status | https://status.unhurried-careers.com, from [unhurried-ops](https://github.com/Unhurried-Careers/unhurried-ops) in its own Google Cloud project |

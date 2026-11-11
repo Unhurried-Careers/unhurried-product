@@ -96,7 +96,7 @@ Run on the environment being promoted to, signed in with an allowlisted account:
 - [ ] Opportunity: move one stage forward with a reason
 - [ ] Resume studio: open the master resume and make a copy for an opportunity
 - [ ] AI resume rewriting: preview edits for a job description
-- [ ] Google Calendar: the connection succeeds, or still shows as connected, and interviews are listed
+- [ ] Google Calendar: "Add to Google Calendar" template links and booking page links open correctly without auth
 - [ ] Settings: change the email digest preference and save
 - [ ] Extension: with **Settings → Unhurried address** set to that environment, the popup lists opportunities whose resume is ready
 

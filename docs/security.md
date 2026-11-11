@@ -7,7 +7,6 @@ This document lists every security control in Unhurried, where it is implemented
 | Asset | Why it matters |
 | --- | --- |
 | The user's job search data | Their direction and reasons, research notes, opportunities, conversations, and resume content are personal and career-sensitive |
-| Google Calendar access | A refresh token with `calendar.events.readonly` can read every event on the user's calendars |
 | Google Drive access | A refresh token with `drive.file` can read and change the resumes Unhurried created |
 | The Google Cloud projects | Owner-level access means control of all data and billing |
 | Deployment credentials | Whoever can deploy can change what runs in production |
@@ -22,7 +21,7 @@ This document lists every security control in Unhurried, where it is implemented
 | One user reads another's data | Every query scoped to the token's user ID; foreign IDs answer 404 |
 | Calls that skip API Gateway | Cloud Run IAM: only the gateway's service account (and listed internal callers) may invoke |
 | Forged internal calls | `/internal/*` not on the gateway; Google OIDC tokens with a fixed audience and an explicit caller list |
-| Stolen database contents | Calendar and Drive tokens sealed with Cloud KMS and bound to the user; calendar events not stored |
+| Stolen database contents | Drive tokens sealed with Cloud KMS and bound to the user |
 | Compromised CI or repository | GitHub Actions runs pure CI (`contents: read`, zero GCP credentials); all CD runs natively in Google Cloud Build + Cloud Deploy under least-privilege service accounts |
 | Vulnerable dependencies or base images | govulncheck (source and binary), npm audit, distroless non-root images |
 | Malicious job sites or pages | Extension never submits, relays only five operations from its own popup, holds no tokens |
@@ -99,12 +98,12 @@ Cloud Run's IAM binding enforces the same caller list a second time. Cloud Run i
 | --- | --- |
 | Least scope | `https://www.googleapis.com/auth/drive.file` only: the service can reach files it created and files the user picked in Google Picker, never the rest of the Drive. Google classifies it as non-sensitive |
 | Resumes stay with the user | Documents live in an "Unhurried resumes" folder in the user's own Drive; Firestore keeps only the title, role, document ID, and link |
-| Same OAuth protections as Google Calendar | PKCE (S256), single-use hashed state bound to the user with a 10-minute expiry, scope check, server-side code exchange |
-| Sealed refresh token | Cloud KMS key `docs-refresh-tokens`, separate from the Calendar key, with the user ID as additional authenticated data; only the resume service account can use it; required in Firestore mode |
+| Standard OAuth protections | PKCE (S256), single-use hashed state bound to the user with a 10-minute expiry, scope check, server-side code exchange |
+| Sealed refresh token | Cloud KMS key `docs-refresh-tokens` with the user ID as additional authenticated data; only the resume service account can use it; required in Firestore mode |
 | Picker token | Google Picker runs in the browser and needs an access token, so `POST /v1/docs/picker-token` returns a short-lived (about one hour) `drive.file` token. It carries no more access than the service already has and is never stored by the web app |
 | Input checks | The picked file ID must match `^[A-Za-z0-9_-]{10,200}$` and be a Google Doc that is not in the trash; edits are capped at 20 per request, 500 characters to find, 2,000 to replace |
 | Deleting | "Move to trash" uses Drive's trash, so the user can restore a resume for 30 days |
-| Disconnect | Deletes the stored token without revoking it at Google, because revocation would also end Google Calendar access granted to the same OAuth client; myaccount.google.com/permissions removes all access |
+| Disconnect | Deletes the stored token; myaccount.google.com/permissions removes all access |
 
 ## Browser and frontend
 
@@ -163,4 +162,4 @@ Everything else needs no stored secret: services reach Google APIs as their serv
 | Free GitHub plan: no GitHub branch protection on private repos, so anyone with write access to `main` triggers production builds | Set `require_deploy_approval = true` in `envs/prod/settings.auto.tfvars` to require manual approval in Google Cloud Deploy before Cloud Run rollouts, or upgrade GitHub to require PR reviews on `main` |
 | `unhurried-terraform` has project owner | Replace with a custom role or a list of admin roles once the resource set is stable |
 | The OAuth client secret is also in Terraform state | Treat state-bucket access as secret access; consider creating the secret version out of band and reading it with a data source |
-| Consent screen in Testing mode | Keep it while usage is personal (limits access to test users); publishing requires Google's verification for the sensitive Calendar scope |
+| Consent screen in Testing mode | Keep it while usage is personal (limits access to test users); production publishing only requires non-sensitive scope verification (`drive.file`) since sensitive Calendar scopes are not used |

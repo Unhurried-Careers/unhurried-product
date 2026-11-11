@@ -48,7 +48,6 @@ flowchart TD
   subgraph External["External Integrations & Services"]
     BOARDS["Public ATS Boards<br/>(Greenhouse, Lever, Ashby, Adzuna)"]
     GDOCS["Google Drive & Docs API<br/>(drive.file scope)"]
-    GCAL["Google Calendar API<br/>(calendar.events.readonly scope)"]
     RESEND["Resend SMTP Relay<br/>(smtp.resend.com:587)"]
     INBOX["User Email Inbox<br/>(Job Alert Digest)"]
   end
@@ -84,12 +83,6 @@ flowchart TD
   S4 -->|"read smtp password"| SM
   S4 -->|"send email digest"| RESEND
   RESEND -->|"deliver alerts"| INBOX
-
-  S5 -->|"read/write connections, interviews"| FS
-  S5 -->|"decrypt Calendar tokens"| KMS
-  S5 -->|"live query events"| GCAL
-
-  S6 -->|"read/write profiles"| FS
 ```
 
 | Tier | Components | Responsibilities |
@@ -99,7 +92,7 @@ flowchart TD
 | **API Gateways** | 6 managed Google API Gateways | Validates caller API keys, rate limits client traffic (300 req/min per service), validates Firebase ID tokens (signature, issuer, audience), and invokes Cloud Run backend services via dedicated gateway service accounts. Also routes public profile endpoints (`/v1/public/*`) without authentication. |
 | **Compute** | 6 Go Cloud Run services | Containerized Go applications (`golang:alpine` build, `gcr.io/distroless/static-debian13:nonroot` runtime). Each enforces ownership scoping, App Check attestation, user email allowlisting, and specific domain rules. |
 | **Data & Secrets** | Firestore, KMS, Secret Manager | Cloud Firestore (Native mode, `us-central1`) for document persistence. Cloud KMS key ring `unhurried` for envelope encryption of external OAuth tokens. Secret Manager for sensitive third-party credentials. |
-| **AI & External APIs** | Vertex AI, Google Workspace, Resend | Vertex AI Gemini 3.5 Flash for structured resume tailoring (resume service) and for research summaries with Google Search grounding and sources (job-search service). Google Drive & Docs APIs for document management. Google Calendar API for interview discovery. Resend SMTP for outbound alert delivery. |
+| **AI & External APIs** | Vertex AI, Google Workspace, Resend | Vertex AI Gemini 3.5 Flash for structured resume tailoring (resume service) and for research summaries with Google Search grounding and sources (job-search service). Google Drive & Docs APIs for document management. Resend SMTP for outbound alert delivery. |
 
 ---
 
@@ -318,34 +311,26 @@ flowchart LR
 
 ---
 
-## 6. Google Calendar Interview Detection
+## 6. Zero-Auth Google Calendar Scheduling & Booking
 
-Unhurried connects to Google Calendar with read-only permissions (`calendar.events.readonly`) to help candidates file their interviews into each opportunity's rounds, without ever storing raw calendar events. Google's API cannot read appointment schedules, so the booking page link comes from the user: Unhurried opens Google Calendar, the user copies the link, and the app picks it up from the clipboard.
+Unhurried assists with interview scheduling and coffee chat outreach using **zero-auth Google Calendar links** (`https://calendar.google.com/calendar/render?action=TEMPLATE&...`). No Google Calendar OAuth scopes (such as `calendar.events.readonly`), background calendar pollers, or stored calendar tokens are required.
+
+For outreach scheduling, the user provides their Google Calendar appointment booking link: Unhurried opens Google Calendar in a tab, the user copies their booking link, and the app reads it from the clipboard (with explicit permission) to embed it in drafted messages.
 
 ```mermaid
 flowchart TD
-  subgraph OAuthConnect["OAuth Connection Lifecycle"]
-    U1["User clicks 'Connect Calendar'"] --> CONNECT["POST /v1/calendar/connect"]
-    CONNECT --> PKCE["Generate SHA-256 PKCE & state in calendar_oauth_states"]
-    PKCE --> GOOG_CONSENT["Redirect to Google OAuth Consent<br/>(calendar.events.readonly)"]
-    GOOG_CONSENT --> CALLBACK["POST /v1/calendar/callback {code, state}"]
-    CALLBACK --> EXCHANGE["Exchange code for refresh token"]
-    EXCHANGE --> SEAL["Cloud KMS Encrypt<br/>(Key: calendar-refresh-tokens, AAD: userId)"]
-    SEAL --> SAVE_CONN["Store in calendar_connections<br/>(Sealed token, email, status)"]
+  subgraph ZeroAuth["Zero-Auth Calendar Scheduling"]
+    U1["User schedules Interview or Follow-up"] --> GEN["Generate browser deep-link:<br/>calendar.google.com/calendar/render?action=TEMPLATE&..."]
+    GEN --> OPEN_CAL["Google Calendar opens in new tab with pre-filled details"]
+    OPEN_CAL --> USER_SAVES["User saves event directly in their own Google Calendar"]
   end
 
-  subgraph EventDiscovery["Privacy-First Interview Detection"]
-    U2["User views Interviews page"] --> GET_EVENTS["GET /v1/calendar/events"]
-    GET_EVENTS --> DECRYPT["Cloud KMS Decrypt Refresh Token"]
-    DECRYPT --> GCAL_API["Google Calendar API: list events (past 60 to next 60 days)"]
-    GCAL_API --> HEURISTICS["Heuristic Classification Engine<br/>- Match recruiter emails & domains<br/>- Video links (Meet, Zoom, Teams)<br/>- Keywords: Interview, Screen, Debrief, Chat"]
-    HEURISTICS --> FLAGGED["Return timed events with likelyInterview: true/false<br/>(Events are NEVER stored in Firestore)"]
-    subgraph Booking["Booking Page for Outreach"]
-    U3["User clicks 'Get my booking link'"] --> OPEN["Google Calendar opens in a new tab"]
-    OPEN --> COPY["User creates or opens a booking page and clicks Copy link"]
-    COPY --> PICK["Back in Unhurried: the copied link is read from the clipboard and checked"]
-    PICK --> SAVE["Saved in conversation_settings; used in drafted messages"]
-    SAVE --> SHARE["Booking link placed in the drafted message; the user sends it"]
+  subgraph Booking["Booking Page for Outreach"]
+    U2["User clicks 'Get my booking link'"] --> OPEN["Google Calendar opens in a new tab"]
+    OPEN --> COPY["User creates or opens booking schedule and copies link"]
+    COPY --> PICK["Unhurried reads link from clipboard (validates calendar.app.google)"]
+    PICK --> SAVE["Saved in conversation_settings (Firestore)"]
+    SAVE --> SHARE["Booking link placed in drafted message for user to send"]
   end
 ```
 

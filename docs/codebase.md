@@ -147,7 +147,7 @@ Resumes are Google Docs in an **"Unhurried resumes" folder in the user's own Goo
 
 **Folder**: created on connect, reused on reconnect with the same Google account, and recreated automatically if the user deletes or trashes it. **Errors**: a deleted document answers 410, a missing master 409, revoked access 409 with `needsReconnect`; other Google errors answer a generic 502.
 
-Configuration: `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET` (the same OAuth client and Secret Manager secret unhurried-google-oauth-client-secret as Google sign-in and Calendar), `DOCS_REDIRECT_URL` (`/app/docs/callback`), `KMS_KEY_NAME` (required with Firestore), `FIREBASE_PROJECT_NUMBER` (Picker app ID), `VERTEX_PROJECT`, `VERTEX_LOCATION` (`global`), `VERTEX_MODEL` (`gemini-3.5-flash`). Without a client ID the Docs routes answer 503.
+Configuration: `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET` (the same OAuth client and Secret Manager secret unhurried-google-oauth-client-secret as Google sign-in), `DOCS_REDIRECT_URL` (`/app/docs/callback`), `KMS_KEY_NAME` (required with Firestore), `FIREBASE_PROJECT_NUMBER` (Picker app ID), `VERTEX_PROJECT`, `VERTEX_LOCATION` (`global`), `VERTEX_MODEL` (`gemini-3.5-flash`). Without a client ID the Docs routes answer 503.
 
 AI resume tailoring uses Google Cloud Vertex AI (Gemini 3.5 Flash) via `POST /v1/resumes/{id}/tailor`. It compares the existing Google Doc resume with the target job description under strict honesty rules (never inventing facts, skills, or employment history). The user's reasons are passed in their own delimited block as data, used only to choose what to bring forward; every fact must still come from the resume. It returns a match score, gaps analysis, and exact find-and-replace text diffs that the user reviews and applies directly to their Google Doc via `POST /v1/resumes/{id}/edit`.
 ## unhurried-applications
@@ -180,7 +180,7 @@ An **opportunity** is one posting the user is working through the process. It ke
 | `GET /v1/rounds` | All of the user's rounds |
 | `POST /v1/opportunities/{id}/rounds` | Add a round; the opportunity must be applied |
 | `PATCH/DELETE /v1/opportunities/{id}/rounds/{roundId}` | Update status, skills, learnings, notes, or prep / delete |
-| `POST /v1/opportunities/{id}/rounds/{roundId}/interviews` | Add an interview, by hand or from Google Calendar |
+| `POST /v1/opportunities/{id}/rounds/{roundId}/interviews` | Add an interview to a round |
 | `DELETE /v1/opportunities/{id}/rounds/{roundId}/interviews/{interviewId}` | Remove an interview |
 
 **Gates** (`internal/pipeline`), each checked by the server when moving to the stage:
@@ -263,9 +263,9 @@ firebase.json             Hosting: SPA rewrite, caching, security headers
 | `/app/discover` | Look for postings; each says why it surfaced; considering one needs a reason |
 | `/app/opportunities/:id` | The stepper: Consider, Research, Decide, Resume, Apply, Interviews (`?step=` opens one); drop with a reason; timeline |
 | `/app/conversations`, `/app/resume` | Conversations (`?opportunity=` links a new one), resume studio (master resume and all copies) |
-| `/app/interviews` | Calendar integration, interviews on the calendar to file into rounds, progress per applied opportunity |
-| `/app/calendar/callback`, `/app/docs/callback` | Google returns here after Google Calendar or Drive consent; posts the code once (`OAuthCallback`), then returns to Interviews or the resume studio |
-| `/app/settings` | Google Drive, Google Calendar, booking link, email alerts |
+| `/app/interviews` | Interviews and round progress per applied opportunity |
+| `/app/docs/callback` | Google returns here after Google Drive consent; posts the code once (`OAuthCallback`), then returns to the resume studio |
+| `/app/settings` | Google Drive, booking link, email alerts |
 
 Signed-out visitors to `/app/*` see the sign-in screen (popup with `prompt=select_account`). Build-time configuration is `VITE_*` variables (`.env.example`); deployed builds read them from the `unhurried-web-build-config` secret. `VITE_AUTH_MODE=dev` with `VITE_TOKEN=user:<id>` works against services running with `AUTH_DEV_BYPASS=true`.
 
