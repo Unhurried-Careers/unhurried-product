@@ -35,7 +35,7 @@ Every arrow out of a stage is a **gate**: the server refuses the move until that
 
 ## Documentation
 
-Full documentation is in [docs/](docs/README.md): [architecture](docs/architecture.md), [codebase guide](docs/codebase.md), [CI/CD](docs/ci-cd.md), [security](docs/security.md), [versioning policy](docs/versioning.md), and [implementation status](docs/status.md).
+Full documentation is in [docs/](docs/README.md): [architecture](docs/architecture.md), [codebase guide](docs/codebase.md), [CI/CD](docs/ci-cd.md), [security](docs/security.md), [versioning policy](docs/versioning.md), and [implementation status](docs/status.md). Interactive API documentation with multi-environment switching (Dev, Staging, Production) is published at [docs.unhurried-careers.com](https://docs.unhurried-careers.com).
 
 ## CI/CD status
 
@@ -52,6 +52,7 @@ Live status of every repository's CI and every environment's deploys, and which 
 | [unhurried-applications](https://github.com/Unhurried-Careers/unhurried-applications) | The opportunity pipeline and its gates, outreach kit, conversations, interview rounds, prep & debrief notes |
 | [unhurried-notifications](https://github.com/Unhurried-Careers/unhurried-notifications) | Email digests of new postings for your target companies and roles |
 | [unhurried-web](https://github.com/Unhurried-Careers/unhurried-web) | TypeScript React frontend (static, on Firebase Hosting) |
+| [unhurried-docs](https://docs.unhurried-careers.com) | Interactive API documentation with Dev, Staging & Production environment switching |
 | [unhurried-ops](https://github.com/Unhurried-Careers/unhurried-ops) | Live CI/CD and environment status dashboard, in its own Google Cloud project |
 
 Each folder is its **own git repository** with `dev` (the default branch, where work happens), `staging`, and `main` (production) branches. `unhurried-ops` has a single environment, so it has only `main`.
